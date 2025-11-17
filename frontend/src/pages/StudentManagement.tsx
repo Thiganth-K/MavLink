@@ -1,0 +1,400 @@
+import React, { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { studentAPI, authAPI, type Student } from '../services/api';
+
+export default function StudentManagement() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    rollNumber: '',
+    department: '',
+    year: ''
+  });
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    const user = localStorage.getItem('user');
+    
+    if (!user || (role !== 'SUPER_ADMIN' && role !== 'ADMIN')) {
+      toast.error('Access denied. Admin privileges required.');
+      window.location.href = '/';
+      return;
+    }
+    
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const studentList = await studentAPI.getStudents();
+      setStudents(studentList);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch students');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const studentData = {
+        ...formData,
+        year: formData.year ? parseInt(formData.year) : undefined
+      };
+      await studentAPI.createStudent(studentData);
+      toast.success('Student created successfully');
+      setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+      setShowCreateForm(false);
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create student');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingStudent || !formData.name.trim() || !formData.email.trim()) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const studentData = {
+        ...formData,
+        year: formData.year ? parseInt(formData.year) : undefined
+      };
+      await studentAPI.updateStudent(editingStudent._id!, studentData);
+      toast.success('Student updated successfully');
+      setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+      setEditingStudent(null);
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update student');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await studentAPI.deleteStudent(id);
+      toast.success('Student deleted successfully');
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete student');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAllStudents = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL students? This action cannot be undone!')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await studentAPI.deleteAllStudents();
+      toast.success(`${result.deletedCount} students deleted successfully`);
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete all students');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCSVUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!csvFile) {
+      toast.error('Please select a CSV file');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await studentAPI.uploadCSV(csvFile);
+      toast.success(`CSV uploaded successfully! ${result.inserted} students imported.`);
+      setCsvFile(null);
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload CSV');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      localStorage.removeItem('user');
+      localStorage.removeItem('role');
+      toast.success('Logged out successfully');
+      window.location.href = '/';
+    } catch (error: any) {
+      toast.error('Logout failed');
+    }
+  };
+
+  const startEdit = (student: Student) => {
+    setEditingStudent(student);
+    setFormData({
+      name: student.name || '',
+      email: student.email || '',
+      rollNumber: student.rollNumber || '',
+      department: student.department || '',
+      year: student.year?.toString() || ''
+    });
+    setShowCreateForm(false);
+  };
+
+  const cancelEdit = () => {
+    setEditingStudent(null);
+    setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+  };
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const role = localStorage.getItem('role');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
+      <Toaster position="top-center" />
+      
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-blue-950 rounded-xl shadow-xl p-6 mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-blue-50">Student Management</h1>
+              <p className="text-blue-200 mt-2">Welcome back, {user.username} ({role})</p>
+            </div>
+            <div className="flex gap-4">
+              {role === 'SUPER_ADMIN' && (
+                <button
+                  onClick={() => window.location.href = '/super-admin'}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Admin Management
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* CSV Upload Section */}
+        <div className="bg-white rounded-xl shadow-xl p-6 mb-6">
+          <h3 className="text-xl font-bold text-blue-950 mb-4">CSV Upload</h3>
+          <form onSubmit={handleCSVUpload} className="flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-blue-900 mb-1 font-medium">Select CSV File</label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading || !csvFile}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              Upload CSV
+            </button>
+          </form>
+        </div>
+
+        {/* Student Management Section */}
+        <div className="bg-white rounded-xl shadow-xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-blue-950">Students</h2>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowCreateForm(!showCreateForm);
+                  setEditingStudent(null);
+                  setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                {showCreateForm ? 'Cancel' : 'Add Student'}
+              </button>
+              <button
+                onClick={handleDeleteAllStudents}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+
+          {/* Create/Edit Form */}
+          {(showCreateForm || editingStudent) && (
+            <div className="bg-blue-50 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-semibold text-blue-950 mb-4">
+                {editingStudent ? 'Edit Student' : 'Add New Student'}
+              </h3>
+              <form onSubmit={editingStudent ? handleUpdateStudent : handleCreateStudent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Email *</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Roll Number</label>
+                  <input
+                    type="text"
+                    value={formData.rollNumber}
+                    onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Department</label>
+                  <input
+                    type="text"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Year</label>
+                  <input
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    min="1"
+                    max="4"
+                  />
+                </div>
+                <div className="flex gap-4 md:col-span-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? 'Saving...' : (editingStudent ? 'Update Student' : 'Add Student')}
+                  </button>
+                  {editingStudent && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Students Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-blue-200">
+              <thead>
+                <tr className="bg-blue-100">
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Name</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Roll Number</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Year</th>
+                  <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
+                      Loading students...
+                    </td>
+                  </tr>
+                ) : students.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
+                      No students found
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((student) => (
+                    <tr key={student._id} className="hover:bg-blue-50">
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.name}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.rollNumber}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.department}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.year}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-center">
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => startEdit(student)}
+                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStudent(student._id!)}
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

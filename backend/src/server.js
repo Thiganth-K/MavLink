@@ -3,12 +3,20 @@ dotenv.config();
 
 import express from 'express';
 import mongoose from 'mongoose';
+import cors from 'cors';
 
 import superAdminRoutes from '../src/routes/superAdminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
 
 
 const app = express();
+
+// Enable CORS for frontend connections
+app.use(cors({
+  origin: 'http://localhost:5173', // Vite default port
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Read from .env

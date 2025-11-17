@@ -1,13 +1,50 @@
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { authAPI, type LoginResponse } from "../services/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Login successful");
+    
+    if (!username.trim()) {
+      toast.error('Please enter your username');
+      return;
+    }
+    
+    if (!password.trim()) {
+      toast.error('Please enter your password');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response: LoginResponse = await authAPI.login(username, password);
+      
+      // Store user info in localStorage
+      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('role', response.role);
+      
+      toast.success(`${response.message}! Welcome ${response.user.username}`);
+      
+      // Redirect based on role
+      setTimeout(() => {
+        if (response.role === 'SUPER_ADMIN') {
+          window.location.href = '/super-admin';
+        } else if (response.role === 'ADMIN') {
+          window.location.href = '/student-management';
+        }
+      }, 1500);
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,9 +93,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full py-3 bg-blue-900 text-white font-semibold rounded-lg shadow-md hover:bg-blue-950 transition-all"
+            disabled={isLoading}
+            className="w-full py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
