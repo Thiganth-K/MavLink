@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { login } from '../services/api'
 
 export default function LoginPage() {
+	const navigate = useNavigate()
 	const [username, setUsername] = useState('')
 	const [password, setPassword] = useState('')
 	const [loading, setLoading] = useState(false)
@@ -15,6 +17,9 @@ export default function LoginPage() {
 			const res = await login(username, password)
 			localStorage.setItem('token', res.token)
 			setMessage(`Welcome, ${res.user.username}!`)
+			if (res.user.role === 'superadmin') {
+				navigate('/superadmin')
+			}
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Login failed'
 			setMessage(msg)

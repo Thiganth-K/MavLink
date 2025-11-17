@@ -8,7 +8,10 @@ function signToken(payload) {
   return jwt.sign(payload, secret, { expiresIn: '1h' });
 }
 
-exports.login = (req, res) => {
+const bcrypt = require('bcrypt');
+const Admin = require('../models/Admin');
+
+exports.login = async (req, res) => {
   const { username, password } = req.body || {};
 
   if (!username || !password) {
@@ -20,11 +23,18 @@ exports.login = (req, res) => {
 
   // Basic demo authentication using env super admin
   if (username === adminUser && password === adminPass) {
-    const token = signToken({ username, role: 'admin' });
+    const token = signToken({ username, role: 'superadmin' });
     return res.json({
       token,
-      user: { username, role: 'admin' }
+      user: { username, role: 'superadmin' }
     });
+  }
+
+  // Try DB-backed admin login
+  const admin = await Admin.findOne({ username });
+  if (admin && (await bcrypt.compare(password, admin.passwordHash))) {
+    const token = signToken({ username: admin.username, role: 'admin', id: admin._id });
+    return res.json({ token, user: { username: admin.username, role: 'admin' } });
   }
 
   return res.status(401).json({ message: 'Invalid credentials' });
