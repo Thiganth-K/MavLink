@@ -1,5 +1,6 @@
 import Login from './pages/login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import StudentManagement from './pages/StudentManagement';
 import './App.css';
 
@@ -9,6 +10,10 @@ function App() {
 
   if (path === '/super-admin') {
     return <SuperAdminDashboard />;
+  }
+
+  if (path === '/admin-dashboard') {
+    return <AdminDashboard />;
   }
 
   if (path === '/student-management') {

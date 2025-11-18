@@ -36,7 +36,7 @@ export default function Login() {
         if (response.role === 'SUPER_ADMIN') {
           window.location.href = '/super-admin';
         } else if (response.role === 'ADMIN') {
-          window.location.href = '/student-management';
+          window.location.href = '/admin-dashboard';
         }
       }, 1500);
       

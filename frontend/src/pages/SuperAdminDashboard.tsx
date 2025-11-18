@@ -131,22 +131,14 @@ export default function SuperAdminDashboard() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-blue-50">Super Admin Dashboard</h1>
-              <p className="text-blue-200 mt-2">Welcome back, {user.username}</p>
+              <p className="text-blue-200 mt-2">Welcome back, {user.username} (Super Admin)</p>
             </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => window.location.href = '/student-management'}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Student Management
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
 

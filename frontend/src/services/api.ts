@@ -11,11 +11,11 @@ export interface LoginResponse {
 
 export interface Student {
   _id?: string;
-  name?: string;
+  regno?: string;
+  studentname?: string;
+  dept?: string;
   email?: string;
-  rollNumber?: string;
-  department?: string;
-  year?: number;
+  phno?: string;
   [key: string]: any;
 }
 

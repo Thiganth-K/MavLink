@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, type Student } from '../services/api';
 
-export default function StudentManagement() {
+export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -16,7 +16,7 @@ export default function StudentManagement() {
   });
   const [csvFile, setCsvFile] = useState<File | null>(null);
 
-  // Check if user is authenticated (Legacy page - use AdminDashboard instead)
+  // Check if user is authenticated as ADMIN (not SUPER_ADMIN)
   useEffect(() => {
     const role = localStorage.getItem('role');
     const user = localStorage.getItem('user');
@@ -171,19 +171,18 @@ export default function StudentManagement() {
   };
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const role = localStorage.getItem('role');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-purple-300 p-6">
       <Toaster position="top-center" />
       
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-blue-950 rounded-xl shadow-xl p-6 mb-6">
+        <div className="bg-purple-950 rounded-xl shadow-xl p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-blue-50">Student Management (Legacy)</h1>
-              <p className="text-blue-200 mt-2">Welcome back, {user.username} ({role})</p>
+              <h1 className="text-3xl font-bold text-purple-50">Admin Dashboard</h1>
+              <p className="text-purple-200 mt-2">Welcome, {user.username} (Admin)</p>
             </div>
             <button
               onClick={handleLogout}
@@ -196,15 +195,15 @@ export default function StudentManagement() {
 
         {/* CSV Upload Section */}
         <div className="bg-white rounded-xl shadow-xl p-6 mb-6">
-          <h3 className="text-xl font-bold text-blue-950 mb-4">CSV Upload</h3>
+          <h3 className="text-xl font-bold text-purple-950 mb-4">CSV Upload</h3>
           <form onSubmit={handleCSVUpload} className="flex gap-4 items-end">
             <div className="flex-1">
-              <label className="block text-blue-900 mb-1 font-medium">Select CSV File</label>
+              <label className="block text-purple-900 mb-1 font-medium">Select CSV File</label>
               <input
                 type="file"
                 accept=".csv"
                 onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
               />
             </div>
             <button
@@ -220,7 +219,7 @@ export default function StudentManagement() {
         {/* Student Management Section */}
         <div className="bg-white rounded-xl shadow-xl p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-blue-950">Students</h2>
+            <h2 className="text-2xl font-bold text-purple-950">Students</h2>
             <div className="flex gap-4">
               <button
                 onClick={() => {
@@ -243,58 +242,58 @@ export default function StudentManagement() {
 
           {/* Create/Edit Form */}
           {(showCreateForm || editingStudent) && (
-            <div className="bg-blue-50 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-semibold text-blue-950 mb-4">
+            <div className="bg-purple-50 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-semibold text-purple-950 mb-4">
                 {editingStudent ? 'Edit Student' : 'Add New Student'}
               </h3>
               <form onSubmit={editingStudent ? handleUpdateStudent : handleCreateStudent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Student Name *</label>
+                  <label className="block text-purple-900 mb-1 font-medium">Student Name *</label>
                   <input
                     type="text"
                     value={formData.studentname}
                     onChange={(e) => setFormData({ ...formData, studentname: e.target.value })}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Email *</label>
+                  <label className="block text-purple-900 mb-1 font-medium">Email *</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Registration Number *</label>
+                  <label className="block text-purple-900 mb-1 font-medium">Registration Number *</label>
                   <input
                     type="text"
                     value={formData.regno}
                     onChange={(e) => setFormData({ ...formData, regno: e.target.value })}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Department *</label>
+                  <label className="block text-purple-900 mb-1 font-medium">Department *</label>
                   <input
                     type="text"
                     value={formData.dept}
                     onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Phone Number *</label>
+                  <label className="block text-purple-900 mb-1 font-medium">Phone Number *</label>
                   <input
                     type="text"
                     value={formData.phno}
                     onChange={(e) => setFormData({ ...formData, phno: e.target.value })}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -302,7 +301,7 @@ export default function StudentManagement() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                   >
                     {isLoading ? 'Saving...' : (editingStudent ? 'Update Student' : 'Add Student')}
                   </button>
@@ -322,39 +321,39 @@ export default function StudentManagement() {
 
           {/* Students Table */}
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-blue-200">
+            <table className="w-full border-collapse border border-purple-200">
               <thead>
-                <tr className="bg-blue-100">
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
-                  <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Actions</th>
+                <tr className="bg-purple-100">
+                  <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Student Name</th>
+                  <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Email</th>
+                  <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Reg Number</th>
+                  <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Department</th>
+                  <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Phone</th>
+                  <th className="border border-purple-200 px-4 py-3 text-center text-purple-950 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
+                    <td colSpan={6} className="border border-purple-200 px-4 py-8 text-center text-purple-600">
                       Loading students...
                     </td>
                   </tr>
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
+                    <td colSpan={6} className="border border-purple-200 px-4 py-8 text-center text-purple-600">
                       No students found
                     </td>
                   </tr>
                 ) : (
                   students.map((student) => (
-                    <tr key={student._id} className="hover:bg-blue-50">
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.phno}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-center">
+                    <tr key={student._id} className="hover:bg-purple-50">
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.studentname}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.email}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.regno}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.dept}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.phno}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-center">
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => startEdit(student)}
