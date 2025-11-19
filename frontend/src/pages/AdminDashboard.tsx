@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance, type AttendanceSummary, type CombinedAttendanceSummary } from '../services/api';
+import { getTodayIST, getLastNDaysIST, formatDateForDisplay } from '../utils/dateUtils';
 import Footer from '../components/Footer';
 import ViewStudents from '../components/ViewStudents';
 import ViewAttendance from '../components/ViewAttendance';
@@ -17,7 +18,7 @@ export default function AdminDashboard() {
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary[]>([]);
   const [selectedDateForDetail, setSelectedDateForDetail] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getTodayIST());
   const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
   const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'On-Duty' }>({});
   const [showSummary, setShowSummary] = useState(false);
@@ -99,18 +100,8 @@ export default function AdminDashboard() {
     try {
       setIsLoading(true);
       
-      // Get last 30 days
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30);
-      
-      // Generate array of dates
-      const dates: string[] = [];
-      const currentDate = new Date(startDate);
-      while (currentDate <= endDate) {
-        dates.push(currentDate.toISOString().split('T')[0]);
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
+      // Get last 30 days in IST
+      const dates = getLastNDaysIST(30);
       
       const response = await attendanceAPI.getAttendanceByDateSummary(dates);
       
@@ -201,7 +192,7 @@ export default function AdminDashboard() {
       
       setSubmittedSummary(summary);
       setShowSummary(true);
-      toast.success(`${selectedSession} Attendance marked successfully for ${new Date(selectedDate).toLocaleDateString()}`);
+      toast.success(`${selectedSession} Attendance marked successfully for ${formatDateForDisplay(selectedDate)}`);
       
       // Refresh only the current session's data (optimized)
       await fetchAttendance();
@@ -274,8 +265,7 @@ export default function AdminDashboard() {
       setSelectedDateForDetail(null); // Reset detail view
     } else if (activeTab === 'mark') {
       // Reset to today's date when switching to mark tab
-      const today = new Date().toISOString().split('T')[0];
-      setSelectedDate(today);
+      setSelectedDate(getTodayIST());
       setShowSummary(false); // Reset summary view
       setSubmittedSummary(null);
       // Fetch session-specific data

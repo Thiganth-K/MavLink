@@ -1,5 +1,6 @@
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
+import { parseISTDate, getNextISTDay, getISTTimestamp } from "../utils/dateUtils.js";
 
 // ============================================================
 // MARK ATTENDANCE FOR A SPECIFIC SESSION
@@ -58,9 +59,8 @@ export const markAttendance = async (req, res) => {
           continue;
         }
 
-        // Normalize date to midnight UTC
-        const attendanceDate = new Date(date);
-        attendanceDate.setUTCHours(0, 0, 0, 0);
+        // Parse date as IST
+        const attendanceDate = parseISTDate(date);
 
         // Check if attendance exists for this student, date, and session
         const existingAttendance = await Attendance.findOne({
@@ -74,7 +74,7 @@ export const markAttendance = async (req, res) => {
           if (existingAttendance.status !== status) {
             existingAttendance.status = status;
             existingAttendance.markedBy = markedBy;
-            existingAttendance.markedAt = new Date();
+            existingAttendance.markedAt = getISTTimestamp();
             await existingAttendance.save();
             
             results.push({
@@ -106,7 +106,7 @@ export const markAttendance = async (req, res) => {
             session,
             status,
             markedBy,
-            markedAt: new Date()
+            markedAt: getISTTimestamp()
           });
 
           results.push({
@@ -161,12 +161,9 @@ export const getAttendanceByDate = async (req, res) => {
       });
     }
 
-    // Normalize date to midnight UTC
-    const attendanceDate = new Date(date);
-    attendanceDate.setUTCHours(0, 0, 0, 0);
-
-    const nextDate = new Date(attendanceDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    // Parse date as IST
+    const attendanceDate = parseISTDate(date);
+    const nextDate = getNextISTDay(attendanceDate);
 
     // Find all attendance records for this date (both sessions)
     const attendanceRecords = await Attendance.find({
@@ -231,12 +228,9 @@ export const getAttendanceByDateAndSession = async (req, res) => {
       });
     }
 
-    // Normalize date to midnight UTC
-    const attendanceDate = new Date(date);
-    attendanceDate.setUTCHours(0, 0, 0, 0);
-
-    const nextDate = new Date(attendanceDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    // Parse date as IST
+    const attendanceDate = parseISTDate(date);
+    const nextDate = getNextISTDay(attendanceDate);
 
     // Find attendance records for specific date and session
     const attendanceRecords = await Attendance.find({
@@ -290,12 +284,9 @@ export const getSessionSummaryByDate = async (req, res) => {
       });
     }
 
-    // Normalize date to midnight UTC
-    const attendanceDate = new Date(date);
-    attendanceDate.setUTCHours(0, 0, 0, 0);
-
-    const nextDate = new Date(attendanceDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    // Parse date as IST
+    const attendanceDate = parseISTDate(date);
+    const nextDate = getNextISTDay(attendanceDate);
 
     // Get all attendance records for the date
     const allRecords = await Attendance.find({
@@ -362,11 +353,10 @@ export const getAttendanceByDateRange = async (req, res) => {
       });
     }
 
-    const start = new Date(startDate);
-    start.setUTCHours(0, 0, 0, 0);
-
-    const end = new Date(endDate);
-    end.setUTCHours(23, 59, 59, 999);
+    const start = parseISTDate(startDate);
+    const end = parseISTDate(endDate);
+    // Set end to end of day
+    end.setHours(23, 59, 59, 999);
 
     const attendanceRecords = await Attendance.find({
       date: { $gte: start, $lte: end }
@@ -424,11 +414,8 @@ export const getAttendanceByDateSummary = async (req, res) => {
     const summaries = [];
 
     for (const dateStr of dateArray) {
-      const attendanceDate = new Date(dateStr);
-      attendanceDate.setUTCHours(0, 0, 0, 0);
-
-      const nextDate = new Date(attendanceDate);
-      nextDate.setDate(nextDate.getDate() + 1);
+      const attendanceDate = parseISTDate(dateStr);
+      const nextDate = getNextISTDay(attendanceDate);
 
       const records = await Attendance.find({
         date: {

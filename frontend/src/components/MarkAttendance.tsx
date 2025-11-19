@@ -1,4 +1,5 @@
 import type { Student, Attendance } from '../services/api';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 interface MarkAttendanceProps {
   students: Student[];
@@ -46,12 +47,12 @@ export default function MarkAttendance({
           <h2 className="text-2xl font-bold text-blue-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
           {attendanceRecords.length > 0 && (
             <p className="text-sm text-orange-600 mt-1 font-medium">
-              ⚠️ {selectedSession} attendance already marked for {new Date(selectedDate).toLocaleDateString()}. You can update it below.
+              ⚠️ {selectedSession} attendance already marked for {formatDateForDisplay(selectedDate)}. You can update it below.
             </p>
           )}
           {attendanceRecords.length === 0 && (
             <p className="text-sm text-green-600 mt-1 font-medium">
-              ✓ No {selectedSession} attendance marked yet for {new Date(selectedDate).toLocaleDateString()}
+              ✓ No {selectedSession} attendance marked yet for {formatDateForDisplay(selectedDate)}
             </p>
           )}
         </div>
@@ -224,7 +225,7 @@ export default function MarkAttendance({
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-blue-950 mb-2">✓ {selectedSession} Attendance Submitted Successfully</h3>
             <p className="text-blue-700">
-              {selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{new Date(selectedDate).toLocaleDateString('en-US', {
+              {selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{formatDateForDisplay(selectedDate, {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',

@@ -1,4 +1,5 @@
 import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../services/api';
+import { formatDateForDisplay, formatTimestampIST } from '../utils/dateUtils';
 
 interface ViewAttendanceProps {
   isLoading: boolean;
@@ -58,7 +59,7 @@ export default function ViewAttendance({
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-blue-950">
-                      {new Date(summary.date).toLocaleDateString('en-US', {
+                      {formatDateForDisplay(summary.date, {
                         weekday: 'short',
                         year: 'numeric',
                         month: 'short',
@@ -128,7 +129,7 @@ export default function ViewAttendance({
         // Show detailed attendance for selected date
         <div className="bg-white rounded-xl shadow-xl p-6">
           <h3 className="text-xl font-bold text-blue-950 mb-4">
-            Attendance Details for {new Date(selectedDateForDetail).toLocaleDateString('en-US', {
+            Attendance Details for {formatDateForDisplay(selectedDateForDetail, {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -180,10 +181,10 @@ export default function ViewAttendance({
                     )}
                   </tbody>
                 </table>
-                {attendanceRecords.filter(r => r.session === 'AN').length > 0 && (
+                {attendanceRecords.filter(r => r.session === 'FN').length > 0 && (
                   <div className="mt-3 text-sm text-gray-600">
                     <p>Marked by: {attendanceRecords.find(r => r.session === 'FN')?.markedBy}</p>
-                    <p>Marked at: {new Date(attendanceRecords.find(r => r.session === 'FN')?.markedAt!).toLocaleString()}</p>
+                    <p>Marked at: {formatTimestampIST(attendanceRecords.find(r => r.session === 'FN')?.markedAt!)}</p>
                   </div>
                 )}
               </div>
@@ -231,10 +232,10 @@ export default function ViewAttendance({
                     )}
                   </tbody>
                 </table>
-                {attendanceRecords.filter(r => r.session === 'FN').length > 0 && (
+                {attendanceRecords.filter(r => r.session === 'AN').length > 0 && (
                   <div className="mt-3 text-sm text-gray-600">
                     <p>Marked by: {attendanceRecords.find(r => r.session === 'AN')?.markedBy}</p>
-                    <p>Marked at: {new Date(attendanceRecords.find(r => r.session === 'AN')?.markedAt!).toLocaleString()}</p>
+                    <p>Marked at: {formatTimestampIST(attendanceRecords.find(r => r.session === 'AN')?.markedAt!)}</p>
                   </div>
                 )}
               </div>
