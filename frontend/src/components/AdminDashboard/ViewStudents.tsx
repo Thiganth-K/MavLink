@@ -1,4 +1,4 @@
-import type { Student } from '../services/api';
+import type { Student } from '../../services/api';
 
 interface ViewStudentsProps {
   students: Student[];

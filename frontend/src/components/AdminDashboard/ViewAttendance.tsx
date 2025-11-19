@@ -1,5 +1,5 @@
-import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../services/api';
-import { formatDateForDisplay, formatTimestampIST } from '../utils/dateUtils';
+import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../../services/api';
+import { formatDateForDisplay, formatTimestampIST } from '../../utils/dateUtils';
 
 interface ViewAttendanceProps {
   isLoading: boolean;

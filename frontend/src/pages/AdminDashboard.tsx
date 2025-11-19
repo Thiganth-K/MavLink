@@ -3,9 +3,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance, type AttendanceSummary, type CombinedAttendanceSummary } from '../services/api';
 import { getTodayIST, getLastNDaysIST, formatDateForDisplay } from '../utils/dateUtils';
 import Footer from '../components/Footer';
-import ViewStudents from '../components/ViewStudents';
-import ViewAttendance from '../components/ViewAttendance';
-import MarkAttendance from '../components/MarkAttendance';
+import ViewStudents from '../components/AdminDashboard/ViewStudents';
+import ViewAttendance from '../components/AdminDashboard/ViewAttendance';
+import MarkAttendance from '../components/AdminDashboard/MarkAttendance';
 
 export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -289,7 +289,6 @@ export default function AdminDashboard() {
       localStorage.removeItem('user');
       localStorage.removeItem('role');
       localStorage.setItem('showLogoutAnimation', 'true');
-      toast.success('Logged out successfully');
       window.location.href = '/';
     } catch (error: any) {
       toast.error('Logout failed');

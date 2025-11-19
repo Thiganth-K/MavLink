@@ -1,5 +1,5 @@
-import type { Student, Attendance } from '../services/api';
-import { formatDateForDisplay } from '../utils/dateUtils';
+import type { Student, Attendance } from '../../services/api';
+import { formatDateForDisplay } from '../../utils/dateUtils';
 
 interface MarkAttendanceProps {
   students: Student[];

@@ -44,6 +44,7 @@ export default function Login() {
       // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('role', response.role);
+      localStorage.setItem('showLoginAnimation', 'true');
       
       // Show success animation
       setAnimationType('login');

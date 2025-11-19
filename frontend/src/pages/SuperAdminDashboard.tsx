@@ -102,7 +102,7 @@ export default function SuperAdminDashboard() {
       await authAPI.logout();
       localStorage.removeItem('user');
       localStorage.removeItem('role');
-      toast.success('Logged out successfully');
+      localStorage.setItem('showLogoutAnimation', 'true');
       window.location.href = '/';
     } catch (error: any) {
       toast.error('Logout failed');
