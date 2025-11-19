@@ -1,7 +1,8 @@
-☐ Change the admin manages only the view students and attendance marking
+✔ Change the admin manages only the view students and attendance marking @done (11/19/2025, 7:40:28 PM)
 ☐ Super admin can add and edit students
 ☐ Add batch option in superadmin panel
 ☐ Make a cards for each operation in super admin panel
-☐ And a navbar for admin panel (Home, Mark attendance, View Attendance, Select batch, Logout)
-☐ Add a search option to search students in view students page 
-☐ Footer creation
+✔ And a navbar for admin panel (Home, Mark attendance, View Attendance, Select batch, Logout) @done (11/19/2025, 7:49:43 PM)
+✔ Add a search option to search students in view students page @done (11/19/2025, 7:49:46 PM)
+✔ Footer creation @done (11/19/2025, 7:55:32 PM)
+✔ Login Animation @done (11/19/2025, 7:30:51 PM)

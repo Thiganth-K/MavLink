@@ -6,6 +6,7 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,6 +30,8 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('role', response.role);
       
+      // Show success animation
+      setShowSuccess(true);
       toast.success(`${response.message}! Welcome ${response.user.username}`);
       
       // Redirect based on role
@@ -38,7 +41,7 @@ export default function Login() {
         } else if (response.role === 'ADMIN') {
           window.location.href = '/admin-dashboard';
         }
-      }, 1500);
+      }, 2000);
       
     } catch (error: any) {
       toast.error(error.message || 'Login failed. Please try again.');
@@ -48,11 +51,89 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center ">
-      <Toaster position="top-center" />
+    <>
+      <style>{`
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        @keyframes drawCheck {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes ripple {
+          0% {
+            transform: scale(1);
+            opacity: 0.6;
+          }
+          100% {
+            transform: scale(1.8);
+            opacity: 0;
+          }
+        }
+        .animate-scale-in {
+          animation: scaleIn 0.5s ease-out;
+        }
+        .animate-draw-check {
+          animation: drawCheck 0.5s ease-out 0.3s forwards;
+        }
+        .animate-ripple {
+          animation: ripple 1s ease-out;
+        }
+      `}</style>
+      
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center ">
+        <Toaster position="top-center" />
 
-      <div className=" rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950">
-        <div className="flex flex-col items-center mb-6">
+        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950 relative bg-white">
+          {/* Success Animation Overlay inside the box */}
+          {showSuccess && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 rounded-3xl">
+              <div className="animate-bounce">
+                <div className="relative">
+                  {/* Outer Circle with scale animation */}
+                  <div className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
+                    {/* Inner white circle */}
+                    <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center">
+                      {/* Checkmark with draw animation */}
+                      <svg
+                        className="w-20 h-20 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path
+                          d="M5 13l4 4L19 7"
+                          className="animate-draw-check"
+                          style={{
+                            strokeDasharray: '30',
+                            strokeDashoffset: '30'
+                          }}
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Success ripple effect */}
+                  <div className="absolute inset-0 w-32 h-32 bg-green-400 rounded-full animate-ripple"></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg">
             <svg
               className="w-10 h-10"
@@ -101,5 +182,6 @@ export default function Login() {
         </form>
       </div>
     </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import cors from 'cors';
 
 import superAdminRoutes from '../src/routes/superAdminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
 
 
 const app = express();
@@ -39,6 +40,7 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //routes inga irruku
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/attendance', attendanceRoutes);
 // Simple test route
 app.get('/', (req, res) => {
   res.send('Server is up and running');

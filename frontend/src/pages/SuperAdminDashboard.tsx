@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { superAdminAPI, authAPI, type Admin } from '../services/api';
+import Footer from '../components/Footer';
 
 export default function SuperAdminDashboard() {
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -259,6 +260,8 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }

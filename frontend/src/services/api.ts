@@ -26,6 +26,28 @@ export interface Admin {
   role: string;
 }
 
+export interface Attendance {
+  _id?: string;
+  studentId: string;
+  regno: string;
+  studentname: string;
+  date: Date | string;
+  status: 'Present' | 'Absent' | 'Late';
+  markedBy: string;
+  markedAt?: Date | string;
+}
+
+export interface AttendanceStats {
+  _id: string;
+  regno: string;
+  studentname: string;
+  totalClasses: number;
+  present: number;
+  absent: number;
+  late: number;
+  attendancePercentage: number;
+}
+
 // Authentication API
 export const authAPI = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
@@ -216,6 +238,94 @@ export const studentAPI = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to delete all students');
+    }
+
+    return response.json();
+  },
+};
+
+// Attendance API
+export const attendanceAPI = {
+  markAttendance: async (attendanceData: Omit<Attendance, '_id' | 'markedAt'>[], markedBy: string): Promise<{ message: string; results: any[] }> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attendanceData, markedBy }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByDate: async (date: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date?date=${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByStudent: async (studentId: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/student/${studentId}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch student attendance');
+    }
+
+    return response.json();
+  },
+
+  getAllAttendance: async (): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceStats: async (startDate?: string, endDate?: string): Promise<AttendanceStats[]> => {
+    let url = `${API_BASE_URL}/attendance/stats`;
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance statistics');
+    }
+
+    return response.json();
+  },
+
+  deleteAttendance: async (id: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete attendance record');
     }
 
     return response.json();

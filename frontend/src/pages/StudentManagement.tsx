@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, type Student } from '../services/api';
+import Footer from '../components/Footer';
 
 export default function StudentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -378,6 +379,8 @@ export default function StudentManagement() {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }
