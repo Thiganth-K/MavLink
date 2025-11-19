@@ -67,7 +67,10 @@ export default function Login() {
           }
         }
         @keyframes drawCheck {
-          to {
+          0% {
+            stroke-dashoffset: 30;
+          }
+          100% {
             stroke-dashoffset: 0;
           }
         }
@@ -82,32 +85,34 @@ export default function Login() {
           }
         }
         .animate-scale-in {
-          animation: scaleIn 0.5s ease-out;
+          animation: scaleIn 0.5s ease-out forwards;
         }
         .animate-draw-check {
-          animation: drawCheck 0.5s ease-out 0.3s forwards;
+          animation: drawCheck 0.6s ease-out 0.3s forwards;
+          stroke-dasharray: 30;
+          stroke-dashoffset: 30;
         }
         .animate-ripple {
-          animation: ripple 1s ease-out;
+          animation: ripple 1s ease-out infinite;
         }
       `}</style>
       
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center ">
         <Toaster position="top-center" />
 
-        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950 relative bg-white">
+        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950">
           {/* Success Animation Overlay inside the box */}
           {showSuccess && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 rounded-3xl">
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-blue-100 bg-opacity-95 rounded-3xl">
               <div className="animate-bounce">
                 <div className="relative">
                   {/* Outer Circle with scale animation */}
-                  <div className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
+                  <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
                     {/* Inner white circle */}
-                    <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center">
+                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
                       {/* Checkmark with draw animation */}
                       <svg
-                        className="w-20 h-20 text-green-500"
+                        className="w-16 h-16 text-green-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -118,16 +123,12 @@ export default function Login() {
                         <path
                           d="M5 13l4 4L19 7"
                           className="animate-draw-check"
-                          style={{
-                            strokeDasharray: '30',
-                            strokeDashoffset: '30'
-                          }}
                         />
                       </svg>
                     </div>
                   </div>
                   {/* Success ripple effect */}
-                  <div className="absolute inset-0 w-32 h-32 bg-green-400 rounded-full animate-ripple"></div>
+                  <div className="absolute inset-0 w-24 h-24 bg-green-400 rounded-full animate-ripple"></div>
                 </div>
               </div>
             </div>
