@@ -11,3 +11,4 @@
 ✔ View attendance day by day option @done (11/19/2025, 10:18:52 PM)
 ✔ Add toggle FN/AN for attendance marking and update the database accordingly @done (11/20/2025, 1:00:12 AM)
 ✔ Submission button in mark attendance page in bottom of the page and after taking attendance give a summary of attendance marked @done (11/19/2025, 10:41:07 PM)
+☐ nav bar and the footer need to be updated in the superadmin note the superadmin need to have a separate file for the footer and navbar and fix the allignments for them
