@@ -26,6 +26,23 @@ export interface Admin {
   role: string;
 }
 
+export interface BatchStudent {
+  name: string;
+  regno: string;
+  dept: string;
+  email: string;
+  mobile: string;
+}
+
+export interface Batch {
+  _id?: string;
+  batchName: string;
+  batchYear: number;
+  students: BatchStudent[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Attendance {
   _id?: string;
   studentId: string;
@@ -330,4 +347,55 @@ export const attendanceAPI = {
 
     return response.json();
   },
+};
+
+// Batch API
+export const batchAPI = {
+  getBatches: async (): Promise<Batch[]> => {
+    const res = await fetch(`${API_BASE_URL}/batches`);
+    if (!res.ok) throw new Error('Failed to fetch batches');
+    return res.json();
+  },
+  getBatch: async (id: string): Promise<Batch> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch batch');
+    return res.json();
+  },
+  createBatch: async (data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify(data)
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to create batch');
+    return body;
+  },
+  updateBatch: async (id: string, data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify(data)
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to update batch');
+    return body;
+  },
+  deleteBatch: async (id: string): Promise<{ message: string }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Role': localStorage.getItem('role') || ''
+      }
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to delete batch');
+    return body;
+  }
 };

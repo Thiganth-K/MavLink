@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { superAdminAPI, authAPI, type Admin } from '../services/api';
-import Footer from '../components/Footer';
+
+import BatchManagement from './BatchManagement';
+import BatchViewer from './BatchViewer';
 
 export default function SuperAdminDashboard() {
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -10,6 +12,8 @@ export default function SuperAdminDashboard() {
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showBatchPanel, setShowBatchPanel] = useState(false);
+  const [showBatchViewerPanel, setShowBatchViewerPanel] = useState(false);
 
   // Check if user is authenticated and has super admin role
   useEffect(() => {
@@ -124,40 +128,48 @@ export default function SuperAdminDashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-100 to-blue-300 p-6">
       <Toaster position="top-center" />
       
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-blue-950 rounded-xl shadow-xl p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-blue-50">Super Admin Dashboard</h1>
-              <p className="text-blue-200 mt-2">Welcome back, {user.username} (Super Admin)</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto flex-1">
+        <p className="text-sm text-blue-800 mb-4">Welcome back, {user.username}</p>
 
         {/* Management Cards (collapsed view) */}
-        {!showAdminPanel && (
+        {!showAdminPanel && !showBatchPanel && !showBatchViewerPanel && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <button
-              onClick={() => setShowAdminPanel(true)}
+              onClick={() => { setShowAdminPanel(true); setShowBatchPanel(false); }}
               className="text-left bg-white rounded-xl shadow-xl border border-blue-200 hover:shadow-2xl hover:border-blue-300 transition p-6"
             >
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                  AM
-                </div>
+                <div className="h-12 w-12 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">AM</div>
                 <div>
                   <h3 className="text-lg font-bold text-blue-950">Admin Management</h3>
                   <p className="text-sm text-blue-700">Create, edit, and delete admins</p>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowBatchPanel(true); setShowAdminPanel(false); setShowBatchViewerPanel(false); }}
+              className="text-left bg-white rounded-xl shadow-xl border border-blue-200 hover:shadow-2xl hover:border-blue-300 transition p-6"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-lg bg-green-100 text-green-700 flex items-center justify-center font-bold">BM</div>
+                <div>
+                  <h3 className="text-lg font-bold text-blue-950">Batch Management</h3>
+                  <p className="text-sm text-blue-700">Create, edit, and delete batches</p>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowBatchViewerPanel(true); setShowAdminPanel(false); setShowBatchPanel(false); }}
+              className="text-left bg-white rounded-xl shadow-xl border border-blue-200 hover:shadow-2xl hover:border-blue-300 transition p-6"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">VB</div>
+                <div>
+                  <h3 className="text-lg font-bold text-blue-950">View Batches</h3>
+                  <p className="text-sm text-blue-700">Browse existing batch details</p>
                 </div>
               </div>
             </button>
@@ -303,9 +315,15 @@ export default function SuperAdminDashboard() {
           )}
         </div>
         )}
+
+        {showBatchPanel && (
+          <BatchManagement onClose={() => setShowBatchPanel(false)} />
+        )}
+        {showBatchViewerPanel && (
+          <BatchViewer onClose={() => setShowBatchViewerPanel(false)} />
+        )}
       </div>
       
-      <Footer />
     </div>
   );
 }
