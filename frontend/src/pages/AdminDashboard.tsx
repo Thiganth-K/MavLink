@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance } from '../services/api';
+import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance, type AttendanceSummary, type CombinedAttendanceSummary } from '../services/api';
+import { getTodayIST, getLastNDaysIST, formatDateForDisplay } from '../utils/dateUtils';
 import Footer from '../components/Footer';
+import ViewStudents from '../components/AdminDashboard/ViewStudents';
+import ViewAttendance from '../components/AdminDashboard/ViewAttendance';
+import MarkAttendance from '../components/AdminDashboard/MarkAttendance';
 
 export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -12,8 +16,13 @@ export default function AdminDashboard() {
   
   // Attendance states
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'Late' }>({});
+  const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary[]>([]);
+  const [selectedDateForDetail, setSelectedDateForDetail] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(getTodayIST());
+  const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
+  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'On-Duty' }>({});
+  const [showSummary, setShowSummary] = useState(false);
+  const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; total: number } | null>(null);
 
   // Check if user is authenticated as ADMIN (not SUPER_ADMIN)
   useEffect(() => {
@@ -27,6 +36,25 @@ export default function AdminDashboard() {
     }
     
     fetchStudents();
+    
+    // Handle hash-based navigation
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['home', 'students', 'attendance', 'mark'].includes(hash)) {
+      setActiveTab(hash as 'home' | 'students' | 'attendance' | 'mark');
+    }
+  }, []);
+
+  // Listen for hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && ['home', 'students', 'attendance', 'mark'].includes(hash)) {
+        setActiveTab(hash as 'home' | 'students' | 'attendance' | 'mark');
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const fetchStudents = async () => {
@@ -49,19 +77,89 @@ export default function AdminDashboard() {
   const fetchAttendance = async () => {
     try {
       setIsLoading(true);
-      const records = await attendanceAPI.getAttendanceByDate(selectedDate);
-      setAttendanceRecords(records);
       
-      // If in mark attendance tab, populate the attendance map with existing data
-      if (activeTab === 'mark') {
-        const existingAttendance: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
-        records.forEach(record => {
-          existingAttendance[record.studentId] = record.status;
-        });
-        setAttendanceMap(existingAttendance);
-      }
+      // Fetch only the selected session's records for mark attendance
+      const sessionRecords = await attendanceAPI.getAttendanceByDateAndSession(selectedDate, selectedSession);
+      setAttendanceRecords(sessionRecords);
+      
+      // Populate the attendance map with existing session data
+      const newAttendanceMap: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
+      sessionRecords.forEach(record => {
+        newAttendanceMap[record.studentId] = record.status;
+      });
+      
+      setAttendanceMap(newAttendanceMap);
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch attendance');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAttendanceSummary = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get last 30 days in IST
+      const dates = getLastNDaysIST(30);
+      
+      const response = await attendanceAPI.getAttendanceByDateSummary(dates);
+      
+      // Transform API response to match frontend interface
+      const transformedSummary: AttendanceSummary[] = response.data.map(item => ({
+        date: item.date,
+        FN: {
+          total: item.FN.total,
+          present: item.FN.present,
+          absent: item.FN.absent,
+          onDuty: item.FN.onDuty
+        },
+        AN: {
+          total: item.AN.total,
+          present: item.AN.present,
+          absent: item.AN.absent,
+          onDuty: item.AN.onDuty
+        }
+      }));
+      
+      // Filter out dates with no attendance
+      const filtered = transformedSummary.filter(s => s.FN.total > 0 || s.AN.total > 0);
+      setAttendanceSummary(filtered);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch attendance summary');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to combine FN and AN sessions by date for display
+  const getCombinedSummary = (): CombinedAttendanceSummary[] => {
+    return attendanceSummary.map(summary => ({
+      date: summary.date,
+      fn: {
+        total: summary.FN.total,
+        present: summary.FN.present,
+        absent: summary.FN.absent,
+        onDuty: summary.FN.onDuty
+      },
+      an: {
+        total: summary.AN.total,
+        present: summary.AN.present,
+        absent: summary.AN.absent,
+        onDuty: summary.AN.onDuty
+      }
+    })).sort((a, b) => b.date.localeCompare(a.date));
+  };
+
+  const handleCardClick = async (date: string) => {
+    setSelectedDateForDetail(date);
+    try {
+      setIsLoading(true);
+      // Fetch all sessions (FN and AN) for the selected date
+      const records = await attendanceAPI.getAttendanceByDate(date);
+      setAttendanceRecords(records);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch attendance details');
     } finally {
       setIsLoading(false);
     }
@@ -74,17 +172,38 @@ export default function AdminDashboard() {
       regno: student.regno!,
       studentname: student.studentname!,
       date: selectedDate,
-      status: attendanceMap[student._id!] || 'Absent',
-      markedBy: user.username
+      session: selectedSession,
+      status: attendanceMap[student._id!] || 'Absent'
     }));
 
     try {
       setIsLoading(true);
-      await attendanceAPI.markAttendance(attendanceData, user.username);
-      toast.success('Attendance marked successfully');
-      setAttendanceMap({});
-      setActiveTab('attendance');
-      fetchAttendance();
+      const response = await attendanceAPI.markAttendance(attendanceData, user.username);
+      
+      console.log('Mark Attendance Response:', response);
+      
+      // Calculate summary
+      const summary = {
+        total: students.length,
+        present: attendanceData.filter(a => a.status === 'Present').length,
+        absent: attendanceData.filter(a => a.status === 'Absent').length,
+        onDuty: attendanceData.filter(a => a.status === 'On-Duty').length
+      };
+      
+      setSubmittedSummary(summary);
+      setShowSummary(true);
+      toast.success(`${selectedSession} Attendance marked successfully for ${formatDateForDisplay(selectedDate)}`);
+      
+      // Refresh only the current session's data (optimized)
+      await fetchAttendance();
+      
+      // Refresh attendance summary for view attendance section
+      await fetchAttendanceSummary();
+      
+      // Scroll to summary
+      setTimeout(() => {
+        document.getElementById('attendance-summary')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } catch (error: any) {
       toast.error(error.message || 'Failed to mark attendance');
     } finally {
@@ -92,12 +211,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'Late') => {
+  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'On-Duty') => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
   };
 
   const handleMarkAllPresent = () => {
-    const allPresent: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
+    const allPresent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
     students.forEach(student => {
       allPresent[student._id!] = 'Present';
     });
@@ -106,12 +225,17 @@ export default function AdminDashboard() {
   };
 
   const handleMarkAllAbsent = () => {
-    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
+    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
     students.forEach(student => {
       allAbsent[student._id!] = 'Absent';
     });
     setAttendanceMap(allAbsent);
     toast.success('Marked all students as Absent');
+  };
+
+  const handleClearAll = () => {
+    setAttendanceMap({});
+    toast.success('Cleared all attendance selections');
   };
 
   const handleSearch = (query: string) => {
@@ -135,27 +259,36 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (activeTab === 'attendance' || activeTab === 'mark') {
-      // Reset to today's date when switching to attendance or mark tabs
-      const today = new Date().toISOString().split('T')[0];
-      setSelectedDate(today);
+    if (activeTab === 'attendance') {
+      // Fetch attendance summary when switching to attendance tab
+      fetchAttendanceSummary();
+      setSelectedDateForDetail(null); // Reset detail view
+    } else if (activeTab === 'mark') {
+      // Reset to today's date when switching to mark tab
+      setSelectedDate(getTodayIST());
+      setShowSummary(false); // Reset summary view
+      setSubmittedSummary(null);
+      // Fetch session-specific data
       fetchAttendance();
     }
   }, [activeTab]);
 
   useEffect(() => {
-    // Fetch attendance when date changes (but only if on attendance/mark tabs)
-    if (activeTab === 'attendance' || activeTab === 'mark') {
+    // Fetch session-specific attendance when date or session changes
+    if (activeTab === 'mark') {
+      // Clear map and fetch only the selected session's data
+      setAttendanceMap({});
+      setShowSummary(false); // Hide previous summary
       fetchAttendance();
     }
-  }, [selectedDate]);
+  }, [selectedDate, selectedSession]);
 
   const handleLogout = async () => {
     try {
       await authAPI.logout();
       localStorage.removeItem('user');
       localStorage.removeItem('role');
-      toast.success('Logged out successfully');
+      localStorage.setItem('showLogoutAnimation', 'true');
       window.location.href = '/';
     } catch (error: any) {
       toast.error('Logout failed');
@@ -356,239 +489,50 @@ export default function AdminDashboard() {
 
         {/* Student List Section */}
         {activeTab === 'students' && (
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-blue-950">Students List</h2>
-            </div>
-
-            {/* Students Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-blue-200">
-                <thead>
-                  <tr className="bg-blue-100">
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                        Loading students...
-                      </td>
-                    </tr>
-                  ) : students.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                        No students found
-                      </td>
-                    </tr>
-                  ) : (
-                    students.map((student) => (
-                      <tr key={student._id} className="hover:bg-blue-50">
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.phno}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ViewStudents students={students} isLoading={isLoading} />
         )}
 
         {/* View Attendance Section */}
         {activeTab === 'attendance' && (
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-blue-950">Attendance Records</h2>
-              <div className="flex gap-4 items-center">
-                <label className="text-blue-900 font-medium">Date:</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-blue-200">
-                <thead>
-                  <tr className="bg-blue-100">
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Status</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Marked By</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Marked At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                        Loading attendance...
-                      </td>
-                    </tr>
-                  ) : attendanceRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                        No attendance records found for this date
-                      </td>
-                    </tr>
-                  ) : (
-                    attendanceRecords.sort((a, b) => (a.regno || '').localeCompare(b.regno || '')).map((record) => (
-                      <tr key={record._id} className="hover:bg-blue-50">
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{record.regno}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{record.studentname}</td>
-                        <td className="border border-blue-200 px-4 py-3">
-                          <span className={`px-3 py-1 rounded-full text-white font-semibold ${
-                            record.status === 'Present' ? 'bg-green-500' :
-                            record.status === 'Late' ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{record.markedBy}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">
-                          {new Date(record.markedAt!).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ViewAttendance
+            isLoading={isLoading}
+            attendanceSummary={attendanceSummary}
+            attendanceRecords={attendanceRecords}
+            selectedDateForDetail={selectedDateForDetail}
+            getCombinedSummary={getCombinedSummary}
+            onCardClick={handleCardClick}
+            onBackToSummary={() => {
+              setSelectedDateForDetail(null);
+              setAttendanceRecords([]);
+            }}
+          />
         )}
 
         {/* Mark Attendance Section */}
         {activeTab === 'mark' && (
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-blue-950">Mark Attendance</h2>
-                {attendanceRecords.length > 0 && (
-                  <p className="text-sm text-orange-600 mt-1 font-medium">
-                    ⚠️ Attendance already taken for this date. You can update it below.
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-4 items-center">
-                <label className="text-blue-900 font-medium">Date:</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-                <button
-                  onClick={handleMarkAttendance}
-                  disabled={isLoading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                >
-                  {attendanceRecords.length > 0 ? 'Update Attendance' : 'Save Attendance'}
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="mb-4 flex gap-3">
-              <button
-                onClick={handleMarkAllPresent}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Mark All Present
-              </button>
-              <button
-                onClick={handleMarkAllAbsent}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                Mark All Absent
-              </button>
-              <div className="flex-1"></div>
-              <span className="text-sm text-blue-600 font-medium self-center">
-                Quick actions to mark all students at once
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-blue-200">
-                <thead>
-                  <tr className="bg-blue-100">
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                    <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attendance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                        No students found
-                      </td>
-                    </tr>
-                  ) : (
-                    students.map((student) => (
-                      <tr key={student._id} className="hover:bg-blue-50">
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
-                        <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
-                        <td className="border border-blue-200 px-4 py-3">
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              onClick={() => handleAttendanceChange(student._id!, 'Present')}
-                              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                                attendanceMap[student._id!] === 'Present'
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-gray-200 text-gray-700 hover:bg-green-100'
-                              }`}
-                            >
-                              Present
-                            </button>
-                            <button
-                              onClick={() => handleAttendanceChange(student._id!, 'Absent')}
-                              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                                attendanceMap[student._id!] === 'Absent'
-                                  ? 'bg-red-600 text-white'
-                                  : 'bg-gray-200 text-gray-700 hover:bg-red-100'
-                              }`}
-                            >
-                              Absent
-                            </button>
-                            <button
-                              onClick={() => handleAttendanceChange(student._id!, 'Late')}
-                              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                                attendanceMap[student._id!] === 'Late'
-                                  ? 'bg-yellow-600 text-white'
-                                  : 'bg-gray-200 text-gray-700 hover:bg-yellow-100'
-                              }`}
-                            >
-                              Late
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <MarkAttendance
+            students={students}
+            attendanceRecords={attendanceRecords}
+            selectedDate={selectedDate}
+            selectedSession={selectedSession}
+            attendanceMap={attendanceMap}
+            isLoading={isLoading}
+            showSummary={showSummary}
+            submittedSummary={submittedSummary}
+            onDateChange={setSelectedDate}
+            onSessionChange={setSelectedSession}
+            onAttendanceChange={handleAttendanceChange}
+            onMarkAllPresent={handleMarkAllPresent}
+            onMarkAllAbsent={handleMarkAllAbsent}
+            onClearAll={handleClearAll}
+            onSubmit={handleMarkAttendance}
+            onMarkNewAttendance={() => {
+              setShowSummary(false);
+              setSubmittedSummary(null);
+              setAttendanceMap({});
+            }}
+            onViewAllRecords={() => setActiveTab('attendance')}
+          />
         )}
       </div>
       

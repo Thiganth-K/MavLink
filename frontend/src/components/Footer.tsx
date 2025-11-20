@@ -1,5 +1,6 @@
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const role = localStorage.getItem('role');
 
   return (
     <footer className="bg-blue-950 text-blue-100 mt-auto">
@@ -39,30 +40,70 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - Dynamic based on role */}
           <div>
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  Contact Support
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-blue-200 hover:text-white transition-colors">
-                  Terms of Service
-                </a>
-              </li>
+              {role === 'ADMIN' ? (
+                <>
+                  <li>
+                    <a href="/admin-dashboard#home" className="text-blue-200 hover:text-white transition-colors">
+                      Home
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/admin-dashboard#students" className="text-blue-200 hover:text-white transition-colors">
+                      View Students
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/admin-dashboard#attendance" className="text-blue-200 hover:text-white transition-colors">
+                      View Attendance
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/admin-dashboard#mark" className="text-blue-200 hover:text-white transition-colors">
+                      Mark Attendance
+                    </a>
+                  </li>
+                </>
+              ) : role === 'SUPER_ADMIN' ? (
+                <>
+                  <li>
+                    <a href="/super-admin" className="text-blue-200 hover:text-white transition-colors">
+                      Dashboard
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/super-admin" className="text-blue-200 hover:text-white transition-colors">
+                      Manage Admins
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/student-management" className="text-blue-200 hover:text-white transition-colors">
+                      Student Management
+                    </a>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <a href="/" className="text-blue-200 hover:text-white transition-colors">
+                      Login
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#about" className="text-blue-200 hover:text-white transition-colors">
+                      About Us
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#contact" className="text-blue-200 hover:text-white transition-colors">
+                      Contact Support
+                    </a>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 

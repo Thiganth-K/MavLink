@@ -6,4 +6,12 @@
 ✔ Add a search option to search students in view students page @done (11/19/2025, 7:49:46 PM)
 ✔ Footer creation @done (11/19/2025, 7:55:32 PM)
 ✔ Login Animation @done (11/19/2025, 7:30:51 PM)
+<<<<<<< HEAD
 ☐ nav bar and the footer need to be updated in the superadmin note the superadmin need to have a separate file for the footer and navbar and fix the allignments for them
+=======
+✔ Footer updation only sections available in the respective login @done (11/19/2025, 9:42:00 PM)
+✔ Logout toast and animation, remove bounce @done (11/19/2025, 10:18:51 PM)
+✔ View attendance day by day option @done (11/19/2025, 10:18:52 PM)
+✔ Add toggle FN/AN for attendance marking and update the database accordingly @done (11/20/2025, 1:00:12 AM)
+✔ Submission button in mark attendance page in bottom of the page and after taking attendance give a summary of attendance marked @done (11/19/2025, 10:41:07 PM)
+>>>>>>> e8144fd01a4c1334c17e4e2c352bf5c2f3be58af
