@@ -11,11 +11,11 @@ export interface LoginResponse {
 
 export interface Student {
   _id?: string;
-  name?: string;
+  regno?: string;
+  studentname?: string;
+  dept?: string;
   email?: string;
-  rollNumber?: string;
-  department?: string;
-  year?: number;
+  phno?: string;
   [key: string]: any;
 }
 
@@ -24,6 +24,45 @@ export interface Admin {
   username: string;
   password: string;
   role: string;
+}
+
+export interface BatchStudent {
+  name: string;
+  regno: string;
+  dept: string;
+  email: string;
+  mobile: string;
+}
+
+export interface Batch {
+  _id?: string;
+  batchName: string;
+  batchYear: number;
+  students: BatchStudent[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Attendance {
+  _id?: string;
+  studentId: string;
+  regno: string;
+  studentname: string;
+  date: Date | string;
+  status: 'Present' | 'Absent' | 'Late';
+  markedBy: string;
+  markedAt?: Date | string;
+}
+
+export interface AttendanceStats {
+  _id: string;
+  regno: string;
+  studentname: string;
+  totalClasses: number;
+  present: number;
+  absent: number;
+  late: number;
+  attendancePercentage: number;
 }
 
 // Authentication API
@@ -220,4 +259,143 @@ export const studentAPI = {
 
     return response.json();
   },
+};
+
+// Attendance API
+export const attendanceAPI = {
+  markAttendance: async (attendanceData: Omit<Attendance, '_id' | 'markedAt'>[], markedBy: string): Promise<{ message: string; results: any[] }> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attendanceData, markedBy }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByDate: async (date: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date?date=${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByStudent: async (studentId: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/student/${studentId}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch student attendance');
+    }
+
+    return response.json();
+  },
+
+  getAllAttendance: async (): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceStats: async (startDate?: string, endDate?: string): Promise<AttendanceStats[]> => {
+    let url = `${API_BASE_URL}/attendance/stats`;
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance statistics');
+    }
+
+    return response.json();
+  },
+
+  deleteAttendance: async (id: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete attendance record');
+    }
+
+    return response.json();
+  },
+};
+
+// Batch API
+export const batchAPI = {
+  getBatches: async (): Promise<Batch[]> => {
+    const res = await fetch(`${API_BASE_URL}/batches`);
+    if (!res.ok) throw new Error('Failed to fetch batches');
+    return res.json();
+  },
+  getBatch: async (id: string): Promise<Batch> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch batch');
+    return res.json();
+  },
+  createBatch: async (data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify(data)
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to create batch');
+    return body;
+  },
+  updateBatch: async (id: string, data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify(data)
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to update batch');
+    return body;
+  },
+  deleteBatch: async (id: string): Promise<{ message: string }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Role': localStorage.getItem('role') || ''
+      }
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to delete batch');
+    return body;
+  }
 };

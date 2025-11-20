@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, type Student } from '../services/api';
+import Footer from '../components/Footer';
 
 export default function StudentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -8,20 +9,20 @@ export default function StudentManagement() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    studentname: '',
     email: '',
-    rollNumber: '',
-    department: '',
-    year: ''
+    regno: '',
+    dept: '',
+    phno: ''
   });
   const [csvFile, setCsvFile] = useState<File | null>(null);
 
-  // Check if user is authenticated
+  // Check if user is authenticated (Legacy page - use AdminDashboard instead)
   useEffect(() => {
     const role = localStorage.getItem('role');
     const user = localStorage.getItem('user');
     
-    if (!user || (role !== 'SUPER_ADMIN' && role !== 'ADMIN')) {
+    if (!user || role !== 'ADMIN') {
       toast.error('Access denied. Admin privileges required.');
       window.location.href = '/';
       return;
@@ -45,20 +46,16 @@ export default function StudentManagement() {
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.email.trim()) {
-      toast.error('Please fill in required fields');
+    if (!formData.studentname.trim() || !formData.email.trim() || !formData.regno.trim() || !formData.dept.trim() || !formData.phno.trim()) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setIsLoading(true);
-      const studentData = {
-        ...formData,
-        year: formData.year ? parseInt(formData.year) : undefined
-      };
-      await studentAPI.createStudent(studentData);
+      await studentAPI.createStudent(formData);
       toast.success('Student created successfully');
-      setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+      setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
       setShowCreateForm(false);
       fetchStudents();
     } catch (error: any) {
@@ -71,20 +68,16 @@ export default function StudentManagement() {
   const handleUpdateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!editingStudent || !formData.name.trim() || !formData.email.trim()) {
-      toast.error('Please fill in required fields');
+    if (!editingStudent || !formData.studentname.trim() || !formData.email.trim() || !formData.regno.trim() || !formData.dept.trim() || !formData.phno.trim()) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setIsLoading(true);
-      const studentData = {
-        ...formData,
-        year: formData.year ? parseInt(formData.year) : undefined
-      };
-      await studentAPI.updateStudent(editingStudent._id!, studentData);
+      await studentAPI.updateStudent(editingStudent._id!, formData);
       toast.success('Student updated successfully');
-      setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+      setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
       setEditingStudent(null);
       fetchStudents();
     } catch (error: any) {
@@ -164,18 +157,18 @@ export default function StudentManagement() {
   const startEdit = (student: Student) => {
     setEditingStudent(student);
     setFormData({
-      name: student.name || '',
+      studentname: student.studentname || '',
       email: student.email || '',
-      rollNumber: student.rollNumber || '',
-      department: student.department || '',
-      year: student.year?.toString() || ''
+      regno: student.regno || '',
+      dept: student.dept || '',
+      phno: student.phno || ''
     });
     setShowCreateForm(false);
   };
 
   const cancelEdit = () => {
     setEditingStudent(null);
-    setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+    setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
   };
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -190,25 +183,15 @@ export default function StudentManagement() {
         <div className="bg-blue-950 rounded-xl shadow-xl p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-blue-50">Student Management</h1>
+              <h1 className="text-3xl font-bold text-blue-50">Student Management (Legacy)</h1>
               <p className="text-blue-200 mt-2">Welcome back, {user.username} ({role})</p>
             </div>
-            <div className="flex gap-4">
-              {role === 'SUPER_ADMIN' && (
-                <button
-                  onClick={() => window.location.href = '/super-admin'}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Admin Management
-                </button>
-              )}
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
@@ -244,7 +227,7 @@ export default function StudentManagement() {
                 onClick={() => {
                   setShowCreateForm(!showCreateForm);
                   setEditingStudent(null);
-                  setFormData({ name: '', email: '', rollNumber: '', department: '', year: '' });
+                  setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -267,11 +250,11 @@ export default function StudentManagement() {
               </h3>
               <form onSubmit={editingStudent ? handleUpdateStudent : handleCreateStudent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Name *</label>
+                  <label className="block text-blue-900 mb-1 font-medium">Student Name *</label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.studentname}
+                    onChange={(e) => setFormData({ ...formData, studentname: e.target.value })}
                     className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     required
                   />
@@ -287,32 +270,33 @@ export default function StudentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Roll Number</label>
+                  <label className="block text-blue-900 mb-1 font-medium">Registration Number *</label>
                   <input
                     type="text"
-                    value={formData.rollNumber}
-                    onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
+                    value={formData.regno}
+                    onChange={(e) => setFormData({ ...formData, regno: e.target.value })}
                     className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Department</label>
+                  <label className="block text-blue-900 mb-1 font-medium">Department *</label>
                   <input
                     type="text"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    value={formData.dept}
+                    onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
                     className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-blue-900 mb-1 font-medium">Year</label>
+                  <label className="block text-blue-900 mb-1 font-medium">Phone Number *</label>
                   <input
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    type="text"
+                    value={formData.phno}
+                    onChange={(e) => setFormData({ ...formData, phno: e.target.value })}
                     className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    min="1"
-                    max="4"
+                    required
                   />
                 </div>
                 <div className="flex gap-4 md:col-span-2">
@@ -342,11 +326,11 @@ export default function StudentManagement() {
             <table className="w-full border-collapse border border-blue-200">
               <thead>
                 <tr className="bg-blue-100">
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Name</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
                   <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Roll Number</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
                   <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Year</th>
+                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
                   <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -366,11 +350,11 @@ export default function StudentManagement() {
                 ) : (
                   students.map((student) => (
                     <tr key={student._id} className="hover:bg-blue-50">
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.name}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
                       <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.rollNumber}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.department}</td>
-                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.year}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.phno}</td>
                       <td className="border border-blue-200 px-4 py-3 text-center">
                         <div className="flex gap-2 justify-center">
                           <button
@@ -395,6 +379,8 @@ export default function StudentManagement() {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }
