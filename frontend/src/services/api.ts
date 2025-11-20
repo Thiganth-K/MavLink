@@ -459,7 +459,6 @@ export const attendanceAPI = {
 
     return response.json();
   },
-<<<<<<< HEAD
 
   getAttendanceByStudent: async (studentId: string): Promise<Attendance[]> => {
     const response = await fetch(`${API_BASE_URL}/attendance/student/${studentId}`);
@@ -559,6 +558,4 @@ export const batchAPI = {
     if (!res.ok) throw new Error(body.message || 'Failed to delete batch');
     return body;
   }
-=======
->>>>>>> e8144fd01a4c1334c17e4e2c352bf5c2f3be58af
 };
