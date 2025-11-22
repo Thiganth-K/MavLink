@@ -12,3 +12,19 @@
 ✔ Add toggle FN/AN for attendance marking and update the database accordingly @done (11/20/2025, 1:00:12 AM)
 ✔ Submission button in mark attendance page in bottom of the page and after taking attendance give a summary of attendance marked @done (11/19/2025, 10:41:07 PM)
 ☐ nav bar and the footer need to be updated in the superadmin note the superadmin need to have a separate file for the footer and navbar and fix the allignments for them
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+☐ need 5 design templates for the login page 
+☐ need 5 design remplates for the admin dashboard 
+☐ need 5 design templates for the superadmin dashboard 
+☐ recommendations for text fonts for the project (professional texts)
+☐ add a profile view feature for the admin 
+☐ the attendance marking page need to have a better design
+☐ the attendance view page need to view all day records 
+☐ the superadmin need to have graphical comparisions among the batches(depts)
+☐ the superadmin need to have a feature to export the student data and attendance data in excel 
+☐ the superadmin can able to map the admin to a particular batch(dept)
+☐ multiple admin can be mapped to the same batch(dept)
+☐ the superadmin to have a better admin administration panel to view all the admins and their mapped batches(depts)
+☐ the superadmin to have a better student administration panel to view all the students and their mapped batches(depts)
+☐ the superadmin to have a better batch management panel to view all the batches(depts) and their mapped admins and students
+--------------------------------------------------------------------------------------------------------------------------------------
