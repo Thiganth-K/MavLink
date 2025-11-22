@@ -1,14 +1,36 @@
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
+import Admin from "../models/Admin.js";
+import Batch from "../models/Batch.js";
 
 // ---------------- MARK ATTENDANCE ----------------
 export const markAttendance = async (req, res) => {
   try {
-    const { attendanceData, markedBy } = req.body;
+    const { attendanceData, markedBy, batchId } = req.body;
     // attendanceData is array of { studentId, regno, studentname, date, status }
 
     if (!attendanceData || !Array.isArray(attendanceData)) {
       return res.status(400).json({ message: "Invalid attendance data" });
+    }
+
+    // Authorization: ensure admin allowed for batch
+    const role = req.headers['x-role'];
+    if (role === 'ADMIN') {
+      const adminId = req.headers['x-admin-id'];
+      if (!adminId) return res.status(400).json({ message: 'x-admin-id header required' });
+      const admin = await Admin.findOne({ adminId });
+      if (!admin) return res.status(404).json({ message: 'Admin not found' });
+      if (!batchId) return res.status(400).json({ message: 'batchId required' });
+      if (!admin.assignedBatchIds.includes(batchId)) return res.status(403).json({ message: 'Admin not assigned to batch' });
+      // Optional deeper validation: ensure all students belong to batch snapshot
+      const batch = await Batch.findOne({ batchId });
+      if (!batch) return res.status(404).json({ message: 'Batch not found' });
+      const allowedRegnos = new Set(batch.students.map(s => s.regno.toUpperCase()));
+      for (const rec of attendanceData) {
+        if (!allowedRegnos.has((rec.regno || '').toUpperCase())) {
+          return res.status(403).json({ message: `Student ${rec.regno} not in batch ${batchId}` });
+        }
+      }
     }
 
     const results = [];
@@ -30,6 +52,7 @@ export const markAttendance = async (req, res) => {
             existingAttendance.status = status;
             existingAttendance.markedBy = markedBy;
             existingAttendance.markedAt = new Date();
+            if (batchId) existingAttendance.batchId = batchId;
             await existingAttendance.save();
             results.push({ studentId, status: "updated" });
           } else {
@@ -44,7 +67,8 @@ export const markAttendance = async (req, res) => {
             studentname,
             date: new Date(date),
             status,
-            markedBy
+            markedBy,
+            batchId: batchId || undefined
           });
           results.push({ studentId, status: "created" });
         }
@@ -66,7 +90,7 @@ export const markAttendance = async (req, res) => {
 // ---------------- GET ATTENDANCE BY DATE ----------------
 export const getAttendanceByDate = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, batchId } = req.query;
 
     if (!date) {
       return res.status(400).json({ message: "Date is required" });
@@ -78,9 +102,11 @@ export const getAttendanceByDate = async (req, res) => {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const attendance = await Attendance.find({
-      date: { $gte: startOfDay, $lte: endOfDay }
-    }).sort({ studentname: 1 });
+    const filter = { date: { $gte: startOfDay, $lte: endOfDay } };
+    if (batchId) {
+      filter.batchId = String(batchId).toUpperCase();
+    }
+    const attendance = await Attendance.find(filter).sort({ studentname: 1 });
 
     res.status(200).json(attendance);
   } catch (err) {
@@ -156,7 +182,7 @@ export const deleteAttendance = async (req, res) => {
 // ---------------- GET ATTENDANCE STATISTICS ----------------
 export const getAttendanceStats = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, batchId } = req.query;
 
     let dateFilter = {};
     if (startDate && endDate) {
@@ -167,8 +193,12 @@ export const getAttendanceStats = async (req, res) => {
       dateFilter = { date: { $gte: start, $lte: end } };
     }
 
+    const matchStage = { ...dateFilter };
+    if (batchId) {
+      matchStage.batchId = String(batchId).toUpperCase();
+    }
     const stats = await Attendance.aggregate([
-      { $match: dateFilter },
+      { $match: matchStage },
       {
         $group: {
           _id: "$studentId",

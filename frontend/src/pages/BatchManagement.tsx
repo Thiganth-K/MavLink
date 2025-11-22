@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { batchAPI, type Batch } from '../services/api';
+import { batchAPI, departmentAPI, superAdminAPI, type Batch } from '../services/api';
 
 interface Props {
 	onClose: () => void;
@@ -11,15 +11,37 @@ export default function BatchManagement({ onClose }: Props) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [showForm, setShowForm] = useState(false);
 	const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+	const [batchId, setBatchId] = useState('');
 	const [batchName, setBatchName] = useState('');
 	const [batchYear, setBatchYear] = useState<number | ''>('');
+	const [deptId, setDeptId] = useState('');
+	const [adminId, setAdminId] = useState('');
+	const [departments, setDepartments] = useState<{ deptId: string; deptName: string; _id?: string }[]>([]); // still loaded for validation but not shown
+	const [admins, setAdmins] = useState<any[]>([]);
 	const [studentsText, setStudentsText] = useState('');
 	const [previewCount, setPreviewCount] = useState(0);
 	const [previewError, setPreviewError] = useState<string | null>(null);
+	const [missingDeptMessage, setMissingDeptMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		loadBatches();
+		loadDepartments(); // used to validate inferred deptId exists
+		loadAdmins();
 	}, []);
+
+	const loadDepartments = async () => {
+		try {
+			const list = await departmentAPI.listDepartments();
+			setDepartments(list);
+		} catch (e: any) {}
+	};
+
+	const loadAdmins = async () => {
+		try {
+			const list = await superAdminAPI.getAdmins();
+			setAdmins(list);
+		} catch (e: any) {}
+	};
 
 	const loadBatches = async () => {
 		try {
@@ -33,34 +55,60 @@ export default function BatchManagement({ onClose }: Props) {
 		}
 	};
 
-	// Live preview of students
+	// Live preview of students & auto-detect deptId from first valid data line (skip header if present)
 	useEffect(() => {
 		if (!studentsText.trim()) {
 			setPreviewCount(0);
 			setPreviewError(null);
+			setMissingDeptMessage(null);
+			if (!editingBatch) setDeptId('');
 			return;
 		}
 		try {
-			const lines = studentsText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+			const rawLines = studentsText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+			let lines = [...rawLines];
+			// Detect and remove header line (e.g. name,regno,dept,email,mobile)
+			if (lines.length) {
+				const headerParts = lines[0].split(',').map(p => p.trim().toLowerCase());
+				if (headerParts[0] === 'name' && headerParts[1] === 'regno' && headerParts[2] === 'dept') {
+					lines = lines.slice(1); // drop header
+				}
+			}
 			let count = 0;
+			let firstDept: string | null = null;
 			for (const line of lines) {
 				const parts = line.split(',').map(p => p.trim());
 				if (parts.length !== 5 || parts.some(p => !p)) {
 					throw new Error(`Invalid line: ${line}`);
 				}
+				if (!firstDept) firstDept = parts[2].toUpperCase();
 				count++;
 			}
+			if (!editingBatch && firstDept) {
+				setDeptId(firstDept);
+				if (departments.length && !departments.find(d => d.deptId === firstDept)) {
+					// Inform instead of error; we'll auto-create on submit
+					setMissingDeptMessage(`Department ${firstDept} will be auto-created.`);
+				} else {
+					setMissingDeptMessage(null);
+				}
+			}
 			setPreviewCount(count);
-			setPreviewError(null);
+			if (!previewError) setPreviewError(null);
 		} catch (e: any) {
 			setPreviewError(e.message);
+			setMissingDeptMessage(null);
 			setPreviewCount(0);
 		}
-	}, [studentsText]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [studentsText, editingBatch, departments]);
 
 	const resetForm = () => {
+		setBatchId('');
 		setBatchName('');
 		setBatchYear('');
+		setDeptId('');
+		setAdminId('');
 		setStudentsText('');
 		setEditingBatch(null);
 		setShowForm(false);
@@ -78,13 +126,22 @@ export default function BatchManagement({ onClose }: Props) {
 			toast.error('Fix student list errors');
 			return;
 		}
+		// Auto-create department if flagged missing
+		if (!editingBatch && deptId && missingDeptMessage) {
+			try {
+				await departmentAPI.createDepartment(deptId, deptId);
+				toast.success(`Department ${deptId} created`);
+			} catch (e:any) {
+				// Ignore duplicate creation attempt
+			}
+		}
 		try {
 			setIsLoading(true);
 			if (editingBatch) {
-				await batchAPI.updateBatch(editingBatch._id!, { batchName, batchYear: Number(batchYear), studentsText });
+				await batchAPI.updateBatch(editingBatch._id!, { batchName, batchYear: Number(batchYear), deptId, adminId, studentsText });
 				toast.success('Batch updated');
 			} else {
-				await batchAPI.createBatch({ batchName, batchYear: Number(batchYear), studentsText });
+				await batchAPI.createBatch({ batchId, batchName, batchYear: Number(batchYear), deptId, adminId: adminId || undefined, studentsText });
 				toast.success('Batch created');
 			}
 			resetForm();
@@ -98,8 +155,11 @@ export default function BatchManagement({ onClose }: Props) {
 
 	const startEdit = (b: Batch) => {
 		setEditingBatch(b);
+		setBatchId(b.batchId || '');
 		setBatchName(b.batchName);
 		setBatchYear(b.batchYear);
+		setDeptId(b.deptId || '');
+		setAdminId(b.adminId || '');
 		setStudentsText(b.students.map(s => `${s.name},${s.regno},${s.dept},${s.email},${s.mobile}`).join('\n'));
 		setShowForm(true);
 	};
@@ -145,6 +205,17 @@ export default function BatchManagement({ onClose }: Props) {
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="grid md:grid-cols-2 gap-4">
 							<div>
+								<label className="block text-blue-900 mb-1 font-medium">Batch ID (unique)</label>
+								<input
+									type="text"
+									value={batchId}
+									onChange={(e) => setBatchId(e.target.value.toUpperCase())}
+									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+									required={!editingBatch}
+									disabled={!!editingBatch}
+								/>
+							</div>
+							<div>
 								<label className="block text-blue-900 mb-1 font-medium">Batch Name</label>
 								<input
 									type="text"
@@ -164,6 +235,27 @@ export default function BatchManagement({ onClose }: Props) {
 									required
 								/>
 							</div>
+							<div>
+								<label className="block text-blue-900 mb-1 font-medium">Department (auto)</label>
+								<input
+									type="text"
+									value={deptId}
+									readOnly
+									placeholder="Detected from students CSV"
+									className="w-full px-4 py-2 border border-dashed border-blue-300 bg-gray-50 rounded-lg focus:outline-none text-blue-700"
+								/>
+							</div>
+							<div>
+								<label className="block text-blue-900 mb-1 font-medium">Assign Admin (optional)</label>
+								<select
+									value={adminId}
+									onChange={(e) => setAdminId(e.target.value)}
+									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+								>
+									<option value="">None</option>
+									{admins.map(a => <option key={a._id} value={a.adminId}>{a.adminId} - {a.username}</option>)}
+								</select>
+							</div>
 						</div>
 						<div>
 							<label className="block text-blue-900 mb-1 font-medium">Students (CSV lines)</label>
@@ -175,10 +267,10 @@ export default function BatchManagement({ onClose }: Props) {
 								className="w-full px-4 py-2 border border-blue-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
 							/>
 							<div className="mt-2 text-sm">
-								{previewError ? (
-									<span className="text-red-600">{previewError}</span>
-								) : (
-									<span className="text-blue-700">Parsed students: {previewCount}</span>
+								{previewError && <span className="text-red-600">{previewError}</span>}
+								{!previewError && <span className="text-blue-700">Parsed students: {previewCount}</span>}
+								{missingDeptMessage && !previewError && (
+									<div className="text-amber-600 mt-1">{missingDeptMessage}</div>
 								)}
 							</div>
 						</div>
@@ -229,6 +321,13 @@ export default function BatchManagement({ onClose }: Props) {
 								<div>
 									<p className="text-blue-950 font-semibold leading-tight">{batch.batchName}</p>
 									<p className="text-sm text-blue-700">Year: {batch.batchYear}</p>
+									<p className="text-xs text-blue-600">Batch ID: {batch.batchId}</p>
+									{batch.deptId && <p className="text-xs text-blue-600">Dept: {batch.deptId}</p>}
+									{batch.adminId ? (
+										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Admin: {batch.adminId}</span>
+									) : (
+										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">No Admin</span>
+									)}
 									<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
 										{batch.students.length} students
 									</span>

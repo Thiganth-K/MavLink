@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { superAdminAPI, authAPI, type Admin } from '../services/api';
+import { superAdminAPI, authAPI, departmentAPI, batchAPI, type Admin } from '../services/api';
 
 import BatchManagement from './BatchManagement';
 import BatchViewer from './BatchViewer';
@@ -10,7 +10,10 @@ export default function SuperAdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ adminId: '', username: '', password: '' });
+  const [departments, setDepartments] = useState<{ deptId: string; deptName: string; _id?: string }[]>([]);
+  const [assignBatchId, setAssignBatchId] = useState('');
+  const [assignAdminId, setAssignAdminId] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showBatchPanel, setShowBatchPanel] = useState(false);
   const [showBatchViewerPanel, setShowBatchViewerPanel] = useState(false);
@@ -27,7 +30,17 @@ export default function SuperAdminDashboard() {
     }
     
     fetchAdmins();
+    fetchDepartments();
   }, []);
+  const fetchDepartments = async () => {
+    try {
+      const list = await departmentAPI.listDepartments();
+      setDepartments(list);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to load departments');
+    }
+  };
+
 
   const fetchAdmins = async () => {
     try {
@@ -51,9 +64,9 @@ export default function SuperAdminDashboard() {
 
     try {
       setIsLoading(true);
-      await superAdminAPI.createAdmin(formData.username, formData.password);
+      await superAdminAPI.createAdmin(formData.adminId, formData.username, formData.password);
       toast.success('Admin created successfully');
-      setFormData({ username: '', password: '' });
+      setFormData({ adminId: '', username: '', password: '' });
       setShowCreateForm(false);
       fetchAdmins();
     } catch (error: any) {
@@ -73,9 +86,9 @@ export default function SuperAdminDashboard() {
 
     try {
       setIsLoading(true);
-      await superAdminAPI.updateAdmin(editingAdmin._id!, formData.username, formData.password);
+      await superAdminAPI.updateAdmin(editingAdmin._id!, formData.adminId, formData.username, formData.password);
       toast.success('Admin updated successfully');
-      setFormData({ username: '', password: '' });
+      setFormData({ adminId: '', username: '', password: '' });
       setEditingAdmin(null);
       fetchAdmins();
     } catch (error: any) {
@@ -116,13 +129,13 @@ export default function SuperAdminDashboard() {
 
   const startEdit = (admin: Admin) => {
     setEditingAdmin(admin);
-    setFormData({ username: admin.username, password: admin.password });
+    setFormData({ adminId: admin.adminId || '', username: admin.username, password: admin.password });
     setShowCreateForm(false);
   };
 
   const cancelEdit = () => {
     setEditingAdmin(null);
-    setFormData({ username: '', password: '' });
+    setFormData({ adminId: '', username: '', password: '' });
   };
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -209,6 +222,17 @@ export default function SuperAdminDashboard() {
               </h3>
               <form onSubmit={editingAdmin ? handleUpdateAdmin : handleCreateAdmin} className="space-y-4">
                 <div>
+                  <label className="block text-blue-900 mb-1 font-medium">Admin ID (unique)</label>
+                  <input
+                    type="text"
+                    value={formData.adminId}
+                    onChange={(e) => setFormData({ ...formData, adminId: e.target.value.toUpperCase() })}
+                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                    disabled={!!editingAdmin}
+                  />
+                </div>
+                <div>
                   <label className="block text-blue-900 mb-1 font-medium">Username</label>
                   <input
                     type="text"
@@ -247,6 +271,59 @@ export default function SuperAdminDashboard() {
                   )}
                 </div>
               </form>
+              {/* Assign Admin To Batch (separate section) */}
+              <div className="bg-blue-50 p-6 rounded-lg mb-6 mt-8">
+                <h3 className="text-xl font-semibold text-blue-950 mb-4">Assign Admin To Batch</h3>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!assignBatchId || !assignAdminId) {
+                      toast.error('Select batch and admin');
+                      return;
+                    }
+                    try {
+                      await batchAPI.assignAdmin(assignBatchId, assignAdminId);
+                      toast.success('Admin assigned to batch');
+                      setAssignBatchId('');
+                      setAssignAdminId('');
+                      fetchAdmins();
+                    } catch (err: any) {
+                      toast.error(err.message || 'Assignment failed');
+                    }
+                  }}
+                  className="grid md:grid-cols-3 gap-4 items-end"
+                >
+                  <div>
+                    <label className="block text-blue-900 mb-1 font-medium">Batch ID</label>
+                    <input
+                      type="text"
+                      value={assignBatchId}
+                      onChange={(e) => setAssignBatchId(e.target.value.toUpperCase())}
+                      className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="e.g. BATCH2025A"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-blue-900 mb-1 font-medium">Admin ID</label>
+                    <select
+                      value={assignAdminId}
+                      onChange={(e) => setAssignAdminId(e.target.value)}
+                      className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="">Select Admin</option>
+                      {admins.map(a => (
+                        <option key={a._id} value={a.adminId}>{a.adminId} - {a.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >Assign</button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 

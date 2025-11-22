@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+// Use environment override if provided, fallback to backend default port 3000
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 // Types for API responses
 export interface LoginResponse {
@@ -6,6 +7,8 @@ export interface LoginResponse {
   role: 'SUPER_ADMIN' | 'ADMIN';
   user: {
     username: string;
+    adminId?: string;
+    assignedBatchIds?: string[];
   };
 }
 
@@ -24,6 +27,8 @@ export interface Admin {
   username: string;
   password: string;
   role: string;
+  adminId?: string;
+  assignedBatchIds?: string[];
 }
 
 export interface BatchStudent {
@@ -36,8 +41,11 @@ export interface BatchStudent {
 
 export interface Batch {
   _id?: string;
+  batchId?: string;
   batchName: string;
   batchYear: number;
+  deptId?: string;
+  adminId?: string;
   students: BatchStudent[];
   createdAt?: string;
   updatedAt?: string;
@@ -102,13 +110,13 @@ export const authAPI = {
 
 // Super Admin API
 export const superAdminAPI = {
-  createAdmin: async (username: string, password: string): Promise<{ message: string; admin: Admin }> => {
+  createAdmin: async (adminId: string, username: string, password: string): Promise<{ message: string; admin: Admin }> => {
     const response = await fetch(`${API_BASE_URL}/superadmin/admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ adminId, username, password }),
     });
 
     if (!response.ok) {
@@ -129,13 +137,13 @@ export const superAdminAPI = {
     return response.json();
   },
 
-  updateAdmin: async (id: string, username: string, password: string): Promise<{ message: string; admin: Admin }> => {
+  updateAdmin: async (id: string, adminId: string, username: string, password: string): Promise<{ message: string; admin: Admin }> => {
     const response = await fetch(`${API_BASE_URL}/superadmin/admin/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ adminId, username, password }),
     });
 
     if (!response.ok) {
@@ -196,8 +204,9 @@ export const studentAPI = {
     return response.json();
   },
 
-  getStudents: async (): Promise<Student[]> => {
-    const response = await fetch(`${API_BASE_URL}/students`);
+  getStudents: async (batchId?: string): Promise<Student[]> => {
+    const url = batchId ? `${API_BASE_URL}/students?batchId=${encodeURIComponent(batchId)}` : `${API_BASE_URL}/students`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch students');
@@ -263,13 +272,24 @@ export const studentAPI = {
 
 // Attendance API
 export const attendanceAPI = {
-  markAttendance: async (attendanceData: Omit<Attendance, '_id' | 'markedAt'>[], markedBy: string): Promise<{ message: string; results: any[] }> => {
+  markAttendance: async (
+    attendanceData: Omit<Attendance, '_id' | 'markedAt'>[],
+    markedBy: string,
+    batchId?: string
+  ): Promise<{ message: string; results: any[] }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try {
+      adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
+    } catch {}
     const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || '',
+        'X-Admin-Id': adminId || ''
       },
-      body: JSON.stringify({ attendanceData, markedBy }),
+      body: JSON.stringify({ attendanceData, markedBy, batchId }),
     });
 
     if (!response.ok) {
@@ -280,8 +300,10 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  getAttendanceByDate: async (date: string): Promise<Attendance[]> => {
-    const response = await fetch(`${API_BASE_URL}/attendance/date?date=${date}`);
+  getAttendanceByDate: async (date: string, batchId?: string): Promise<Attendance[]> => {
+    let url = `${API_BASE_URL}/attendance/date?date=${date}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -320,11 +342,12 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  getAttendanceStats: async (startDate?: string, endDate?: string): Promise<AttendanceStats[]> => {
-    let url = `${API_BASE_URL}/attendance/stats`;
-    if (startDate && endDate) {
-      url += `?startDate=${startDate}&endDate=${endDate}`;
-    }
+  getAttendanceStats: async (startDate?: string, endDate?: string, batchId?: string): Promise<AttendanceStats[]> => {
+    const params: string[] = [];
+    if (startDate && endDate) params.push(`startDate=${startDate}`, `endDate=${endDate}`);
+    if (batchId) params.push(`batchId=${encodeURIComponent(batchId)}`);
+    const query = params.length ? `?${params.join('&')}` : '';
+    let url = `${API_BASE_URL}/attendance/stats${query}`;
 
     const response = await fetch(url);
 
@@ -361,7 +384,7 @@ export const batchAPI = {
     if (!res.ok) throw new Error('Failed to fetch batch');
     return res.json();
   },
-  createBatch: async (data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+  createBatch: async (data: { batchId: string; batchName: string; batchYear: number; deptId: string; adminId?: string; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
     const res = await fetch(`${API_BASE_URL}/batches`, {
       method: 'POST',
       headers: {
@@ -374,7 +397,7 @@ export const batchAPI = {
     if (!res.ok) throw new Error(body.message || 'Failed to create batch');
     return body;
   },
-  updateBatch: async (id: string, data: { batchName: string; batchYear: number; studentsText: string }): Promise<{ message: string; batch: Batch }> => {
+  updateBatch: async (id: string, data: { batchName?: string; batchYear?: number; deptId?: string; adminId?: string; studentsText?: string }): Promise<{ message: string; batch: Batch }> => {
     const res = await fetch(`${API_BASE_URL}/batches/${id}`, {
       method: 'PUT',
       headers: {
@@ -397,5 +420,40 @@ export const batchAPI = {
     const body = await res.json();
     if (!res.ok) throw new Error(body.message || 'Failed to delete batch');
     return body;
+  },
+  assignAdmin: async (batchId: string, adminId: string): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/assign-admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify({ batchId, adminId })
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to assign admin');
+    return body;
+  }
+};
+
+// Department API
+export const departmentAPI = {
+  createDepartment: async (deptId: string, deptName: string) => {
+    const res = await fetch(`${API_BASE_URL}/departments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify({ deptId, deptName })
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to create department');
+    return body;
+  },
+  listDepartments: async () => {
+    const res = await fetch(`${API_BASE_URL}/departments`);
+    if (!res.ok) throw new Error('Failed to fetch departments');
+    return res.json();
   }
 };

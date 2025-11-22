@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance } from '../services/api';
+import { studentAPI, authAPI, attendanceAPI, batchAPI, type Student, type Attendance, type Batch } from '../services/api';
 import Footer from '../components/Footer';
 
 export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [assignedBatches, setAssignedBatches] = useState<Batch[]>([]);
+  const [activeBatchId, setActiveBatchId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'students' | 'attendance' | 'mark'>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,15 +28,32 @@ export default function AdminDashboard() {
       return;
     }
     
-    fetchStudents();
+    fetchAssignedBatches();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchAssignedBatches = async () => {
+    try {
+      // Admin sees only assigned batches by filtering getBatches
+      const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
+      const all = await batchAPI.getBatches();
+      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
+      setAssignedBatches(mine);
+      if (mine.length > 0) {
+        setActiveBatchId(mine[0].batchId || '');
+        fetchStudents(mine[0].batchId || '');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to load batches');
+    }
+  };
+
+  const fetchStudents = async (batchId?: string) => {
     try {
       setIsLoading(true);
-      const studentList = await studentAPI.getStudents();
+      const studentList = await studentAPI.getStudents(batchId);
+      const filtered = studentList; // already filtered server-side if batchId provided
       // Sort students by registration number
-      const sortedStudents = studentList.sort((a, b) => 
+      const sortedStudents = filtered.sort((a, b) => 
         (a.regno || '').localeCompare(b.regno || '')
       );
       setStudents(sortedStudents);
@@ -49,8 +68,11 @@ export default function AdminDashboard() {
   const fetchAttendance = async () => {
     try {
       setIsLoading(true);
-      const records = await attendanceAPI.getAttendanceByDate(selectedDate);
-      setAttendanceRecords(records);
+      const records = await attendanceAPI.getAttendanceByDate(selectedDate, activeBatchId || undefined);
+      // Filter records to active batch students only
+      const allowedRegnos = new Set(students.map(s => (s.regno || '').toUpperCase()));
+      const filtered = records.filter(r => allowedRegnos.has((r.regno || '').toUpperCase()));
+      setAttendanceRecords(filtered);
       
       // If in mark attendance tab, populate the attendance map with existing data
       if (activeTab === 'mark') {
@@ -80,7 +102,7 @@ export default function AdminDashboard() {
 
     try {
       setIsLoading(true);
-      await attendanceAPI.markAttendance(attendanceData, user.username);
+      await attendanceAPI.markAttendance(attendanceData.map(d => ({ ...d })), user.username, activeBatchId);
       toast.success('Attendance marked successfully');
       setAttendanceMap({});
       setActiveTab('attendance');
@@ -161,6 +183,21 @@ export default function AdminDashboard() {
       toast.error('Logout failed');
     }
   };
+
+  // Reusable batch selector component
+  const batchSelector = (
+    <div className="mb-4">
+      <label className="text-blue-900 font-medium mr-2">Batch:</label>
+      <select
+        value={activeBatchId}
+        onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchStudents(v); fetchAttendance(); }}
+        className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      >
+        {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
+        {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
+      </select>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
@@ -359,6 +396,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-xl p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-blue-950">Students List</h2>
+              {batchSelector}
             </div>
 
             {/* Students Table */}
@@ -416,6 +454,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+                {batchSelector}
               </div>
             </div>
 
@@ -489,6 +528,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+                {batchSelector}
                 <button
                   onClick={handleMarkAttendance}
                   disabled={isLoading}
