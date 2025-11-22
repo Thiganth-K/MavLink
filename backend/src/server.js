@@ -9,6 +9,7 @@ import superAdminRoutes from '../src/routes/superAdminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import batchRoutes from './routes/batchRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
 
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/batches', batchRoutes);
+app.use('/api/departments', departmentRoutes);
 // Simple test route
 app.get('/', (req, res) => {
   res.send('Server is up and running');

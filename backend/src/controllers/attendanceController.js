@@ -1,13 +1,15 @@
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
-import { parseISTDate, getNextISTDay, getISTTimestamp } from "../utils/dateUtils.js";
+import Admin from "../models/Admin.js";
+import Batch from "../models/Batch.js";
 
 // ============================================================
 // MARK ATTENDANCE FOR A SPECIFIC SESSION
 // ============================================================
 export const markAttendance = async (req, res) => {
   try {
-    const { attendanceData, markedBy } = req.body;
+    const { attendanceData, markedBy, batchId } = req.body;
+    // attendanceData is array of { studentId, regno, studentname, date, status }
 
     // Validate request body
     if (!attendanceData || !Array.isArray(attendanceData)) {
@@ -22,6 +24,26 @@ export const markAttendance = async (req, res) => {
         success: false,
         message: "markedBy is required and must be a string"
       });
+    }
+
+    // Authorization: ensure admin allowed for batch
+    const role = req.headers['x-role'];
+    if (role === 'ADMIN') {
+      const adminId = req.headers['x-admin-id'];
+      if (!adminId) return res.status(400).json({ message: 'x-admin-id header required' });
+      const admin = await Admin.findOne({ adminId });
+      if (!admin) return res.status(404).json({ message: 'Admin not found' });
+      if (!batchId) return res.status(400).json({ message: 'batchId required' });
+      if (!admin.assignedBatchIds.includes(batchId)) return res.status(403).json({ message: 'Admin not assigned to batch' });
+      // Optional deeper validation: ensure all students belong to batch snapshot
+      const batch = await Batch.findOne({ batchId });
+      if (!batch) return res.status(404).json({ message: 'Batch not found' });
+      const allowedRegnos = new Set(batch.students.map(s => s.regno.toUpperCase()));
+      for (const rec of attendanceData) {
+        if (!allowedRegnos.has((rec.regno || '').toUpperCase())) {
+          return res.status(403).json({ message: `Student ${rec.regno} not in batch ${batchId}` });
+        }
+      }
     }
 
     const results = [];
@@ -74,7 +96,8 @@ export const markAttendance = async (req, res) => {
           if (existingAttendance.status !== status) {
             existingAttendance.status = status;
             existingAttendance.markedBy = markedBy;
-            existingAttendance.markedAt = getISTTimestamp();
+            existingAttendance.markedAt = new Date();
+            if (batchId) existingAttendance.batchId = batchId;
             await existingAttendance.save();
             
             results.push({
@@ -106,16 +129,7 @@ export const markAttendance = async (req, res) => {
             session,
             status,
             markedBy,
-            markedAt: getISTTimestamp()
-          });
-
-          results.push({
-            studentId,
-            regno,
-            studentname,
-            session,
-            status: 'created',
-            attendanceStatus: status
+            batchId: batchId || undefined
           });
         }
       } catch (err) {
@@ -152,7 +166,7 @@ export const markAttendance = async (req, res) => {
 // ============================================================
 export const getAttendanceByDate = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, batchId } = req.query;
 
     if (!date) {
       return res.status(400).json({
@@ -173,21 +187,11 @@ export const getAttendanceByDate = async (req, res) => {
       }
     }).sort({ session: 1, studentname: 1 }); // Sort by session first, then name
 
-    // Separate by session
-    const fnRecords = attendanceRecords.filter(r => r.session === 'FN');
-    const anRecords = attendanceRecords.filter(r => r.session === 'AN');
-
-    return res.status(200).json({
-      success: true,
-      message: `Found ${attendanceRecords.length} total attendance records for ${date}`,
-      data: attendanceRecords,
-      summary: {
-        date: date,
-        totalRecords: attendanceRecords.length,
-        fnCount: fnRecords.length,
-        anCount: anRecords.length
-      }
-    });
+    const filter = { date: { $gte: startOfDay, $lte: endOfDay } };
+    if (batchId) {
+      filter.batchId = String(batchId).toUpperCase();
+    }
+    const attendance = await Attendance.find(filter).sort({ studentname: 1 });
 
   } catch (error) {
     console.error("Error in getAttendanceByDate:", error);
@@ -400,7 +404,7 @@ export const getAttendanceByDateRange = async (req, res) => {
 // ============================================================
 export const getAttendanceByDateSummary = async (req, res) => {
   try {
-    const { dates } = req.query;
+    const { startDate, endDate, batchId } = req.query;
 
     if (!dates) {
       return res.status(400).json({
@@ -409,18 +413,27 @@ export const getAttendanceByDateSummary = async (req, res) => {
       });
     }
 
-    const dateArray = dates.split(',').map(d => d.trim());
-
-    const summaries = [];
-
-    for (const dateStr of dateArray) {
-      const attendanceDate = parseISTDate(dateStr);
-      const nextDate = getNextISTDay(attendanceDate);
-
-      const records = await Attendance.find({
-        date: {
-          $gte: attendanceDate,
-          $lt: nextDate
+    const matchStage = { ...dateFilter };
+    if (batchId) {
+      matchStage.batchId = String(batchId).toUpperCase();
+    }
+    const stats = await Attendance.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$studentId",
+          regno: { $first: "$regno" },
+          studentname: { $first: "$studentname" },
+          totalClasses: { $sum: 1 },
+          present: {
+            $sum: { $cond: [{ $eq: ["$status", "Present"] }, 1, 0] }
+          },
+          absent: {
+            $sum: { $cond: [{ $eq: ["$status", "Absent"] }, 1, 0] }
+          },
+          late: {
+            $sum: { $cond: [{ $eq: ["$status", "Late"] }, 1, 0] }
+          }
         }
       });
 

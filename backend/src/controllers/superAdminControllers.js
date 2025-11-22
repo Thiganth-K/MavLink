@@ -30,16 +30,17 @@ export const loginController = async (req, res) => {
   return res.status(200).json({
     message: "Admin login successful",
     role: adminUser.role,
-    user: { username: adminUser.username }
+    user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
   });
 };
 
 // ---------- CREATE ADMIN ----------
 export const createAdmin = async (req, res) => {
-  const { username, password } = req.body;
+  const { adminId, username, password } = req.body;
 
   try {
     const newAdmin = await Admin.create({
+      adminId,
       username,
       password,
       role: "ADMIN"
@@ -67,12 +68,16 @@ export const getAdmins = async (req, res) => {
 // ---------- UPDATE ADMIN ----------
 export const updateAdmin = async (req, res) => {
   const { id } = req.params;
-  const { username, password } = req.body;
+  const { username, password, adminId } = req.body;
 
   try {
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (password) updateFields.password = password;
+    if (adminId) updateFields.adminId = adminId;
     const updated = await Admin.findByIdAndUpdate(
       id,
-      { username, password },
+      updateFields,
       { new: true }
     );
 

@@ -28,6 +28,15 @@ const attendanceSchema = new mongoose.Schema({
     },
     required: [true, "Session is required"]
   },
+  batchId: {
+    type: String,
+    index: true,
+    trim: true,
+    uppercase: true
+  },
+  regno: { type: String, required: true },
+  studentname: { type: String, required: true },
+  date: { type: Date, required: true },
   status: {
     type: String,
     enum: {
@@ -49,13 +58,8 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true // Adds createdAt and updatedAt
 });
 
-// Compound unique index: one student can have only one FN and one AN record per day
-attendanceSchema.index({ studentId: 1, date: 1, session: 1 }, { unique: true });
-
-// Index for faster queries by date
-attendanceSchema.index({ date: 1, session: 1 });
-
-// Index for faster queries by student
-attendanceSchema.index({ studentId: 1, session: 1 });
+// Create compound index for student and date to prevent duplicate entries
+attendanceSchema.index({ studentId: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ batchId: 1, date: 1 });
 
 export default mongoose.model("Attendance", attendanceSchema);
