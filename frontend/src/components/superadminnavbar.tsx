@@ -16,8 +16,10 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
+              // preserve logout animation flag so the app can play the exit animation
               localStorage.removeItem('user');
               localStorage.removeItem('role');
+              try { localStorage.setItem('showLogoutAnimation', 'true'); } catch (e) {}
               window.location.href = '/';
             }}
             className="bg-red-600 hover:bg-red-700 transition-colors rounded-lg font-medium px-4 py-2"

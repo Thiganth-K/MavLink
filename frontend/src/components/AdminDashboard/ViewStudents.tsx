@@ -14,24 +14,28 @@ export default function ViewStudents() {
 
   const fetchAssignedBatches = async () => {
     try {
+      (window as any).showGlobalLoader?.();
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
       setAssignedBatches(mine);
       if (mine.length > 0) {
         setActiveBatchId(mine[0].batchId || '');
-        fetchStudents(mine[0].batchId || '');
+        await fetchStudents(mine[0].batchId || '');
       } else {
         // fallback to assigned students endpoint
-        fetchStudents();
+        await fetchStudents();
       }
     } catch (e: any) {
       toast.error(e.message || 'Failed to load batches');
+    } finally {
+      (window as any).hideGlobalLoader?.();
     }
   };
 
   const fetchStudents = async (batchId?: string) => {
     try {
+      (window as any).showGlobalLoader?.();
       setIsLoading(true);
       let studentList;
       if (!batchId) {
@@ -46,6 +50,7 @@ export default function ViewStudents() {
       setStudents([]);
     } finally {
       setIsLoading(false);
+      (window as any).hideGlobalLoader?.();
     }
   };
 

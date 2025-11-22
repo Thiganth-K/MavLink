@@ -64,6 +64,7 @@ export default function ViewAttendance() {
 
   const fetchAssignedBatches = async () => {
     try {
+      (window as any).showGlobalLoader?.();
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
@@ -71,11 +72,14 @@ export default function ViewAttendance() {
       if (mine.length > 0) setActiveBatchId(mine[0].batchId || '');
     } catch (e: any) {
       // silently continue
+    } finally {
+      (window as any).hideGlobalLoader?.();
     }
   };
 
   const fetchAttendanceSummary = async (days = 30) => {
     try {
+      (window as any).showGlobalLoader?.();
       setIsLoading(true);
       const dates: string[] = [];
       const today = new Date();
@@ -89,11 +93,14 @@ export default function ViewAttendance() {
       }
       const resp = await attendanceAPI.getAttendanceByDateSummary(dates);
       setAttendanceSummary(resp.data || []);
+      // If the overlay is visible, force-hide it now that summary is set (avoid long overlay specifically for this page)
+      (window as any).hideGlobalLoaderImmediate?.();
     } catch (e: any) {
       console.error('Failed to load attendance summary', e);
       setAttendanceSummary([]);
     } finally {
       setIsLoading(false);
+      (window as any).hideGlobalLoader?.();
     }
   };
 
@@ -108,17 +115,21 @@ export default function ViewAttendance() {
   const handleCardClick = async (date: string) => {
     try {
       setSelectedDateForDetail(date);
+      (window as any).showGlobalLoader?.();
       setIsLoading(true);
       const data: any = await attendanceAPI.getAttendanceByDate(date, activeBatchId || undefined);
       const fn = Array.isArray(data.FN) ? data.FN.map((e: any) => ({ ...e, session: 'FN' as const })) : [];
       const an = Array.isArray(data.AN) ? data.AN.map((e: any) => ({ ...e, session: 'AN' as const })) : [];
       const combined = [...fn, ...an];
       setAttendanceRecords(combined as Attendance[]);
+      // hide overlay immediately after records set so cards can show without extra wait
+      (window as any).hideGlobalLoaderImmediate?.();
     } catch (e) {
       console.error('Failed to load attendance details', e);
       setAttendanceRecords([]);
     } finally {
       setIsLoading(false);
+      (window as any).hideGlobalLoader?.();
     }
   };
 
@@ -159,7 +170,8 @@ export default function ViewAttendance() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-12 text-blue-600">Loading attendance summary...</div>
+            // overlay loader handles the loading animation now — do not show textual loading
+            <div className="text-center py-8" />
           ) : attendanceSummary.length === 0 ? (
             <div className="bg-white rounded-xl shadow-xl p-12 text-center">
               <p className="text-blue-600 text-lg">No attendance records found in the last 30 days</p>

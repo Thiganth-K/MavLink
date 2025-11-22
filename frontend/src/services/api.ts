@@ -289,6 +289,39 @@ export const studentAPI = {
     return response.json();
   },
 
+  /**
+   * Search students by regno or studentname (case-insensitive).
+   * Uses assigned students for admins if available to scope results.
+   */
+  searchStudents: async (query: string): Promise<Student[]> => {
+    if (!query || !String(query).trim()) return [];
+    const q = String(query).trim().toLowerCase();
+
+    try {
+      // Prefer assigned students (scoped to admin) so admins only search their students
+      const assigned = await studentAPI.getAssignedStudents();
+      const pool = Array.isArray(assigned) && assigned.length ? assigned : await studentAPI.getStudents();
+
+      return pool.filter(s => {
+        const regno = String(s.regno || '').toLowerCase();
+        const name = String(s.studentname || '').toLowerCase();
+        return regno.includes(q) || name.includes(q);
+      });
+    } catch (err) {
+      // Fallback to unscoped search if assigned fetch fails
+      try {
+        const all = await studentAPI.getStudents();
+        return all.filter(s => {
+          const regno = String(s.regno || '').toLowerCase();
+          const name = String(s.studentname || '').toLowerCase();
+          return regno.includes(q) || name.includes(q);
+        });
+      } catch (error) {
+        return [];
+      }
+    }
+  },
+
   getStudentById: async (id: string): Promise<Student> => {
     const response = await fetch(`${API_BASE_URL}/students/${id}`);
 
