@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, authAPI, attendanceAPI, batchAPI, type Student, type Attendance, type Batch } from '../services/api';
+import { studentAPI, authAPI, attendanceAPI, type Student, type Attendance, type AttendanceSummary, type CombinedAttendanceSummary } from '../services/api';
+import { getTodayIST, getLastNDaysIST, formatDateForDisplay } from '../utils/dateUtils';
 import Footer from '../components/Footer';
+import ViewStudents from '../components/AdminDashboard/ViewStudents';
+import ViewAttendance from '../components/AdminDashboard/ViewAttendance';
+import MarkAttendance from '../components/AdminDashboard/MarkAttendance';
 
 export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -14,8 +19,13 @@ export default function AdminDashboard() {
   
   // Attendance states
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'Late' }>({});
+  const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary[]>([]);
+  const [selectedDateForDetail, setSelectedDateForDetail] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(getTodayIST());
+  const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
+  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'On-Duty' }>({});
+  const [showSummary, setShowSummary] = useState(false);
+  const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; total: number } | null>(null);
 
   // Check if user is authenticated as ADMIN (not SUPER_ADMIN)
   useEffect(() => {
@@ -29,6 +39,26 @@ export default function AdminDashboard() {
     }
     
     fetchAssignedBatches();
+    fetchStudents();
+    
+    // Handle hash-based navigation
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['home', 'students', 'attendance', 'mark'].includes(hash)) {
+      setActiveTab(hash as 'home' | 'students' | 'attendance' | 'mark');
+    }
+  }, []);
+
+  // Listen for hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && ['home', 'students', 'attendance', 'mark'].includes(hash)) {
+        setActiveTab(hash as 'home' | 'students' | 'attendance' | 'mark');
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const fetchAssignedBatches = async () => {
@@ -74,16 +104,88 @@ export default function AdminDashboard() {
       const filtered = records.filter(r => allowedRegnos.has((r.regno || '').toUpperCase()));
       setAttendanceRecords(filtered);
       
-      // If in mark attendance tab, populate the attendance map with existing data
-      if (activeTab === 'mark') {
-        const existingAttendance: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
-        records.forEach(record => {
-          existingAttendance[record.studentId] = record.status;
-        });
-        setAttendanceMap(existingAttendance);
-      }
+      // Fetch only the selected session's records for mark attendance
+      const sessionRecords = await attendanceAPI.getAttendanceByDateAndSession(selectedDate, selectedSession);
+      setAttendanceRecords(sessionRecords);
+      
+      // Populate the attendance map with existing session data
+      const newAttendanceMap: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
+      sessionRecords.forEach(record => {
+        newAttendanceMap[record.studentId] = record.status;
+      });
+      
+      setAttendanceMap(newAttendanceMap);
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch attendance');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAttendanceSummary = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get last 30 days in IST
+      const dates = getLastNDaysIST(30);
+      
+      const response = await attendanceAPI.getAttendanceByDateSummary(dates);
+      
+      // Transform API response to match frontend interface
+      const transformedSummary: AttendanceSummary[] = response.data.map(item => ({
+        date: item.date,
+        FN: {
+          total: item.FN.total,
+          present: item.FN.present,
+          absent: item.FN.absent,
+          onDuty: item.FN.onDuty
+        },
+        AN: {
+          total: item.AN.total,
+          present: item.AN.present,
+          absent: item.AN.absent,
+          onDuty: item.AN.onDuty
+        }
+      }));
+      
+      // Filter out dates with no attendance
+      const filtered = transformedSummary.filter(s => s.FN.total > 0 || s.AN.total > 0);
+      setAttendanceSummary(filtered);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch attendance summary');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to combine FN and AN sessions by date for display
+  const getCombinedSummary = (): CombinedAttendanceSummary[] => {
+    return attendanceSummary.map(summary => ({
+      date: summary.date,
+      fn: {
+        total: summary.FN.total,
+        present: summary.FN.present,
+        absent: summary.FN.absent,
+        onDuty: summary.FN.onDuty
+      },
+      an: {
+        total: summary.AN.total,
+        present: summary.AN.present,
+        absent: summary.AN.absent,
+        onDuty: summary.AN.onDuty
+      }
+    })).sort((a, b) => b.date.localeCompare(a.date));
+  };
+
+  const handleCardClick = async (date: string) => {
+    setSelectedDateForDetail(date);
+    try {
+      setIsLoading(true);
+      // Fetch all sessions (FN and AN) for the selected date
+      const records = await attendanceAPI.getAttendanceByDate(date);
+      setAttendanceRecords(records);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch attendance details');
     } finally {
       setIsLoading(false);
     }
@@ -96,8 +198,8 @@ export default function AdminDashboard() {
       regno: student.regno!,
       studentname: student.studentname!,
       date: selectedDate,
-      status: attendanceMap[student._id!] || 'Absent',
-      markedBy: user.username
+      session: selectedSession,
+      status: attendanceMap[student._id!] || 'Absent'
     }));
 
     try {
@@ -107,6 +209,32 @@ export default function AdminDashboard() {
       setAttendanceMap({});
       setActiveTab('attendance');
       fetchAttendance();
+      const response = await attendanceAPI.markAttendance(attendanceData, user.username);
+      
+      console.log('Mark Attendance Response:', response);
+      
+      // Calculate summary
+      const summary = {
+        total: students.length,
+        present: attendanceData.filter(a => a.status === 'Present').length,
+        absent: attendanceData.filter(a => a.status === 'Absent').length,
+        onDuty: attendanceData.filter(a => a.status === 'On-Duty').length
+      };
+      
+      setSubmittedSummary(summary);
+      setShowSummary(true);
+      toast.success(`${selectedSession} Attendance marked successfully for ${formatDateForDisplay(selectedDate)}`);
+      
+      // Refresh only the current session's data (optimized)
+      await fetchAttendance();
+      
+      // Refresh attendance summary for view attendance section
+      await fetchAttendanceSummary();
+      
+      // Scroll to summary
+      setTimeout(() => {
+        document.getElementById('attendance-summary')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } catch (error: any) {
       toast.error(error.message || 'Failed to mark attendance');
     } finally {
@@ -114,12 +242,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'Late') => {
+  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'On-Duty') => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
   };
 
   const handleMarkAllPresent = () => {
-    const allPresent: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
+    const allPresent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
     students.forEach(student => {
       allPresent[student._id!] = 'Present';
     });
@@ -128,12 +256,17 @@ export default function AdminDashboard() {
   };
 
   const handleMarkAllAbsent = () => {
-    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'Late' } = {};
+    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
     students.forEach(student => {
       allAbsent[student._id!] = 'Absent';
     });
     setAttendanceMap(allAbsent);
     toast.success('Marked all students as Absent');
+  };
+
+  const handleClearAll = () => {
+    setAttendanceMap({});
+    toast.success('Cleared all attendance selections');
   };
 
   const handleSearch = (query: string) => {
@@ -157,27 +290,36 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (activeTab === 'attendance' || activeTab === 'mark') {
-      // Reset to today's date when switching to attendance or mark tabs
-      const today = new Date().toISOString().split('T')[0];
-      setSelectedDate(today);
+    if (activeTab === 'attendance') {
+      // Fetch attendance summary when switching to attendance tab
+      fetchAttendanceSummary();
+      setSelectedDateForDetail(null); // Reset detail view
+    } else if (activeTab === 'mark') {
+      // Reset to today's date when switching to mark tab
+      setSelectedDate(getTodayIST());
+      setShowSummary(false); // Reset summary view
+      setSubmittedSummary(null);
+      // Fetch session-specific data
       fetchAttendance();
     }
   }, [activeTab]);
 
   useEffect(() => {
-    // Fetch attendance when date changes (but only if on attendance/mark tabs)
-    if (activeTab === 'attendance' || activeTab === 'mark') {
+    // Fetch session-specific attendance when date or session changes
+    if (activeTab === 'mark') {
+      // Clear map and fetch only the selected session's data
+      setAttendanceMap({});
+      setShowSummary(false); // Hide previous summary
       fetchAttendance();
     }
-  }, [selectedDate]);
+  }, [selectedDate, selectedSession]);
 
   const handleLogout = async () => {
     try {
       await authAPI.logout();
       localStorage.removeItem('user');
       localStorage.removeItem('role');
-      toast.success('Logged out successfully');
+      localStorage.setItem('showLogoutAnimation', 'true');
       window.location.href = '/';
     } catch (error: any) {
       toast.error('Logout failed');
@@ -439,6 +581,7 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
+          <ViewStudents students={students} isLoading={isLoading} />
         )}
 
         {/* View Attendance Section */}
@@ -506,6 +649,18 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
+          <ViewAttendance
+            isLoading={isLoading}
+            attendanceSummary={attendanceSummary}
+            attendanceRecords={attendanceRecords}
+            selectedDateForDetail={selectedDateForDetail}
+            getCombinedSummary={getCombinedSummary}
+            onCardClick={handleCardClick}
+            onBackToSummary={() => {
+              setSelectedDateForDetail(null);
+              setAttendanceRecords([]);
+            }}
+          />
         )}
 
         {/* Mark Attendance Section */}
@@ -629,6 +784,29 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
+          <MarkAttendance
+            students={students}
+            attendanceRecords={attendanceRecords}
+            selectedDate={selectedDate}
+            selectedSession={selectedSession}
+            attendanceMap={attendanceMap}
+            isLoading={isLoading}
+            showSummary={showSummary}
+            submittedSummary={submittedSummary}
+            onDateChange={setSelectedDate}
+            onSessionChange={setSelectedSession}
+            onAttendanceChange={handleAttendanceChange}
+            onMarkAllPresent={handleMarkAllPresent}
+            onMarkAllAbsent={handleMarkAllAbsent}
+            onClearAll={handleClearAll}
+            onSubmit={handleMarkAttendance}
+            onMarkNewAttendance={() => {
+              setShowSummary(false);
+              setSubmittedSummary(null);
+              setAttendanceMap({});
+            }}
+            onViewAllRecords={() => setActiveTab('attendance')}
+          />
         )}
       </div>
       

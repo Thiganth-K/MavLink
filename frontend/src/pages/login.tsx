@@ -7,6 +7,21 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [animationType, setAnimationType] = useState<'login' | 'logout'>('login');
+
+  // Check for logout animation flag
+  React.useEffect(() => {
+    const showLogoutAnim = localStorage.getItem('showLogoutAnimation');
+    if (showLogoutAnim === 'true') {
+      setAnimationType('logout');
+      setShowSuccess(true);
+      toast.success('Logged out successfully!');
+      localStorage.removeItem('showLogoutAnimation');
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 2000);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,8 +44,10 @@ export default function Login() {
       // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('role', response.role);
+      localStorage.setItem('showLoginAnimation', 'true');
       
       // Show success animation
+      setAnimationType('login');
       setShowSuccess(true);
       toast.success(`${response.message}! Welcome ${response.user.username}`);
       
@@ -100,11 +117,11 @@ export default function Login() {
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center ">
         <Toaster position="top-center" />
 
-        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950">
+        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-blue-200 outline outline-4 outline-blue-950 relative bg-gradient-to-br from-blue-100 to-blue-300">
           {/* Success Animation Overlay inside the box */}
           {showSuccess && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-blue-100 bg-opacity-95 rounded-3xl">
-              <div className="animate-bounce">
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl backdrop-blur-sm bg-white/30">
+              <div>
                 <div className="relative">
                   {/* Outer Circle with scale animation */}
                   <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
@@ -131,6 +148,10 @@ export default function Login() {
                   <div className="absolute inset-0 w-24 h-24 bg-green-400 rounded-full animate-ripple"></div>
                 </div>
               </div>
+              {/* Success Text */}
+              <p className="mt-6 text-xl font-bold text-green-700">
+                {animationType === 'login' ? 'Login Successful!!' : 'Logout Successful!!'}
+              </p>
             </div>
           )}
 

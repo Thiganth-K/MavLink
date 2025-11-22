@@ -57,7 +57,8 @@ export interface Attendance {
   regno: string;
   studentname: string;
   date: Date | string;
-  status: 'Present' | 'Absent' | 'Late';
+  session: 'FN' | 'AN';
+  status: 'Present' | 'Absent' | 'On-Duty';
   markedBy: string;
   markedAt?: Date | string;
 }
@@ -69,8 +70,59 @@ export interface AttendanceStats {
   totalClasses: number;
   present: number;
   absent: number;
-  late: number;
+  onDuty: number;
   attendancePercentage: number;
+}
+
+export interface AttendanceSummary {
+  date: string;
+  FN: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+  AN: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+}
+
+export interface CombinedAttendanceSummary {
+  date: string;
+  fn: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+  an: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+}
+
+export interface SessionSummary {
+  date: string;
+  FN: {
+    session: 'FN';
+    totalRecords: number;
+    presentCount: number;
+    absentCount: number;
+    onDutyCount: number;
+  };
+  AN: {
+    session: 'AN';
+    totalRecords: number;
+    presentCount: number;
+    absentCount: number;
+    onDutyCount: number;
+  };
+  totalRecords: number;
 }
 
 // Authentication API
@@ -270,6 +322,65 @@ export const studentAPI = {
   },
 };
 
+// Backend API Response Interfaces
+interface AttendanceAPIResponse {
+  success: boolean;
+  message: string;
+  data?: Attendance[];
+  results?: any[];
+  errors?: any[];
+  summary?: any;
+  totalProcessed?: number;
+  successCount?: number;
+  errorCount?: number;
+  date?: string;
+  session?: string;
+  groupedByDate?: any;
+}
+
+interface SessionSummaryAPIResponse {
+  success: boolean;
+  message: string;
+  date: string;
+  summary: {
+    FN: {
+      session: 'FN';
+      totalRecords: number;
+      presentCount: number;
+      absentCount: number;
+      onDutyCount: number;
+    };
+    AN: {
+      session: 'AN';
+      totalRecords: number;
+      presentCount: number;
+      absentCount: number;
+      onDutyCount: number;
+    };
+    totalRecords: number;
+  };
+}
+
+interface DatesSummaryAPIResponse {
+  success: boolean;
+  message: string;
+  data: Array<{
+    date: string;
+    FN: {
+      total: number;
+      present: number;
+      absent: number;
+      onDuty: number;
+    };
+    AN: {
+      total: number;
+      present: number;
+      absent: number;
+      onDuty: number;
+    };
+  }>;
+}
+
 // Attendance API
 export const attendanceAPI = {
   markAttendance: async (
@@ -282,6 +393,18 @@ export const attendanceAPI = {
     try {
       adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
     } catch {}
+  // Mark attendance for a specific session
+  markAttendance: async (
+    attendanceData: Array<{
+      studentId: string;
+      regno: string;
+      studentname: string;
+      date: string;
+      session: 'FN' | 'AN';
+      status: 'Present' | 'Absent' | 'On-Duty';
+    }>,
+    markedBy: string
+  ): Promise<AttendanceAPIResponse> => {
     const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
       method: 'POST',
       headers: {
@@ -304,15 +427,55 @@ export const attendanceAPI = {
     let url = `${API_BASE_URL}/attendance/date?date=${date}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
     const response = await fetch(url);
+  // Get attendance for a date (both FN and AN sessions)
+  getAttendanceByDate: async (date: string): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date?date=${date}`);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
     }
 
+    const data: AttendanceAPIResponse = await response.json();
+    return data.data || [];
+  },
+
+  // Get attendance for a specific date and session (FN or AN only)
+  getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN'): Promise<Attendance[]> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    const data: AttendanceAPIResponse = await response.json();
+    return data.data || [];
+  },
+
+  // Get session-wise summary for a specific date (stats for both FN and AN)
+  getSessionSummaryByDate: async (date: string): Promise<SessionSummaryAPIResponse> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date/summary?date=${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch session summary');
+    }
+
     return response.json();
   },
 
-  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<Attendance[]> => {
+  // Get attendance summary by multiple dates (comma-separated)
+  getAttendanceByDateSummary: async (dates: string[]): Promise<DatesSummaryAPIResponse> => {
+    const datesString = dates.join(',');
+    const response = await fetch(`${API_BASE_URL}/attendance/summary?dates=${datesString}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance summary');
+    }
+
+    return response.json();
+  },
+
+  // Get attendance by date range (with session grouping)
+  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<AttendanceAPIResponse> => {
     const response = await fetch(`${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`);
 
     if (!response.ok) {
