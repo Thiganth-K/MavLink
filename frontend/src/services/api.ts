@@ -1,5 +1,5 @@
 // Use environment override if provided, fallback to backend default port 3000
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 // Types for API responses
 export interface LoginResponse {
@@ -59,6 +59,7 @@ export interface Attendance {
   date: Date | string;
   session: 'FN' | 'AN';
   status: 'Present' | 'Absent' | 'On-Duty';
+  reason?: string | null;
   markedBy: string;
   markedAt?: Date | string;
 }
@@ -267,6 +268,27 @@ export const studentAPI = {
     return response.json();
   },
 
+  getAssignedStudents: async (): Promise<Student[]> => {
+    // Use adminId from localStorage if available and send as header
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try {
+      adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
+    } catch {}
+
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+
+    const response = await fetch(`${API_BASE_URL}/students/assigned`, { headers });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to fetch assigned students');
+    }
+
+    return response.json();
+  },
+
   getStudentById: async (id: string): Promise<Student> => {
     const response = await fetch(`${API_BASE_URL}/students/${id}`);
 
@@ -384,35 +406,36 @@ interface DatesSummaryAPIResponse {
 // Attendance API
 export const attendanceAPI = {
   markAttendance: async (
-    attendanceData: Omit<Attendance, '_id' | 'markedAt'>[],
+    attendanceData: Array<{
+      studentId: string;
+      regno: string;
+      studentname: string;
+      status: 'Present' | 'Absent' | 'On-Duty';
+      reason?: string;
+    }>,
     markedBy: string,
-    batchId?: string
-  ): Promise<{ message: string; results: any[] }> => {
+    batchId?: string,
+    session?: 'FN' | 'AN',
+    date?: string // optional YYYY-MM-DD, defaults to today's IST when omitted
+  ): Promise<AttendanceAPIResponse> => {
     const storedUser = localStorage.getItem('user');
     let adminId: string | undefined;
     try {
       adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
     } catch {}
-  // Mark attendance for a specific session
-  markAttendance: async (
-    attendanceData: Array<{
-      studentId: string;
-      regno: string;
-      studentname: string;
-      date: string;
-      session: 'FN' | 'AN';
-      status: 'Present' | 'Absent' | 'On-Duty';
-    }>,
-    markedBy: string
-  ): Promise<AttendanceAPIResponse> => {
+
+    const payload: any = { attendanceData, markedBy, batchId };
+    if (session) payload.session = session;
+    if (date) payload.date = date;
+
     const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Role': localStorage.getItem('role') || '',
-        'X-Admin-Id': adminId || ''
+        'X-Admin-Id': adminId || '',
       },
-      body: JSON.stringify({ attendanceData, markedBy, batchId }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -424,12 +447,24 @@ export const attendanceAPI = {
   },
 
   getAttendanceByDate: async (date: string, batchId?: string): Promise<Attendance[]> => {
+    // Backend now returns an object with FN and AN arrays
     let url = `${API_BASE_URL}/attendance/date?date=${date}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
     const response = await fetch(url);
-  // Get attendance for a date (both FN and AN sessions)
-  getAttendanceByDate: async (date: string): Promise<Attendance[]> => {
-    const response = await fetch(`${API_BASE_URL}/attendance/date?date=${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    const data: AttendanceAPIResponse = await response.json();
+    // Expect data.data to be { FN: Attendance[], AN: Attendance[] }
+    return (data.data as any) || { FN: [], AN: [] };
+  },
+
+  getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN', batchId?: string): Promise<Attendance[]> => {
+    let url = `${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -439,19 +474,6 @@ export const attendanceAPI = {
     return data.data || [];
   },
 
-  // Get attendance for a specific date and session (FN or AN only)
-  getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN'): Promise<Attendance[]> => {
-    const response = await fetch(`${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`);
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch attendance');
-    }
-
-    const data: AttendanceAPIResponse = await response.json();
-    return data.data || [];
-  },
-
-  // Get session-wise summary for a specific date (stats for both FN and AN)
   getSessionSummaryByDate: async (date: string): Promise<SessionSummaryAPIResponse> => {
     const response = await fetch(`${API_BASE_URL}/attendance/date/summary?date=${date}`);
 
@@ -462,7 +484,6 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  // Get attendance summary by multiple dates (comma-separated)
   getAttendanceByDateSummary: async (dates: string[]): Promise<DatesSummaryAPIResponse> => {
     const datesString = dates.join(',');
     const response = await fetch(`${API_BASE_URL}/attendance/summary?dates=${datesString}`);
@@ -474,9 +495,10 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  // Get attendance by date range (with session grouping)
-  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<AttendanceAPIResponse> => {
-    const response = await fetch(`${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`);
+  getAttendanceByDateRange: async (startDate: string, endDate: string, batchId?: string): Promise<AttendanceAPIResponse> => {
+    let url = `${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -510,7 +532,7 @@ export const attendanceAPI = {
     if (startDate && endDate) params.push(`startDate=${startDate}`, `endDate=${endDate}`);
     if (batchId) params.push(`batchId=${encodeURIComponent(batchId)}`);
     const query = params.length ? `?${params.join('&')}` : '';
-    let url = `${API_BASE_URL}/attendance/stats${query}`;
+    const url = `${API_BASE_URL}/attendance/stats${query}`;
 
     const response = await fetch(url);
 
