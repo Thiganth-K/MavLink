@@ -16,6 +16,7 @@ import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
 import './App.css';
+import ViewAnalysisPage from './pages/ViewAnalysisPage';
 
 function App() {
   useEffect(() => {
@@ -216,6 +217,10 @@ function App() {
         <SuperAdminFooter />
       </div>
     );
+  }
+
+  if (path === '/super-admin/viewanalysis') {
+    return <ViewAnalysisPage />;
   }
 
   // Default to login page

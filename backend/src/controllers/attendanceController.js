@@ -2,6 +2,7 @@ import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
 import Admin from "../models/Admin.js";
 import Batch from "../models/Batch.js";
+import Department from "../models/Department.js";
 import { parseISTDate, getNextISTDay, getISTTimestamp, toISTDateString } from "../utils/dateUtils.js";
 import logger from "../utils/logger.js";
 
@@ -462,5 +463,104 @@ export const getStudentsByBatch = async (req, res) => {
   } catch (error) {
     logger.error('getStudentsByBatch error', { error: error.message });
     return res.status(500).json({ success: false, message: 'Failed to fetch students for batch', error: error.message });
+  }
+};
+
+// ============================================================
+// GET ATTENDANCE STATS (PER-STUDENT AGGREGATE)
+// ============================================================
+export const getAttendanceStats = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAttendanceStats start', { query: req.query });
+  try {
+    // Optional query params for date range or batchId
+    const { startDate, endDate, batchId } = req.query;
+
+    const filter = {};
+    if (batchId) filter.batchId = String(batchId).toUpperCase();
+
+    if (startDate || endDate) {
+      const sd = startDate ? parseISTDate(startDate) : new Date(0);
+      const ed = endDate ? parseISTDate(endDate) : new Date();
+      // set end to end of day
+      if (endDate) ed.setHours(23, 59, 59, 999);
+      filter.date = { $gte: sd, $lte: ed };
+    }
+
+    const docs = await Attendance.find(filter);
+
+    // Aggregate per student (use regno as stable key if available)
+    const map = new Map();
+    for (const doc of docs) {
+      const entries = Array.isArray(doc.entries) ? doc.entries : [];
+      for (const e of entries) {
+        try {
+          const key = e.regno ? String(e.regno).toUpperCase() : (e.studentId ? String(e.studentId) : null);
+          if (!key) continue;
+          if (!map.has(key)) map.set(key, { _id: e.studentId || null, regno: e.regno || key, studentname: e.studentname || 'Unknown', totalClasses: 0, present: 0, absent: 0, onDuty: 0 });
+          const obj = map.get(key);
+          obj.totalClasses += 1;
+          if (e.status === 'Present') obj.present += 1;
+          else if (e.status === 'Absent') obj.absent += 1;
+          else if (e.status === 'On-Duty') obj.onDuty += 1;
+        } catch (err) {
+          // skip malformed entry
+        }
+      }
+    }
+
+    const results = [];
+    for (const [k, v] of map.entries()) {
+      const attendancePercentage = v.totalClasses > 0 ? Math.round((v.present / v.totalClasses) * 10000) / 100 : 0;
+      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, attendancePercentage });
+    }
+
+    // Enrich with student -> dept / batch mapping if possible
+    try {
+      const regnos = results.map(r => String(r.regno || '').toUpperCase()).filter(Boolean);
+      if (regnos.length) {
+        const students = await Student.find({ regno: { $in: regnos } }).select('regno dept batchId').lean();
+        const studentMap = new Map();
+        students.forEach(s => studentMap.set(String(s.regno).toUpperCase(), s));
+
+        const deptSet = new Set();
+        results.forEach(r => {
+          const key = String(r.regno || '').toUpperCase();
+          const s = studentMap.get(key);
+          if (s) {
+            r.dept = s.dept || 'Unknown';
+            r.batchId = s.batchId || null;
+            if (r.dept) deptSet.add(r.dept);
+          } else {
+            r.dept = 'Unknown';
+            r.batchId = null;
+          }
+        });
+
+        // Resolve department names
+        const deptIds = Array.from(deptSet);
+        if (deptIds.length) {
+          const depts = await Department.find({ deptId: { $in: deptIds } }).select('deptId deptName').lean();
+          const deptMap = new Map();
+          depts.forEach(d => deptMap.set(String(d.deptId).toUpperCase(), d.deptName));
+          results.forEach(r => {
+            const id = String(r.dept || '').toUpperCase();
+            r.deptName = deptMap.get(id) || r.dept || 'Unknown';
+          });
+        } else {
+          results.forEach(r => r.deptName = r.dept || 'Unknown');
+        }
+      }
+    } catch (err) {
+      // Non-fatal: log and continue returning basic stats
+      logger.warn('Failed to enrich attendance stats with student/dept info', { error: err && err.message ? err.message : err });
+      results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptName) r.deptName = r.dept; });
+    }
+
+    logger.info('getAttendanceStats success', { durationMs: Date.now() - start, count: results.length });
+    return res.status(200).json(results);
+  } catch (error) {
+    logger.error('getAttendanceStats error', { error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to compute attendance stats', error: error.message });
   }
 };
