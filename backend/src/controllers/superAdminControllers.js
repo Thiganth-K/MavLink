@@ -4,9 +4,11 @@ import Department from "../models/Department.js";
 import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import ExcelJS from "exceljs";
+import logger from "../utils/logger.js";
 
 // ---------- LOGIN ----------
 export const loginController = async (req, res) => {
+  logger.debug('loginController start', { bodyKeys: Object.keys(req.body || {}) });
   const { username, password } = req.body;
 
   const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME;
@@ -14,6 +16,7 @@ export const loginController = async (req, res) => {
 
   // SUPER ADMIN LOGIN (from .env)
   if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
+    logger.info('loginController superadmin success', { username });
     return res.status(200).json({
       message: "Super Admin login successful",
       role: "SUPER_ADMIN",
@@ -25,13 +28,16 @@ export const loginController = async (req, res) => {
   const adminUser = await Admin.findOne({ username });
 
   if (!adminUser) {
+    logger.warn('loginController admin not found', { username });
     return res.status(404).json({ message: "User not found" });
   }
 
   if (password !== adminUser.password) {
+    logger.warn('loginController invalid credentials', { username });
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
+  logger.info('loginController admin success', { username });
   return res.status(200).json({
     message: "Admin login successful",
     role: adminUser.role,
@@ -41,6 +47,7 @@ export const loginController = async (req, res) => {
 
 // ---------- CREATE ADMIN ----------
 export const createAdmin = async (req, res) => {
+  logger.debug('createAdmin start', { bodyKeys: Object.keys(req.body || {}) });
   const { adminId, username, password } = req.body;
 
   try {
@@ -51,27 +58,35 @@ export const createAdmin = async (req, res) => {
       role: "ADMIN"
     });
 
+    logger.info('createAdmin success', { adminId });
     return res.status(201).json({
       message: "Admin created successfully",
       admin: newAdmin
     });
   } catch (err) {
+    logger.error('createAdmin error', { error: err.message });
     return res.status(500).json({ message: "Error creating admin", error: err });
   }
 };
 
 // ---------- READ ALL ADMINS ----------
 export const getAdmins = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAdmins start');
   try {
     const admins = await Admin.find();
+    logger.info('getAdmins success', { durationMs: Date.now() - start, count: admins.length });
     return res.status(200).json(admins);
   } catch (err) {
+    logger.error('getAdmins error', { error: err.message });
     return res.status(500).json({ message: "Error fetching admins" });
   }
 };
 
 // ---------- UPDATE ADMIN ----------
 export const updateAdmin = async (req, res) => {
+  const start = Date.now();
+  logger.debug('updateAdmin start', { id: req.params.id, bodyKeys: Object.keys(req.body || {}) });
   const { id } = req.params;
   const { username, password, adminId } = req.body;
 
@@ -86,33 +101,46 @@ export const updateAdmin = async (req, res) => {
       { new: true }
     );
 
-    if (!updated) return res.status(404).json({ message: "Admin not found" });
+    if (!updated) {
+      logger.warn('updateAdmin not found', { id });
+      return res.status(404).json({ message: "Admin not found" });
+    }
 
+    logger.info('updateAdmin success', { durationMs: Date.now() - start, id });
     return res.status(200).json({
       message: "Admin updated successfully",
       admin: updated
     });
   } catch (err) {
+    logger.error('updateAdmin error', { error: err.message });
     return res.status(500).json({ message: "Error updating admin" });
   }
 };
 
 // ---------- DELETE ADMIN ----------
 export const deleteAdmin = async (req, res) => {
+  const start = Date.now();
+  logger.debug('deleteAdmin start', { id: req.params.id });
   const { id } = req.params;
 
   try {
     const deleted = await Admin.findByIdAndDelete(id);
 
-    if (!deleted) return res.status(404).json({ message: "Admin not found" });
+    if (!deleted) {
+      logger.warn('deleteAdmin not found', { id });
+      return res.status(404).json({ message: "Admin not found" });
+    }
 
+    logger.info('deleteAdmin success', { durationMs: Date.now() - start, id });
     return res.status(200).json({ message: "Admin deleted successfully" });
   } catch (err) {
+    logger.error('deleteAdmin error', { error: err.message });
     return res.status(500).json({ message: "Error deleting admin" });
   }
 };
 
 export const logoutSuperAdmin = (req, res) => {
+  logger.info('logoutSuperAdmin');
   return res.status(200).json({
     message: "Super Admin logged out successfully"
   });
@@ -122,9 +150,12 @@ export const logoutSuperAdmin = (req, res) => {
 // Generates a workbook with multiple sheets: Admins, Batches, Departments, Students, Attendance
 // Only SUPER_ADMIN role should invoke (simple header check for now)
 export const exportPlatformData = async (req, res) => {
+  const start = Date.now();
+  logger.debug('exportPlatformData start');
   try {
     const role = req.headers['x-role'] || req.headers['X-Role'];
     if (role !== 'SUPER_ADMIN') {
+      logger.warn('exportPlatformData forbidden', { role });
       return res.status(403).json({ message: 'SUPER_ADMIN role required for export' });
     }
 
@@ -251,8 +282,9 @@ export const exportPlatformData = async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="mavlink_export.xlsx"');
     await wb.xlsx.write(res);
     res.end();
+    logger.info('exportPlatformData success', { durationMs: Date.now() - start, admins: admins.length, batches: batches.length, departments: departments.length, students: students.length, attendanceDocs: attendance.length });
   } catch (err) {
-    console.error('Export error', err);
+    logger.error('exportPlatformData error', { error: err.message });
     res.status(500).json({ message: 'Failed to export data', error: err.message });
   }
 };
