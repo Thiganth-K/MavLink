@@ -10,7 +10,7 @@ import MarkAttendance from './pages/Admin/MarkAttendance';
 import ViewStudents from './pages/Admin/ViewStudents';
 import SuperAdminNavbar from './components/superadminnavbar';
 import SuperAdminFooter from './components/superadminfooter';
-import AdminNavbar from './components/Admin/adminnavbar';
+import AdminNavbar from './components/Admin/AdminNavbar';
 import AdminFooter from './components/Admin/AdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';

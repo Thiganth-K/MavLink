@@ -177,13 +177,13 @@ export default function AdminDashboard() {
                 <div className="flex justify-center gap-4 flex-col items-center animate-heroPop">
                   <div className="flex gap-4">
                     <button
-                      onClick={() => setActiveTab('mark')}
+                      onClick={() => { window.location.href = '/admin-dashboard/mark-attendance'; }}
                       className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg"
                     >
                       Mark Attendance
                     </button>
                     <button
-                      onClick={() => setActiveTab('attendance')}
+                      onClick={() => { window.location.href = '/admin-dashboard/view-attendance'; }}
                       className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
                     >
                       View Attendance
@@ -197,12 +197,12 @@ export default function AdminDashboard() {
                         type="search"
                         value={heroSearch}
                         onChange={(e) => setHeroSearch(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { localStorage.setItem('adminSearchQuery', heroSearch); setActiveTab('students'); } }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { localStorage.setItem('adminSearchQuery', heroSearch); window.location.href = '/admin-dashboard/view-students'; } }}
                         placeholder="Search students by regno or name"
                         className="search-input px-4 py-3 border border-blue-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none flex-grow"
                       />
                       <button
-                        onClick={() => { localStorage.setItem('adminSearchQuery', heroSearch); setActiveTab('students'); }}
+                        onClick={() => { localStorage.setItem('adminSearchQuery', heroSearch); window.location.href = '/admin-dashboard/view-students'; }}
                         className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors ml-3 shadow-sm"
                       >
                         Search
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                             </tr>
                           ) : (
                             searchResults.map((s) => (
-                              <tr key={s._id || s.regno} className="hover:bg-blue-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); setActiveTab('students'); }}>
+                              <tr key={s._id || s.regno} className="hover:bg-blue-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
                                 <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.regno}</td>
                                 <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.studentname}</td>
                                 <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.email}</td>
