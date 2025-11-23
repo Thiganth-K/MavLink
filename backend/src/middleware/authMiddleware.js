@@ -22,9 +22,10 @@ export const verifyAdmin = async (req, res, next) => {
   const admin = await Admin.findOne({ adminId });
   if (!admin) return res.status(404).json({ message: 'Admin not found' });
   // If a batchId is provided, ensure admin assigned
-  const batchId = req.body.batchId || req.params.batchId || req.query.batchId;
+  const batchId = (req.body && req.body.batchId) || (req.params && req.params.batchId) || (req.query && req.query.batchId);
   if (batchId) {
-    if (!admin.assignedBatchIds.includes(batchId)) {
+    const assigned = Array.isArray(admin.assignedBatchIds) ? admin.assignedBatchIds : [];
+    if (!assigned.includes(batchId)) {
       return res.status(403).json({ message: 'Admin not assigned to this batch' });
     }
   }

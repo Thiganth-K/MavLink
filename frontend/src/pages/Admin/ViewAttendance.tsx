@@ -64,7 +64,7 @@ export default function ViewAttendance() {
 
   const fetchAssignedBatches = async () => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('attendance-summary');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
@@ -86,7 +86,7 @@ export default function ViewAttendance() {
 
   const fetchAttendanceSummary = async (days = 30, batchId?: string) => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('attendance-summary');
       setIsLoading(true);
       const dates: string[] = [];
       const today = new Date();
@@ -122,7 +122,7 @@ export default function ViewAttendance() {
   const handleCardClick = async (date: string) => {
     try {
       setSelectedDateForDetail(date);
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('attendance-detail');
       setIsLoading(true);
       const data: any = await attendanceAPI.getAttendanceByDate(date, activeBatchId || undefined);
       const fn = Array.isArray(data.FN) ? data.FN.map((e: any) => ({ ...e, session: 'FN' as const })) : [];
@@ -184,7 +184,7 @@ export default function ViewAttendance() {
               <p className="text-blue-600 text-lg">No attendance records found in the last 30 days</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getCombinedSummary().map((summary) => (
                 <div
                   key={summary.date}
@@ -254,7 +254,7 @@ export default function ViewAttendance() {
         </div>
       ) : (
         // Show detailed attendance for selected date
-        <div className="bg-white rounded-xl shadow-xl p-6">
+        <div id="attendance-detail" className="bg-white rounded-xl shadow-xl p-6">
           <h3 className="text-xl font-bold text-blue-950 mb-4">
             Attendance Details for {formatDateForDisplay(selectedDateForDetail, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </h3>

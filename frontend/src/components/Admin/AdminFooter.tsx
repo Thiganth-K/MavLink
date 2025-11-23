@@ -47,22 +47,22 @@ export default function Footer() {
               {role === 'ADMIN' ? (
                 <>
                   <li>
-                    <a href="/admin-dashboard#home" className="text-blue-200 hover:text-white transition-colors">
+                    <a href="/admin-dashboard" className="text-blue-200 hover:text-white transition-colors">
                       Home
                     </a>
                   </li>
                   <li>
-                    <a href="/admin-dashboard#students" className="text-blue-200 hover:text-white transition-colors">
+                    <a href="/admin-dashboard/view-students" className="text-blue-200 hover:text-white transition-colors">
                       View Students
                     </a>
                   </li>
                   <li>
-                    <a href="/admin-dashboard#attendance" className="text-blue-200 hover:text-white transition-colors">
+                    <a href="/admin-dashboard/view-attendance" className="text-blue-200 hover:text-white transition-colors">
                       View Attendance
                     </a>
                   </li>
                   <li>
-                    <a href="/admin-dashboard#mark" className="text-blue-200 hover:text-white transition-colors">
+                    <a href="/admin-dashboard/mark-attendance" className="text-blue-200 hover:text-white transition-colors">
                       Mark Attendance
                     </a>
                   </li>

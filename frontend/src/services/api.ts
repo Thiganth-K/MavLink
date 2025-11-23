@@ -1,5 +1,5 @@
 // Use environment override if provided, fallback to backend default port 3000
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 // Types for API responses
 export interface LoginResponse {
@@ -686,6 +686,27 @@ export const departmentAPI = {
   listDepartments: async () => {
     const res = await fetch(`${API_BASE_URL}/departments`);
     if (!res.ok) throw new Error('Failed to fetch departments');
+    return res.json();
+  }
+};
+
+// Admin API (for admin-specific operations)
+export const adminAPI = {
+  getProfile: async (): Promise<{ message: string; profile: { username: string; adminId?: string; assignedBatchIds?: string[]; role?: string } }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+
+    const headers: Record<string, string> = {
+      'X-Role': localStorage.getItem('role') || ''
+    };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+
+    const res = await fetch(`${API_BASE_URL}/admin/profile`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch profile');
+    }
     return res.json();
   }
 };

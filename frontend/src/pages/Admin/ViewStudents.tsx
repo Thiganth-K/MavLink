@@ -14,7 +14,7 @@ export default function ViewStudents() {
 
   const fetchAssignedBatches = async () => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('students-data');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
@@ -35,7 +35,7 @@ export default function ViewStudents() {
 
   const fetchStudents = async (batchId?: string) => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('students-data');
       setIsLoading(true);
       let studentList;
       if (!batchId) {
@@ -71,44 +71,52 @@ export default function ViewStudents() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-blue-200">
-          <thead>
-            <tr className="bg-blue-100">
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                  Loading students...
-                </td>
-              </tr>
-            ) : students.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">
-                  No students found
-                </td>
-              </tr>
-            ) : (
-              students.map((student) => (
-                <tr key={student._id} className="hover:bg-blue-50">
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.phno}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+          {isLoading ? (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-blue-200">
+                <tbody>
+                  <tr>
+                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Loading students...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-blue-200">
+                <tbody>
+                  <tr>
+                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No students found</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div id="students-data" className="overflow-x-auto">
+              <table className="w-full border-collapse border border-blue-200">
+                <thead>
+                  <tr className="bg-blue-100">
+                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
+                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
+                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
+                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
+                    <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student._id} className="hover:bg-blue-50">
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.email}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
+                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.phno}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
     </div>
   );
 }

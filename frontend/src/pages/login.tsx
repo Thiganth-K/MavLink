@@ -150,7 +150,7 @@ export default function Login() {
               </div>
               {/* Success Text */}
               <p className="mt-6 text-xl font-bold text-green-700">
-                {animationType === 'login' ? 'Login Successful!!' : 'Logout Successful!!'}
+                {animationType === 'login' ? 'Logged in Successfully!!' : 'Logged out Successfully!!'}
               </p>
             </div>
           )}
