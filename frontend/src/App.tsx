@@ -15,8 +15,8 @@ import AdminFooter from './components/Admin/AdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
- 
 import ViewAnalysisPage from './pages/ViewAnalysisPage';
+import ViewBatchesPage from './pages/ViewBatchesPage';
 import AdminBatchMappingPage from './pages/AdminBatchMapping';
 
 function App() {
@@ -224,6 +224,14 @@ function App() {
     return <ViewAnalysisPage />;
   }
 
+  if (path === '/super-admin/viewbatches') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <ViewBatchesPage />
+        <SuperAdminFooter />
+      </div>
+    );
   if (path === '/super-admin/admin-batch-mapping') {
     return <AdminBatchMappingPage />;
   }
