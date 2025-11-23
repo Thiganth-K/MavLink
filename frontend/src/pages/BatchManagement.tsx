@@ -183,7 +183,6 @@ export default function BatchManagement({ onClose }: Props) {
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-bold text-blue-950">Batch Management</h2>
 				<div className="flex gap-3">
-					<button onClick={onClose} className="px-4 py-2 bg-gray-200 text-blue-900 rounded-lg hover:bg-gray-300 transition-colors">Close</button>
 					<button
 						onClick={() => {
 							if (showForm) {

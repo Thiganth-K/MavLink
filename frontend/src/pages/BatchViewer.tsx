@@ -32,7 +32,6 @@ export default function BatchViewer({ onClose }: Props) {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-950">Available Batches</h2>
         <div className="flex gap-3">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-blue-900 rounded-lg hover:bg-gray-300 transition-colors">Close</button>
           <button onClick={load} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Refresh</button>
         </div>
       </div>

@@ -29,7 +29,7 @@ export default function SuperAdminDashboard() {
       <Toaster position="top-right" />
       <header className={`mb-8 ${mounted ? 'animate-fadeSlide' : 'opacity-0'} text-center`}> 
         <h1 className="text-4xl font-extrabold text-supergreenDark tracking-tight underline-animate inline-block">
-  Super Admin Control Center
+  Super Admin DashBoard
 </h1>
 
         <p className="mt-4 mx-auto max-w-2xl text-sm sm:text-base text-supergreenDark/70 leading-relaxed animate-fadeIn">
@@ -46,7 +46,7 @@ export default function SuperAdminDashboard() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-0 ${mounted ? 'animate-fadeIn' : 'opacity-0'}`}>
           <AdminManagementCard onClick={() => {}} />
           <BatchManagementCard onClick={() => {}} />
-          <ViewBatchesCard onClick={() => setShowBatchViewerPanel(true)} />
+          <ViewBatchesCard onClick={() => { window.location.pathname = '/super-admin/viewbatches'; }} />
 
           <button
             onClick={() => { window.location.pathname = '/super-admin/viewanalysis'; }}
