@@ -1,5 +1,5 @@
 // Use environment override if provided, fallback to backend default port 3000
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 // Types for API responses
 export interface LoginResponse {
@@ -57,7 +57,9 @@ export interface Attendance {
   regno: string;
   studentname: string;
   date: Date | string;
-  status: 'Present' | 'Absent' | 'Late';
+  session: 'FN' | 'AN';
+  status: 'Present' | 'Absent' | 'On-Duty';
+  reason?: string | null;
   markedBy: string;
   markedAt?: Date | string;
 }
@@ -69,8 +71,59 @@ export interface AttendanceStats {
   totalClasses: number;
   present: number;
   absent: number;
-  late: number;
+  onDuty: number;
   attendancePercentage: number;
+}
+
+export interface AttendanceSummary {
+  date: string;
+  FN: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+  AN: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+}
+
+export interface CombinedAttendanceSummary {
+  date: string;
+  fn: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+  an: {
+    total: number;
+    present: number;
+    absent: number;
+    onDuty: number;
+  };
+}
+
+export interface SessionSummary {
+  date: string;
+  FN: {
+    session: 'FN';
+    totalRecords: number;
+    presentCount: number;
+    absentCount: number;
+    onDutyCount: number;
+  };
+  AN: {
+    session: 'AN';
+    totalRecords: number;
+    presentCount: number;
+    absentCount: number;
+    onDutyCount: number;
+  };
+  totalRecords: number;
 }
 
 // Authentication API
@@ -166,6 +219,18 @@ export const superAdminAPI = {
 
     return response.json();
   },
+  exportData: async (): Promise<Blob> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/export`, {
+      headers: {
+        'X-Role': localStorage.getItem('role') || ''
+      }
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to export data');
+    }
+    return response.blob();
+  }
 };
 
 // Student API
@@ -213,6 +278,60 @@ export const studentAPI = {
     }
 
     return response.json();
+  },
+
+  getAssignedStudents: async (): Promise<Student[]> => {
+    // Use adminId from localStorage if available and send as header
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try {
+      adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
+    } catch {}
+
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+
+    const response = await fetch(`${API_BASE_URL}/students/assigned`, { headers });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to fetch assigned students');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Search students by regno or studentname (case-insensitive).
+   * Uses assigned students for admins if available to scope results.
+   */
+  searchStudents: async (query: string): Promise<Student[]> => {
+    if (!query || !String(query).trim()) return [];
+    const q = String(query).trim().toLowerCase();
+
+    try {
+      // Prefer assigned students (scoped to admin) so admins only search their students
+      const assigned = await studentAPI.getAssignedStudents();
+      const pool = Array.isArray(assigned) && assigned.length ? assigned : await studentAPI.getStudents();
+
+      return pool.filter(s => {
+        const regno = String(s.regno || '').toLowerCase();
+        const name = String(s.studentname || '').toLowerCase();
+        return regno.includes(q) || name.includes(q);
+      });
+    } catch (err) {
+      // Fallback to unscoped search if assigned fetch fails
+      try {
+        const all = await studentAPI.getStudents();
+        return all.filter(s => {
+          const regno = String(s.regno || '').toLowerCase();
+          const name = String(s.studentname || '').toLowerCase();
+          return regno.includes(q) || name.includes(q);
+        });
+      } catch (error) {
+        return [];
+      }
+    }
   },
 
   getStudentById: async (id: string): Promise<Student> => {
@@ -270,26 +389,98 @@ export const studentAPI = {
   },
 };
 
+// Backend API Response Interfaces
+interface AttendanceAPIResponse {
+  success: boolean;
+  message: string;
+  data?: Attendance[];
+  results?: any[];
+  errors?: any[];
+  summary?: any;
+  totalProcessed?: number;
+  successCount?: number;
+  errorCount?: number;
+  date?: string;
+  session?: string;
+  groupedByDate?: any;
+}
+
+interface SessionSummaryAPIResponse {
+  success: boolean;
+  message: string;
+  date: string;
+  summary: {
+    FN: {
+      session: 'FN';
+      totalRecords: number;
+      presentCount: number;
+      absentCount: number;
+      onDutyCount: number;
+    };
+    AN: {
+      session: 'AN';
+      totalRecords: number;
+      presentCount: number;
+      absentCount: number;
+      onDutyCount: number;
+    };
+    totalRecords: number;
+  };
+}
+
+interface DatesSummaryAPIResponse {
+  success: boolean;
+  message: string;
+  data: Array<{
+    date: string;
+    FN: {
+      total: number;
+      present: number;
+      absent: number;
+      onDuty: number;
+    };
+    AN: {
+      total: number;
+      present: number;
+      absent: number;
+      onDuty: number;
+    };
+  }>;
+}
+
 // Attendance API
 export const attendanceAPI = {
   markAttendance: async (
-    attendanceData: Omit<Attendance, '_id' | 'markedAt'>[],
+    attendanceData: Array<{
+      studentId: string;
+      regno: string;
+      studentname: string;
+      status: 'Present' | 'Absent' | 'On-Duty';
+      reason?: string;
+    }>,
     markedBy: string,
-    batchId?: string
-  ): Promise<{ message: string; results: any[] }> => {
+    batchId?: string,
+    session?: 'FN' | 'AN',
+    date?: string // optional YYYY-MM-DD, defaults to today's IST when omitted
+  ): Promise<AttendanceAPIResponse> => {
     const storedUser = localStorage.getItem('user');
     let adminId: string | undefined;
     try {
       adminId = storedUser ? JSON.parse(storedUser).adminId : undefined;
     } catch {}
+
+    const payload: any = { attendanceData, markedBy, batchId };
+    if (session) payload.session = session;
+    if (date) payload.date = date;
+
     const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Role': localStorage.getItem('role') || '',
-        'X-Admin-Id': adminId || ''
+        'X-Admin-Id': adminId || '',
       },
-      body: JSON.stringify({ attendanceData, markedBy, batchId }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -301,6 +492,7 @@ export const attendanceAPI = {
   },
 
   getAttendanceByDate: async (date: string, batchId?: string): Promise<Attendance[]> => {
+    // Backend now returns an object with FN and AN arrays
     let url = `${API_BASE_URL}/attendance/date?date=${date}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
     const response = await fetch(url);
@@ -309,11 +501,49 @@ export const attendanceAPI = {
       throw new Error('Failed to fetch attendance');
     }
 
+    const data: AttendanceAPIResponse = await response.json();
+    // Expect data.data to be { FN: Attendance[], AN: Attendance[] }
+    return (data.data as any) || { FN: [], AN: [] };
+  },
+
+  getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN', batchId?: string): Promise<Attendance[]> => {
+    let url = `${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance');
+    }
+
+    const data: AttendanceAPIResponse = await response.json();
+    return data.data || [];
+  },
+
+  getSessionSummaryByDate: async (date: string): Promise<SessionSummaryAPIResponse> => {
+    const response = await fetch(`${API_BASE_URL}/attendance/date/summary?date=${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch session summary');
+    }
+
     return response.json();
   },
 
-  getAttendanceByDateRange: async (startDate: string, endDate: string): Promise<Attendance[]> => {
-    const response = await fetch(`${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`);
+  getAttendanceByDateSummary: async (dates: string[]): Promise<DatesSummaryAPIResponse> => {
+    const datesString = dates.join(',');
+    const response = await fetch(`${API_BASE_URL}/attendance/summary?dates=${datesString}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance summary');
+    }
+
+    return response.json();
+  },
+
+  getAttendanceByDateRange: async (startDate: string, endDate: string, batchId?: string): Promise<AttendanceAPIResponse> => {
+    let url = `${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -347,7 +577,7 @@ export const attendanceAPI = {
     if (startDate && endDate) params.push(`startDate=${startDate}`, `endDate=${endDate}`);
     if (batchId) params.push(`batchId=${encodeURIComponent(batchId)}`);
     const query = params.length ? `?${params.join('&')}` : '';
-    let url = `${API_BASE_URL}/attendance/stats${query}`;
+    const url = `${API_BASE_URL}/attendance/stats${query}`;
 
     const response = await fetch(url);
 

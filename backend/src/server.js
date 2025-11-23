@@ -4,6 +4,7 @@ dotenv.config();
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import { dropLegacyAttendanceIndexes } from './utils/indexCleanup.js';
 
 import superAdminRoutes from '../src/routes/superAdminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
@@ -33,7 +34,20 @@ if (!MONGO_URI) {
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
+  .then(async () => {
+    // Do not print anything on successful startup unless index cleanup reports issues.
+    try {
+      const result = await dropLegacyAttendanceIndexes(mongoose.connection.db);
+      if (result && Array.isArray(result.dropped) && result.dropped.length > 0) {
+        console.log(`Dropped legacy attendance indexes: ${result.dropped.join(', ')}`);
+      }
+      if (result && result.error) {
+        console.warn('Index cleanup error:', result.error && result.error.message ? result.error.message : result.error);
+      }
+    } catch (err) {
+      console.warn('Index cleanup failed', err && err.message ? err.message : err);
+    }
+  })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);

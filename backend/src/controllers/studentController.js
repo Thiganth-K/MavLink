@@ -55,6 +55,36 @@ export const getStudents = async (req, res) => {
   }
 };
 
+// ---------------- GET ASSIGNED STUDENTS ----------------
+// Returns students that belong to batches assigned to the given admin.
+// Admin identifier can be supplied via `x-admin-id` header or `adminId` query parameter.
+export const getAssignedStudents = async (req, res) => {
+  try {
+    const adminIdHeader = req.headers['x-admin-id'];
+    const adminIdQuery = req.query.adminId;
+    const adminId = adminIdHeader || adminIdQuery;
+
+    if (!adminId) return res.status(400).json({ message: 'adminId is required (header x-admin-id or query adminId)' });
+
+    // Load Admin model lazily to avoid circular imports at top-level (Admin model is in ../models/Admin.js)
+    const Admin = (await import('../models/Admin.js')).default;
+    const admin = await Admin.findOne({ adminId: String(adminId).toUpperCase() });
+    if (!admin) return res.status(404).json({ message: 'Admin not found' });
+
+    const assigned = Array.isArray(admin.assignedBatchIds) ? admin.assignedBatchIds.map(String).map(s => s.toUpperCase()) : [];
+
+    if (assigned.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const students = await Student.find({ batchId: { $in: assigned } }).sort({ regno: 1 });
+    return res.status(200).json(students);
+  } catch (err) {
+    console.error('Error in getAssignedStudents:', err);
+    return res.status(500).json({ message: 'Failed to fetch assigned students', error: err.message });
+  }
+};
+
 // ---------------- READ BY ID ----------------
 export const getStudentById = async (req, res) => {
   try {
