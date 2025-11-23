@@ -58,7 +58,7 @@ export default function ViewAttendance() {
 
   useEffect(() => {
     fetchAssignedBatches();
-    fetchAttendanceSummary(30);
+    // initial fetch will happen after assigned batches are loaded (fetchAssignedBatches triggers it)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,7 +69,14 @@ export default function ViewAttendance() {
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
       setAssignedBatches(mine);
-      if (mine.length > 0) setActiveBatchId(mine[0].batchId || '');
+      if (mine.length > 0) {
+        const bid = mine[0].batchId || '';
+        setActiveBatchId(bid);
+        // fetch summary scoped to this batch immediately
+        await fetchAttendanceSummary(30, bid);
+      } else {
+        await fetchAttendanceSummary(30, undefined);
+      }
     } catch (e: any) {
       // silently continue
     } finally {
@@ -77,7 +84,7 @@ export default function ViewAttendance() {
     }
   };
 
-  const fetchAttendanceSummary = async (days = 30) => {
+  const fetchAttendanceSummary = async (days = 30, batchId?: string) => {
     try {
       (window as any).showGlobalLoader?.();
       setIsLoading(true);
@@ -91,7 +98,7 @@ export default function ViewAttendance() {
         const dd = String(d.getDate()).padStart(2, '0');
         dates.push(`${yyyy}-${mm}-${dd}`);
       }
-      const resp = await attendanceAPI.getAttendanceByDateSummary(dates);
+      const resp = await attendanceAPI.getAttendanceByDateSummary(dates, batchId || activeBatchId || undefined);
       setAttendanceSummary(resp.data || []);
       // If the overlay is visible, force-hide it now that summary is set (avoid long overlay specifically for this page)
       (window as any).hideGlobalLoaderImmediate?.();
@@ -160,7 +167,7 @@ export default function ViewAttendance() {
               <label className="text-blue-900 font-medium mr-2">Batch:</label>
               <select
                 value={activeBatchId}
-                onChange={(e) => { setActiveBatchId(e.target.value); fetchAttendanceSummary(30); }}
+                onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
                 className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="">All assigned batches</option>

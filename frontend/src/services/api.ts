@@ -529,9 +529,11 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  getAttendanceByDateSummary: async (dates: string[]): Promise<DatesSummaryAPIResponse> => {
+  getAttendanceByDateSummary: async (dates: string[], batchId?: string): Promise<DatesSummaryAPIResponse> => {
     const datesString = dates.join(',');
-    const response = await fetch(`${API_BASE_URL}/attendance/summary?dates=${datesString}`);
+    let url = `${API_BASE_URL}/attendance/summary?dates=${datesString}`;
+    if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance summary');

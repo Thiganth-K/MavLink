@@ -306,7 +306,20 @@ export default function MarkAttendance() {
 
               <div className="flex justify-center gap-4">
                 <button onClick={closeSummary} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Mark New Attendance</button>
-                <button onClick={() => { window.location.hash = '#attendance'; }} className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">View All Records</button>
+                <button
+                  onClick={() => {
+                    try {
+                      window.location.hash = '#attendance';
+                      window.dispatchEvent(new CustomEvent('navigate', { detail: 'attendance' }));
+                    } catch (e) {
+                      window.location.hash = '#attendance';
+                    }
+                  }}
+                  className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors font-semibold"
+                  aria-label="View all attendance records"
+                >
+                  View All Records
+                </button>
               </div>
             </div>
 
