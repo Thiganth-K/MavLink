@@ -220,6 +220,32 @@ export const assignAdminToBatch = async (req, res) => {
 	}
 };
 
+export const unassignAdminFromBatch = async (req, res) => {
+  const start = Date.now();
+  logger.debug('unassignAdminFromBatch start', { body: req.body });
+  try {
+    await ensureSuperAdmin(req);
+    const { batchId } = req.body;
+    if (!batchId) return res.status(400).json({ message: 'batchId required' });
+    const batch = await Batch.findOne({ batchId });
+    if (!batch) return res.status(404).json({ message: 'Batch not found' });
+    const prevAdminId = batch.adminId;
+    if (prevAdminId) {
+      const prevAdmin = await Admin.findOne({ adminId: prevAdminId });
+      if (prevAdmin) {
+        prevAdmin.assignedBatchIds = (prevAdmin.assignedBatchIds || []).filter(id => id !== batchId);
+        await prevAdmin.save();
+      }
+    }
+    batch.adminId = null;
+    await batch.save();
+    logger.info('unassignAdminFromBatch success', { durationMs: Date.now() - start, batchId });
+    return res.json({ message: 'Admin unassigned from batch', batch });
+  } catch (err) {
+    logger.error('unassignAdminFromBatch error', { error: err.message });
+    return res.status(403).json({ message: err.message || 'Failed to unassign admin' });
+  }
+};
 export const deleteBatch = async (req, res) => {
   const start = Date.now();
   logger.debug('deleteBatch start', { id: req.params.id });

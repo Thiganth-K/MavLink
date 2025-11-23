@@ -1,5 +1,5 @@
 import express from 'express';
-import { createBatch, getBatches, getBatch, updateBatch, deleteBatch, assignAdminToBatch } from '../controllers/batchController.js';
+import { createBatch, getBatches, getBatch, updateBatch, deleteBatch, assignAdminToBatch, unassignAdminFromBatch } from '../controllers/batchController.js';
 
 const router = express.Router();
 
@@ -9,5 +9,6 @@ router.get('/:id', getBatch);
 router.put('/:id', updateBatch);
 router.delete('/:id', deleteBatch);
 router.post('/assign-admin', assignAdminToBatch);
+router.post('/unassign-admin', unassignAdminFromBatch);
 
 export default router;

@@ -6,7 +6,8 @@ import {
   updateAdmin,
   deleteAdmin,
   logoutSuperAdmin,
-  exportPlatformData
+  exportPlatformData,
+  getAdminBatchMapping
 } from "../controllers/superAdminControllers.js";
 const router = express.Router();
 
@@ -22,4 +23,6 @@ router.put("/admin/:id", updateAdmin);
 router.delete("/admin/:id", deleteAdmin);
 // EXPORT (Excel)
 router.get('/export', exportPlatformData);
+// Mapping of admins to batches
+router.get('/admin-batch-mapping', getAdminBatchMapping);
 export default router;

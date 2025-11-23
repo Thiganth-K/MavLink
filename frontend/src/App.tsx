@@ -15,8 +15,9 @@ import AdminFooter from './components/Admin/AdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
-import './App.css';
+ 
 import ViewAnalysisPage from './pages/ViewAnalysisPage';
+import AdminBatchMappingPage from './pages/AdminBatchMapping';
 
 function App() {
   useEffect(() => {
@@ -221,6 +222,10 @@ function App() {
 
   if (path === '/super-admin/viewanalysis') {
     return <ViewAnalysisPage />;
+  }
+
+  if (path === '/super-admin/admin-batch-mapping') {
+    return <AdminBatchMappingPage />;
   }
 
   // Default to login page

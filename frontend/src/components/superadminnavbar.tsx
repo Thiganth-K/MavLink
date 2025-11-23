@@ -1,9 +1,8 @@
 import React from 'react';
 
-interface Props {
-  onLogout: () => void;
-}
+interface Props { onLogout: () => void; }
 
+// Minimal navbar (no quicklinks) per requirement; navigation occurs via dashboard cards.
 export default function SuperAdminNavbar({ onLogout }: Props) {
   return (
     <nav className="w-full bg-supergreen text-supercream shadow-xl mb-0 rounded-none py-4 border-b border-supergreenDark">
