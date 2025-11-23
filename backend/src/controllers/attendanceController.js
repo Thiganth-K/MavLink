@@ -3,11 +3,14 @@ import Student from "../models/Student.js";
 import Admin from "../models/Admin.js";
 import Batch from "../models/Batch.js";
 import { parseISTDate, getNextISTDay, getISTTimestamp, toISTDateString } from "../utils/dateUtils.js";
+import logger from "../utils/logger.js";
 
 // ============================================================
 // MARK ATTENDANCE FOR A SPECIFIC SESSION
 // ============================================================
 export const markAttendance = async (req, res) => {
+  const start = Date.now();
+  logger.debug('markAttendance start', { count: Array.isArray(req.body.attendanceData) ? req.body.attendanceData.length : 0, batchId: req.body.batchId, session: req.body.session });
   try {
     const { attendanceData, markedBy, batchId, date: dateInput, session } = req.body;
     // attendanceData is array of { studentId, regno, studentname, status, reason? }
@@ -143,6 +146,7 @@ export const markAttendance = async (req, res) => {
       }
     }
 
+    logger.info('markAttendance success', { durationMs: Date.now() - start, successCount: results.length, errorCount: errors.length, batchId: batchKey, session });
     return res.status(200).json({
       success: true,
       message: `Attendance processed: ${results.length} successful, ${errors.length} failed`,
@@ -155,7 +159,7 @@ export const markAttendance = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in markAttendance:", error);
+    logger.error('markAttendance error', { error: error.message, stack: error.stack });
     return res.status(500).json({
       success: false,
       message: "Failed to mark attendance",
@@ -168,6 +172,8 @@ export const markAttendance = async (req, res) => {
 // GET ATTENDANCE BY DATE (BOTH FN AND AN SESSIONS)
 // ============================================================
 export const getAttendanceByDate = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAttendanceByDate start', { query: req.query });
   try {
     const { date, batchId } = req.query;
 
@@ -203,6 +209,7 @@ export const getAttendanceByDate = async (req, res) => {
       });
     });
 
+    logger.info('getAttendanceByDate success', { durationMs: Date.now() - start, fnCount: fnRecords.length, anCount: anRecords.length });
     return res.status(200).json({
       success: true,
       message: `Found ${fnRecords.length + anRecords.length} attendance entries for ${dateStr}`,
@@ -216,7 +223,7 @@ export const getAttendanceByDate = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in getAttendanceByDate:", error);
+    logger.error('getAttendanceByDate error', { error: error.message });
     return res.status(500).json({ success: false, message: "Failed to fetch attendance", error: error.message });
   }
 };
@@ -225,6 +232,8 @@ export const getAttendanceByDate = async (req, res) => {
 // GET ATTENDANCE BY DATE AND SESSION (FN OR AN ONLY)
 // ============================================================
 export const getAttendanceByDateAndSession = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAttendanceByDateAndSession start', { query: req.query });
   try {
     const { date, session, batchId } = req.query;
 
@@ -249,10 +258,11 @@ export const getAttendanceByDateAndSession = async (req, res) => {
     const absentCount = flattened.filter(r => r.status === 'Absent').length;
     const onDutyCount = flattened.filter(r => r.status === 'On-Duty').length;
 
+    logger.info('getAttendanceByDateAndSession success', { durationMs: Date.now() - start, count: flattened.length, session });
     return res.status(200).json({ success: true, message: `Found ${flattened.length} attendance entries for ${session} on ${dateStr}`, data: flattened, summary: { date: dateStr, session, totalRecords: flattened.length, presentCount, absentCount, onDutyCount } });
 
   } catch (error) {
-    console.error("Error in getAttendanceByDateAndSession:", error);
+    logger.error('getAttendanceByDateAndSession error', { error: error.message });
     return res.status(500).json({
       success: false,
       message: "Failed to fetch attendance",
@@ -265,6 +275,8 @@ export const getAttendanceByDateAndSession = async (req, res) => {
 // GET SESSION SUMMARY BY DATE (STATS FOR BOTH FN AND AN)
 // ============================================================
 export const getSessionSummaryByDate = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getSessionSummaryByDate start', { query: req.query });
   try {
     const { date } = req.query;
 
@@ -287,10 +299,11 @@ export const getSessionSummaryByDate = async (req, res) => {
     const fnSummary = { session: 'FN', totalRecords: fnEntries.length, presentCount: fnEntries.filter(r => r.status === 'Present').length, absentCount: fnEntries.filter(r => r.status === 'Absent').length, onDutyCount: fnEntries.filter(r => r.status === 'On-Duty').length };
     const anSummary = { session: 'AN', totalRecords: anEntries.length, presentCount: anEntries.filter(r => r.status === 'Present').length, absentCount: anEntries.filter(r => r.status === 'Absent').length, onDutyCount: anEntries.filter(r => r.status === 'On-Duty').length };
 
+    logger.info('getSessionSummaryByDate success', { durationMs: Date.now() - start, fnTotal: fnEntries.length, anTotal: anEntries.length });
     return res.status(200).json({ success: true, message: `Session summary for ${dateStr}`, date: dateStr, summary: { FN: fnSummary, AN: anSummary, totalRecords: fnEntries.length + anEntries.length } });
 
   } catch (error) {
-    console.error("Error in getSessionSummaryByDate:", error);
+    logger.error('getSessionSummaryByDate error', { error: error.message });
     return res.status(500).json({
       success: false,
       message: "Failed to fetch session summary",
@@ -303,6 +316,8 @@ export const getSessionSummaryByDate = async (req, res) => {
 // GET ATTENDANCE BY DATE RANGE (WITH SESSION GROUPING)
 // ============================================================
 export const getAttendanceByDateRange = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAttendanceByDateRange start', { query: req.query });
   try {
     const { startDate, endDate } = req.query;
 
@@ -332,10 +347,11 @@ export const getAttendanceByDateRange = async (req, res) => {
     // Count total flattened entries
     const totalRecords = Object.values(groupedData).reduce((acc, d) => acc + (d.FN.length + d.AN.length), 0);
 
+    logger.info('getAttendanceByDateRange success', { durationMs: Date.now() - start, totalRecords, datesCount: Object.keys(groupedData).length });
     return res.status(200).json({ success: true, message: `Found ${totalRecords} records from ${startDate} to ${endDate}`, data: attendanceRecords, groupedByDate: groupedData, summary: { startDate, endDate, totalRecords, datesCount: Object.keys(groupedData).length } });
 
   } catch (error) {
-    console.error("Error in getAttendanceByDateRange:", error);
+    logger.error('getAttendanceByDateRange error', { error: error.message });
     return res.status(500).json({
       success: false,
       message: "Failed to fetch attendance",
@@ -348,6 +364,8 @@ export const getAttendanceByDateRange = async (req, res) => {
 // GET ATTENDANCE SUMMARY BY DATE (GROUPED BY DATE AND SESSION)
 // ============================================================
 export const getAttendanceByDateSummary = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAttendanceByDateSummary start', { query: req.query });
   try {
     const { batchId } = req.query;
     const { dates } = req.query;
@@ -386,10 +404,10 @@ export const getAttendanceByDateSummary = async (req, res) => {
       }
     }
 
-    return res.status(200).json({ success: true, message: `Summary for ${summaries.length} recorded dates`, data: summaries });
+    return res.status(200).json({ success: true, message: `Summary for ${dateArray.length} dates`, data: summaries });
 
   } catch (error) {
-    console.error("Error in getAttendanceByDateSummary:", error);
+    logger.error('getAttendanceByDateSummary error', { error: error.message });
     return res.status(500).json({
       success: false,
       message: "Failed to fetch attendance summary",
@@ -402,6 +420,8 @@ export const getAttendanceByDateSummary = async (req, res) => {
 // GET STUDENTS FOR A BATCH (HELPER FOR MARKING ATTENDANCE)
 // ============================================================
 export const getStudentsByBatch = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getStudentsByBatch start', { query: req.query });
   try {
     const { batchId, date: dateQuery, session } = req.query;
     if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required' });
@@ -437,9 +457,10 @@ export const getStudentsByBatch = async (req, res) => {
       return { ...base, status: null, reason: null };
     });
 
+    logger.info('getStudentsByBatch success', { durationMs: Date.now() - start, count: students.length, batchId: key });
     return res.status(200).json({ success: true, message: `Found ${students.length} students for batch ${key}`, data: studentsWithStatus });
   } catch (error) {
-    console.error('Error in getStudentsByBatch:', error);
+    logger.error('getStudentsByBatch error', { error: error.message });
     return res.status(500).json({ success: false, message: 'Failed to fetch students for batch', error: error.message });
   }
 };

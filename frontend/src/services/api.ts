@@ -219,6 +219,18 @@ export const superAdminAPI = {
 
     return response.json();
   },
+  exportData: async (): Promise<Blob> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/export`, {
+      headers: {
+        'X-Role': localStorage.getItem('role') || ''
+      }
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to export data');
+    }
+    return response.blob();
+  }
 };
 
 // Student API

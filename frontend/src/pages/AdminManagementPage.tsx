@@ -1,0 +1,296 @@
+import React, { useEffect, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { superAdminAPI, batchAPI, type Admin } from '../services/api';
+
+export default function AdminManagementPage() {
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [formData, setFormData] = useState({ adminId: '', username: '', password: '' });
+  const [assignBatchId, setAssignBatchId] = useState('');
+  const [assignAdminId, setAssignAdminId] = useState('');
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    const user = localStorage.getItem('user');
+    if (!user || role !== 'SUPER_ADMIN') {
+      toast.error('Access denied. Super Admin privileges required.');
+      window.location.href = '/';
+      return;
+    }
+    fetchAdmins();
+  }, []);
+
+  const fetchAdmins = async () => {
+    try {
+      setIsLoading(true);
+      const adminList = await superAdminAPI.getAdmins();
+      setAdmins(adminList);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to fetch admins');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.adminId || !formData.username.trim() || !formData.password.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await superAdminAPI.createAdmin(formData.adminId, formData.username, formData.password);
+      toast.success('Admin created successfully');
+      setFormData({ adminId: '', username: '', password: '' });
+      setShowCreateForm(false);
+      fetchAdmins();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create admin');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdmin || !formData.username.trim() || !formData.password.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await superAdminAPI.updateAdmin(editingAdmin._id!, formData.adminId, formData.username, formData.password);
+      toast.success('Admin updated successfully');
+      setFormData({ adminId: '', username: '', password: '' });
+      setEditingAdmin(null);
+      fetchAdmins();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update admin');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (id: string) => {
+    if (!window.confirm('Delete this admin?')) return;
+    try {
+      setIsLoading(true);
+      await superAdminAPI.deleteAdmin(id);
+      toast.success('Admin deleted');
+      fetchAdmins();
+    } catch (err: any) {
+      toast.error(err.message || 'Delete failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const startEdit = (admin: Admin) => {
+    setEditingAdmin(admin);
+    setFormData({ adminId: admin.adminId || '', username: admin.username, password: admin.password });
+    setShowCreateForm(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingAdmin(null);
+    setFormData({ adminId: '', username: '', password: '' });
+    setShowCreateForm(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-supercream to-green-200 p-6">
+      <Toaster position="top-center" />
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-supergreenDark">Admin Management</h1>
+          <button
+            onClick={() => { window.location.href = '/super-admin'; }}
+            className="px-4 py-2 bg-white border border-supergreenDark/30 text-supergreenDark rounded-lg shadow hover:border-supergreenAccent hover:shadow-md transition-colors"
+          >Back to Dashboard</button>
+        </div>
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => {
+              if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
+            }}
+            className="px-4 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors"
+          >
+            {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
+          </button>
+        </div>
+
+        {showCreateForm && (
+          <div className="bg-white rounded-xl shadow p-6 mb-8 border border-supergreenDark/30">
+            <h2 className="text-xl font-semibold text-supergreenDark mb-4">{editingAdmin ? 'Edit Admin' : 'Create Admin'}</h2>
+            <form onSubmit={editingAdmin ? handleUpdateAdmin : handleCreateAdmin} className="space-y-4">
+              <div>
+                <label className="block text-supergreenDark mb-1 font-medium">Admin ID (unique)</label>
+                <input
+                  type="text"
+                  value={formData.adminId}
+                  onChange={(e) => setFormData({ ...formData, adminId: e.target.value.toUpperCase() })}
+                  className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                  required
+                  disabled={!!editingAdmin}
+                />
+              </div>
+              <div>
+                <label className="block text-supergreenDark mb-1 font-medium">Username</label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-supergreenDark mb-1 font-medium">Password</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                  required
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-6 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : editingAdmin ? 'Update Admin' : 'Create Admin'}
+                </button>
+                {editingAdmin && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+            <div className="bg-supercream p-6 rounded-lg mt-8 border border-supergreenDark/20">
+              <h3 className="text-lg font-semibold text-supergreenDark mb-4">Assign Admin To Batch</h3>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!assignBatchId || !assignAdminId) {
+                    toast.error('Select batch and admin');
+                    return;
+                  }
+                  try {
+                    await batchAPI.assignAdmin(assignBatchId, assignAdminId);
+                    toast.success('Admin assigned');
+                    setAssignBatchId('');
+                    setAssignAdminId('');
+                    fetchAdmins();
+                  } catch (err: any) {
+                    toast.error(err.message || 'Assignment failed');
+                  }
+                }}
+                className="grid md:grid-cols-3 gap-4 items-end"
+              >
+                <div>
+                  <label className="block text-supergreenDark mb-1 font-medium">Batch ID</label>
+                  <input
+                    type="text"
+                    value={assignBatchId}
+                    onChange={(e) => setAssignBatchId(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                    placeholder="e.g. BATCH2025A"
+                  />
+                </div>
+                <div>
+                  <label className="block text-supergreenDark mb-1 font-medium">Admin ID</label>
+                  <select
+                    value={assignAdminId}
+                    onChange={(e) => setAssignAdminId(e.target.value)}
+                    className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                  >
+                    <option value="">Select Admin</option>
+                    {admins.map(a => (
+                      <option key={a._id} value={a.adminId}>{a.adminId} - {a.username}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors"
+                  >Assign</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl border border-supergreenDark/20 shadow animate-pulse p-5">
+                  <div className="h-6 w-32 bg-blue-100 rounded mb-3" />
+                  <div className="h-4 w-24 bg-blue-100 rounded mb-5" />
+                  <div className="flex gap-3">
+                    <div className="h-9 w-20 bg-blue-100 rounded" />
+                    <div className="h-9 w-20 bg-blue-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : admins.length === 0 ? (
+            <div className="bg-supercream border border-supergreenDark/20 rounded-xl p-6 text-supergreen text-center">
+              No admins found. Use the button above to create one.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {admins.map((admin) => (
+                <div
+                  key={admin._id}
+                  className="bg-white rounded-xl border border-supergreenDark/20 shadow hover:shadow-lg transition p-5 flex flex-col"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-supercream text-supergreen flex items-center justify-center font-bold">
+                        {admin.username?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-supergreenDark font-semibold leading-tight">{admin.username}</p>
+                        <span
+                          className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
+                            admin.role === 'SUPER_ADMIN'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-supercream text-supergreen'
+                          }`}
+                        >
+                          {admin.role}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-auto flex gap-2 pt-2">
+                    <button
+                      onClick={() => startEdit(admin)}
+                      className="flex-1 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                    >Edit</button>
+                    <button
+                      onClick={() => handleDeleteAdmin(admin._id!)}
+                      className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

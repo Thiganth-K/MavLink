@@ -2,6 +2,7 @@ import Batch from '../models/Batch.js';
 import Admin from '../models/Admin.js';
 import Department from '../models/Department.js';
 import Student from '../models/Student.js';
+import logger from '../utils/logger.js';
 
 // Helper: parse textarea CSV (each line: name,regno,dept,email,mobile)
 function parseStudents(csvText) {
@@ -32,6 +33,8 @@ async function ensureSuperAdmin(req) {
 }
 
 export const createBatch = async (req, res) => {
+	const start = Date.now();
+	logger.debug('createBatch start', { bodyKeys: Object.keys(req.body || {}) });
 	try {
 		await ensureSuperAdmin(req);
 		const { batchId, batchName, batchYear, deptId, adminId, studentsText } = req.body;
@@ -93,32 +96,44 @@ export const createBatch = async (req, res) => {
 				await mappedAdmin.save();
 			}
 		}
+		logger.info('createBatch success', { durationMs: Date.now() - start, batchId });
 		res.status(201).json({ message: 'Batch created', batch });
 	} catch (err) {
+		logger.error('createBatch error', { error: err.message });
 		res.status(403).json({ message: err.message || 'Failed to create batch' });
 	}
 };
 
 export const getBatches = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getBatches start');
 	try {
 		const batches = await Batch.find().sort({ createdAt: -1 });
+		logger.info('getBatches success', { durationMs: Date.now() - start, count: batches.length });
 		res.json(batches);
 	} catch (err) {
+		logger.error('getBatches error', { error: err.message });
 		res.status(500).json({ message: 'Failed to fetch batches' });
 	}
 };
 
 export const getBatch = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getBatch start', { id: req.params.id });
 	try {
 		const batch = await Batch.findById(req.params.id);
 		if (!batch) return res.status(404).json({ message: 'Batch not found' });
+		logger.info('getBatch success', { durationMs: Date.now() - start, id: req.params.id });
 		res.json(batch);
 	} catch (err) {
+		logger.error('getBatch error', { error: err.message });
 		res.status(500).json({ message: 'Failed to fetch batch' });
 	}
 };
 
 export const updateBatch = async (req, res) => {
+	const start = Date.now();
+	logger.debug('updateBatch start', { id: req.params.id, bodyKeys: Object.keys(req.body || {}) });
 	try {
 		await ensureSuperAdmin(req);
 		const { batchName, batchYear, deptId, adminId, studentsText } = req.body;
@@ -170,13 +185,17 @@ export const updateBatch = async (req, res) => {
 			}
 		}
 		await batch.save();
+		logger.info('updateBatch success', { durationMs: Date.now() - start, batchId: batch.batchId });
 		res.json({ message: 'Batch updated', batch });
 	} catch (err) {
+		logger.error('updateBatch error', { error: err.message });
 		res.status(403).json({ message: err.message || 'Failed to update batch' });
 	}
 };
 
 export const assignAdminToBatch = async (req, res) => {
+	const start = Date.now();
+	logger.debug('assignAdminToBatch start', { body: req.body });
 	try {
 		await ensureSuperAdmin(req);
 		const { batchId, adminId } = req.body;
@@ -193,20 +212,26 @@ export const assignAdminToBatch = async (req, res) => {
 			admin.assignedBatchIds.push(batchId);
 			await admin.save();
 		}
+		logger.info('assignAdminToBatch success', { durationMs: Date.now() - start, batchId: batchId, adminId });
 		res.json({ message: 'Admin assigned to batch', batch });
 	} catch (err) {
+		logger.error('assignAdminToBatch error', { error: err.message });
 		res.status(403).json({ message: err.message || 'Failed to assign admin' });
 	}
 };
 
 export const deleteBatch = async (req, res) => {
+  const start = Date.now();
+  logger.debug('deleteBatch start', { id: req.params.id });
 	try {
 		await ensureSuperAdmin(req);
 		const batch = await Batch.findById(req.params.id);
 		if (!batch) return res.status(404).json({ message: 'Batch not found' });
 		await batch.deleteOne();
+		logger.info('deleteBatch success', { durationMs: Date.now() - start, id: req.params.id });
 		res.json({ message: 'Batch deleted' });
 	} catch (err) {
+		logger.error('deleteBatch error', { error: err.message });
 		res.status(403).json({ message: err.message || 'Failed to delete batch' });
 	}
 };
