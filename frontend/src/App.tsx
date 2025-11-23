@@ -7,6 +7,7 @@ import StudentManagement from './pages/StudentManagement';
 import SuperAdminNavbar from './components/superadminnavbar';
 import SuperAdminFooter from './components/superadminfooter';
 import './App.css';
+import ViewAnalysisPage from './pages/ViewAnalysisPage';
 
 function App() {
   // Simple routing based on URL path
@@ -59,6 +60,10 @@ function App() {
         <SuperAdminFooter />
       </div>
     );
+  }
+
+  if (path === '/super-admin/viewanalysis') {
+    return <ViewAnalysisPage />;
   }
 
   // Default to login page

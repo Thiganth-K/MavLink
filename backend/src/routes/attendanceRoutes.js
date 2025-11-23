@@ -7,6 +7,7 @@ import {
   getAttendanceByDateSummary,
   getSessionSummaryByDate
   , getStudentsByBatch
+  , getAttendanceStats
 } from "../controllers/attendanceController.js";
 
 const router = express.Router();
@@ -44,6 +45,10 @@ router.get("/date/summary", getSessionSummaryByDate);
 // Get students belonging to a batch (used when marking attendance)
 // GET /api/attendance/students?batchId=BATCH1
 router.get("/students", getStudentsByBatch);
+
+// Stats per student (avg attendance etc.)
+// GET /api/attendance/stats?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&batchId=BATCH1
+router.get('/stats', getAttendanceStats);
 
 // Get attendance summary by multiple dates (comma-separated)
 // GET /api/attendance/summary?dates=YYYY-MM-DD,YYYY-MM-DD&batchId=BATCH1
