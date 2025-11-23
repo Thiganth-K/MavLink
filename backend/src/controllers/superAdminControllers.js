@@ -288,3 +288,58 @@ export const exportPlatformData = async (req, res) => {
     res.status(500).json({ message: 'Failed to export data', error: err.message });
   }
 };
+
+// ---------- ADMIN ↔ BATCH MAPPING ----------
+// Returns each admin with its enriched batch list plus unassigned batches.
+// Shape:
+// { admins: [ { adminId, username, batches: [{ batchId, batchName, batchYear, deptId }] } ], unassignedBatches: [...], totalAdmins, totalBatches, generatedAt }
+export const getAdminBatchMapping = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getAdminBatchMapping start');
+  try {
+    const [adminsRaw, batchesRaw] = await Promise.all([
+      Admin.find().lean(),
+      Batch.find().lean()
+    ]);
+
+    // Build quick lookup of batches by adminId
+    const batchesByAdmin = new Map();
+    for (const b of batchesRaw) {
+      const key = (b.adminId || '').trim();
+      if (!key) continue;
+      if (!batchesByAdmin.has(key)) batchesByAdmin.set(key, []);
+      batchesByAdmin.get(key).push({
+        batchId: b.batchId,
+        batchName: b.batchName,
+        batchYear: b.batchYear,
+        deptId: b.deptId
+      });
+    }
+
+    const admins = adminsRaw.map(a => ({
+      adminId: a.adminId,
+      username: a.username,
+      batches: batchesByAdmin.get(a.adminId) || []
+    }));
+
+    // Identify unassigned batches (no adminId)
+    const unassignedBatches = batchesRaw.filter(b => !b.adminId).map(b => ({
+      batchId: b.batchId,
+      batchName: b.batchName,
+      batchYear: b.batchYear,
+      deptId: b.deptId
+    }));
+
+    logger.info('getAdminBatchMapping success', { durationMs: Date.now() - start, admins: admins.length, batches: batchesRaw.length, unassignedCount: unassignedBatches.length });
+    return res.status(200).json({
+      admins,
+      unassignedBatches,
+      totalAdmins: admins.length,
+      totalBatches: batchesRaw.length,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    logger.error('getAdminBatchMapping error', { error: err.message });
+    return res.status(500).json({ message: 'Failed to build mapping', error: err.message });
+  }
+};

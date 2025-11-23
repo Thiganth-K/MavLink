@@ -3,6 +3,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import AdminManagementCard from '../components/AdminManagementCard';
 import BatchManagementCard from '../components/BatchManagementCard';
 import ViewBatchesCard from '../components/ViewBatchesCard';
+import StudentManagementCard from '../components/StudentManagementCard';
+import AdminBatchMappingCard from '../components/AdminBatchMappingCard';
 import BatchViewer from './BatchViewer';
 
 export default function SuperAdminDashboard() {
@@ -46,8 +48,9 @@ export default function SuperAdminDashboard() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-0 ${mounted ? 'animate-fadeIn' : 'opacity-0'}`}>
           <AdminManagementCard onClick={() => {}} />
           <BatchManagementCard onClick={() => {}} />
+          <StudentManagementCard />
+          <AdminBatchMappingCard />
           <ViewBatchesCard onClick={() => setShowBatchViewerPanel(true)} />
-
           <button
             onClick={() => { window.location.pathname = '/super-admin/viewanalysis'; }}
             className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"

@@ -232,6 +232,25 @@ export const superAdminAPI = {
     return response.blob();
   }
 };
+// Mapping types & API
+export interface AdminBatchMapping {
+  admins: Array<{ adminId: string; username: string; batches: Array<{ batchId: string; batchName: string; batchYear: number; deptId: string }> }>;
+  unassignedBatches: Array<{ batchId: string; batchName: string; batchYear: number; deptId: string }>;
+  totalAdmins: number;
+  totalBatches: number;
+  generatedAt: string;
+}
+
+export const mappingAPI = {
+  getAdminBatchMapping: async (): Promise<AdminBatchMapping> => {
+    const res = await fetch(`${API_BASE_URL}/superadmin/admin-batch-mapping`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch mapping');
+    }
+    return res.json();
+  }
+};
 
 // Student API
 export const studentAPI = {
@@ -664,6 +683,19 @@ export const batchAPI = {
     });
     const body = await res.json();
     if (!res.ok) throw new Error(body.message || 'Failed to assign admin');
+    return body;
+  }
+  ,unassignAdmin: async (batchId: string): Promise<{ message: string; batch: Batch }> => {
+    const res = await fetch(`${API_BASE_URL}/batches/unassign-admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Role': localStorage.getItem('role') || ''
+      },
+      body: JSON.stringify({ batchId })
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || 'Failed to unassign admin');
     return body;
   }
 };
