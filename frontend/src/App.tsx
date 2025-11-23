@@ -17,6 +17,7 @@ import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
 import ViewAnalysisPage from './pages/ViewAnalysisPage';
 import ViewBatchesPage from './pages/ViewBatchesPage';
+import AdminBatchMappingPage from './pages/AdminBatchMapping';
 
 function App() {
   useEffect(() => {
@@ -231,6 +232,8 @@ function App() {
         <SuperAdminFooter />
       </div>
     );
+  if (path === '/super-admin/admin-batch-mapping') {
+    return <AdminBatchMappingPage />;
   }
 
   // Default to login page
