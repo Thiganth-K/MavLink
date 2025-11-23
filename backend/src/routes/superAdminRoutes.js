@@ -5,7 +5,8 @@ import {
   getAdmins,
   updateAdmin,
   deleteAdmin,
-  logoutSuperAdmin
+  logoutSuperAdmin,
+  exportPlatformData
 } from "../controllers/superAdminControllers.js";
 const router = express.Router();
 
@@ -19,4 +20,6 @@ router.post("/admin", createAdmin);
 router.get("/admin", getAdmins);
 router.put("/admin/:id", updateAdmin);
 router.delete("/admin/:id", deleteAdmin);
+// EXPORT (Excel)
+router.get('/export', exportPlatformData);
 export default router;

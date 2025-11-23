@@ -6,17 +6,16 @@ interface Props {
 
 export default function SuperAdminNavbar({ onLogout }: Props) {
   return (
-    <nav className="w-full bg-blue-950 text-blue-50 shadow-xl mb-0 rounded-none py-4">
+    <nav className="w-full bg-supergreen text-supercream shadow-xl mb-0 rounded-none py-4 border-b border-supergreenDark">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4">
           <span className="text-2xl font-extrabold tracking-tight">MavLink</span>
-          <span className="hidden sm:inline-block h-6 w-px bg-blue-600" />
+          <span className="hidden sm:inline-block h-6 w-px bg-supergreenAccent" />
           <span className="text-lg font-semibold">Super Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              // preserve logout animation flag so the app can play the exit animation
               localStorage.removeItem('user');
               localStorage.removeItem('role');
               try { localStorage.setItem('showLogoutAnimation', 'true'); } catch (e) {}
