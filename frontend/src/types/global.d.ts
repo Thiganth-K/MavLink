@@ -6,7 +6,7 @@ declare module '*.jsx' {
 
 declare global {
   interface Window {
-    showGlobalLoader?: () => void;
+    showGlobalLoader?: (targetId?: string) => void;
     hideGlobalLoader?: () => void;
     hideGlobalLoaderImmediate?: () => void;
   }

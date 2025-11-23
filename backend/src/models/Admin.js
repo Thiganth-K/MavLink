@@ -36,7 +36,7 @@ const adminSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-adminSchema.index({ adminId: 1 });
-adminSchema.index({ username: 1 });
+// `unique: true` on the schema fields already creates indexes for adminId and username.
+// Avoid calling `.index()` again to prevent duplicate-index warnings from mongoose.
 
 export default mongoose.model("Admin", adminSchema);

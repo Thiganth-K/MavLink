@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../../services/api';
-import { getTodayIST, formatDateForDisplay } from '../../utils/dateUtils';
+import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../services/api';
+import { getTodayIST, formatDateForDisplay } from '../utils/dateUtils';
 
 export default function MarkAttendance() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -29,7 +29,7 @@ export default function MarkAttendance() {
 
   const fetchAssignedBatches = async () => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('markattendance-data');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
       const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
@@ -49,7 +49,7 @@ export default function MarkAttendance() {
 
   const fetchStudents = async (batchId?: string) => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('markattendance-data');
       setIsLoading(true);
       let studentList;
       if (!batchId) studentList = await studentAPI.getAssignedStudents();
@@ -67,7 +67,7 @@ export default function MarkAttendance() {
 
   const fetchAttendance = async () => {
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('markattendance-data');
       setIsLoading(true);
       const sessionRecords = await attendanceAPI.getAttendanceByDateAndSession(selectedDate, selectedSession, activeBatchId || undefined);
       const allowedRegnos = new Set(students.map(s => (s.regno || '').toUpperCase()));
@@ -144,7 +144,7 @@ export default function MarkAttendance() {
     }
 
     try {
-      (window as any).showGlobalLoader?.();
+      (window as any).showGlobalLoader?.('markattendance-data');
       setIsLoading(true);
       await attendanceAPI.markAttendance(attendanceData, user.username, activeBatchId, selectedSession, selectedDate);
       const summary = {
@@ -223,23 +223,29 @@ export default function MarkAttendance() {
         <span className="text-sm text-blue-600 font-medium self-center">Quick actions to mark all students at once</span>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-blue-200">
-          <thead>
-            <tr className="bg-blue-100">
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-              <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-              <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attendance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.length === 0 ? (
+      {students.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-blue-200">
+            <tbody>
               <tr>
                 <td colSpan={4} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No students found</td>
               </tr>
-            ) : (
-              students.map((student) => (
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div id="markattendance-data" className="overflow-x-auto">
+          <table className="w-full border-collapse border border-blue-200">
+            <thead>
+              <tr className="bg-blue-100">
+                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
+                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
+                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
+                <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attendance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
                 <tr key={student._id} className="hover:bg-blue-50">
                   <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
                   <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
@@ -257,11 +263,11 @@ export default function MarkAttendance() {
                     )}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="mt-6 flex justify-center">
         <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-semibold text-lg shadow-lg">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>

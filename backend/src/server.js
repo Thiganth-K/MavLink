@@ -8,6 +8,7 @@ import { dropLegacyAttendanceIndexes } from './utils/indexCleanup.js';
 import logger from './utils/logger.js';
 
 import superAdminRoutes from '../src/routes/superAdminRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import batchRoutes from './routes/batchRoutes.js';
@@ -71,6 +72,7 @@ app.use((req, res, next) => {
 
 //routes inga irruku
 app.use('/api/superadmin', superAdminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/batches', batchRoutes);
