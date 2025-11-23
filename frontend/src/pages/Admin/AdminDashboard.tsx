@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI } from '../services/api';
-import type { Student } from '../services/api';
+import { studentAPI } from '../../services/api';
+import type { Student } from '../../services/api';
  
 
 import MarkAttendance from './MarkAttendance';

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 // toast not needed here
-import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../services/api';
-import { formatDateForDisplay, formatTimestampIST } from '../utils/dateUtils';
-import { attendanceAPI, batchAPI } from '../services/api';
+import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../../services/api';
+import { formatDateForDisplay, formatTimestampIST } from '../../utils/dateUtils';
+import { attendanceAPI, batchAPI } from '../../services/api';
 
 function ViewAttendanceRow({ record }: { record: Attendance }) {
   const [showReason, setShowReason] = useState(false);

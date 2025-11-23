@@ -3,18 +3,18 @@ import Login from './pages/login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AdminManagementPage from './pages/AdminManagementPage';
 import BatchManagementPage from './pages/BatchManagementPage';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/Admin/AdminDashboard';
 import StudentManagement from './pages/StudentManagement';
-import ViewAttendance from './pages/ViewAttendance';
-import MarkAttendance from './pages/MarkAttendance';
-import ViewStudents from './pages/ViewStudents';
+import ViewAttendance from './pages/Admin/ViewAttendance';
+import MarkAttendance from './pages/Admin/MarkAttendance';
+import ViewStudents from './pages/Admin/ViewStudents';
 import SuperAdminNavbar from './components/superadminnavbar';
 import SuperAdminFooter from './components/superadminfooter';
-import AdminNavbar from './components/adminnavbar';
-import AdminFooter from './components/Footer';
-import AdminProfile from './components/AdminProfile';
+import AdminNavbar from './components/Admin/adminnavbar';
+import AdminFooter from './components/Admin/AdminFooter';
+import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
-import Loader from './components/Loader';
+import Loader from './components/Admin/AdminLoader';
 import './App.css';
 
 function App() {

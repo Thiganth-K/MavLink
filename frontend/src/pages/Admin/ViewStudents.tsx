@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { studentAPI, batchAPI, type Student } from '../services/api';
+import { studentAPI, batchAPI, type Student } from '../../services/api';
 
 export default function ViewStudents() {
   const [students, setStudents] = useState<Student[]>([]);

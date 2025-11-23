@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../services/api';
-import { getTodayIST, formatDateForDisplay } from '../utils/dateUtils';
+import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../../services/api';
+import { getTodayIST, formatDateForDisplay } from '../../utils/dateUtils';
 
 export default function MarkAttendance() {
   const [students, setStudents] = useState<Student[]>([]);
