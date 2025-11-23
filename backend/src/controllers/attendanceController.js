@@ -374,10 +374,19 @@ export const getAttendanceByDateSummary = async (req, res) => {
         });
       });
 
-      summaries.push({ date: dateStr, FN: { total: fnEntries.length, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length }, AN: { total: anEntries.length, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length } });
+      // Only include this date if there are any entries for FN or AN
+      const fnTotal = fnEntries.length;
+      const anTotal = anEntries.length;
+      if (fnTotal > 0 || anTotal > 0) {
+        summaries.push({
+          date: dateStr,
+          FN: { total: fnTotal, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length },
+          AN: { total: anTotal, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length }
+        });
+      }
     }
 
-    return res.status(200).json({ success: true, message: `Summary for ${dateArray.length} dates`, data: summaries });
+    return res.status(200).json({ success: true, message: `Summary for ${summaries.length} recorded dates`, data: summaries });
 
   } catch (error) {
     console.error("Error in getAttendanceByDateSummary:", error);

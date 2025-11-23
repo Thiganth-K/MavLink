@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { FaEye, FaEyeSlash, FaSignOutAlt } from 'react-icons/fa';
+import { FiX } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 import Footer from '../components/Footer';
 import Loader from '../components/AdminDashboard/Loader';
-import { studentAPI } from '../services/api';
+import { studentAPI, batchAPI } from '../services/api';
 import type { Student } from '../services/api';
  
 
@@ -80,12 +82,85 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Listen for in-app navigation events and hash changes so child components can request tab changes
+  useEffect(() => {
+    const onNavigate = (e: any) => {
+      const target = (e && e.detail) || (window.location.hash ? window.location.hash.replace('#', '') : null);
+      if (!target) return;
+      if (target === 'attendance' || target === 'students' || target === 'mark' || target === 'home') {
+        setActiveTab(target as any);
+      }
+    };
+
+    const onHash = () => {
+      const h = window.location.hash.replace('#', '');
+      if (h === 'attendance' || h === 'students' || h === 'mark' || h === 'home') setActiveTab(h as any);
+    };
+
+    window.addEventListener('navigate', onNavigate as EventListener);
+    window.addEventListener('hashchange', onHash);
+
+    // apply current hash if present
+    onHash();
+
+    return () => {
+      window.removeEventListener('navigate', onNavigate as EventListener);
+      window.removeEventListener('hashchange', onHash);
+    };
+  }, []);
+
   const handleLogout = async () => {
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.setItem('showLogoutAnimation', 'true');
     window.location.href = '/';
   };
+
+  // Profile modal state + data
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileData, setProfileData] = useState<{ username: string; password?: string | null; batches: Array<{ batchId?: string; batchName?: string; dept?: string; studentCount?: number }>; } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const openProfile = async () => {
+    setShowProfile(true);
+    if (profileData) return; // already loaded
+    setProfileLoading(true);
+    try {
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : {};
+      const assignedIds: string[] = user.assignedBatchIds || [];
+
+      // fetch all batches once and filter
+      const all = await batchAPI.getBatches();
+      const myBatches = all.filter(b => assignedIds.includes(b.batchId || ''));
+
+      // For each batch, try to get student count from batch.students if present, otherwise fetch students
+      const batchesWithCounts: Array<{ batchId?: string; batchName?: string; dept?: string; studentCount?: number }> = [];
+      for (const b of myBatches) {
+        let count = 0;
+        if (Array.isArray((b as any).students) && (b as any).students.length >= 0) {
+          count = (b as any).students.length;
+        } else {
+          try {
+            const students = await studentAPI.getStudents(b.batchId);
+            count = Array.isArray(students) ? students.length : 0;
+          } catch (err) {
+            count = 0;
+          }
+        }
+        batchesWithCounts.push({ batchId: b.batchId, batchName: b.batchName, dept: (b as any).deptId || undefined, studentCount: count });
+      }
+
+      setProfileData({ username: user.username || user.adminId || 'Admin', password: user.password || null, batches: batchesWithCounts });
+    } catch (e) {
+      setProfileData({ username: 'Admin', password: null, batches: [] });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const closeProfile = () => setShowProfile(false);
 
   // Expose global show/hide helpers that toggle an overlay element by id
   useEffect(() => {
@@ -212,11 +287,14 @@ export default function AdminDashboard() {
               >
                 Mark Attendance
               </button>
+              {/* Profile icon replaces Logout in navbar; opens profile modal */}
               <button
-                onClick={handleLogout}
-                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                onClick={() => openProfile()}
+                className="ml-4 p-1 bg-white/5 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center"
+                title="Profile"
+                aria-label="Open profile"
               >
-                Logout
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">{(displayName || 'A')[0].toUpperCase()}</div>
               </button>
             </div>
           </div>
@@ -385,6 +463,65 @@ export default function AdminDashboard() {
       <div className="mt-12">
         <Footer />
       </div>
+      {/* Profile modal */}
+      {showProfile && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={closeProfile} />
+          <div className="relative w-full max-w-md p-6 bg-white rounded-xl shadow-xl z-70">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-blue-950">Profile</h3>
+              <button onClick={closeProfile} className="text-gray-600 hover:text-gray-800" aria-label="Close profile"><FiX className="w-5 h-5" /></button>
+            </div>
+
+            {profileLoading ? (
+              <div className="py-8 text-center">Loading…</div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-gray-600">Username</div>
+                  <div className="text-blue-900 font-medium">{profileData?.username || 'Admin'}</div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-600">Password</div>
+                  <div className="flex items-center gap-2">
+                    <input type={showPassword ? 'text' : 'password'} value={profileData?.password || ''} readOnly className="px-3 py-2 border border-blue-200 rounded-lg w-full bg-gray-50" />
+                    <button
+                      onClick={() => setShowPassword(s => !s)}
+                      className="px-2 py-2 rounded-md bg-blue-50 text-blue-700"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {(!profileData?.password) && <div className="text-xs text-gray-500 mt-1">Password not available to view</div>}
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-600">Assigned Batches (Dept) — Students</div>
+                  <div className="mt-2 space-y-2">
+                    {profileData && profileData.batches.length === 0 && <div className="text-sm text-gray-600">No batches assigned</div>}
+                    {profileData?.batches.map(b => (
+                      <div key={b.batchId} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-blue-900">{b.batchId} {b.batchName ? `- ${b.batchName}` : ''}</div>
+                          <div className="text-xs text-gray-600">Dept: {b.dept || '-'}</div>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-700">{b.studentCount ?? 0}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 flex gap-2">
+                  <button onClick={handleLogout} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"><FaSignOutAlt /> Logout</button>
+                  <button onClick={closeProfile} className="flex-1 px-4 py-2 bg-gray-200 rounded-lg">Close</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
