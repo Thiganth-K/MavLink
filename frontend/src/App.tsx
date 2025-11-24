@@ -232,6 +232,8 @@ function App() {
         <SuperAdminFooter />
       </div>
     );
+  }
+
   if (path === '/super-admin/admin-batch-mapping') {
     return <AdminBatchMappingPage />;
   }
