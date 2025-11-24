@@ -31,7 +31,7 @@ export default function SuperAdminDashboard() {
       <Toaster position="top-right" />
       <header className={`mb-8 ${mounted ? 'animate-fadeSlide' : 'opacity-0'} text-center`}> 
         <h1 className="text-4xl font-extrabold text-supergreenDark tracking-tight underline-animate inline-block">
-  Super Admin Control Center
+  Super Admin DashBoard
 </h1>
 
         <p className="mt-4 mx-auto max-w-2xl text-sm sm:text-base text-supergreenDark/70 leading-relaxed animate-fadeIn">
@@ -48,6 +48,8 @@ export default function SuperAdminDashboard() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-0 ${mounted ? 'animate-fadeIn' : 'opacity-0'}`}>
           <AdminManagementCard onClick={() => {}} />
           <BatchManagementCard onClick={() => {}} />
+          <ViewBatchesCard onClick={() => { window.location.pathname = '/super-admin/viewbatches'; }} />
+
           <StudentManagementCard />
           <AdminBatchMappingCard />
           <ViewBatchesCard onClick={() => setShowBatchViewerPanel(true)} />
@@ -93,6 +95,19 @@ export default function SuperAdminDashboard() {
             <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">
               Generates an Excel workbook containing Admins, Batches, Departments, Students & Attendance.
             </div>
+          </button>
+          <button
+            onClick={() => { window.location.pathname = '/super-admin/student-analysis'; }}
+            className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold group-hover:scale-105 transition">SA</div>
+              <div>
+                <h3 className="text-lg font-bold text-supergreenDark underline-animate">Student Analysis</h3>
+                <p className="text-sm text-supergreen/80 mt-1">Drill into student attendance performance</p>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">Interactive dashboard: distribution, trends, top & bottom performers.</div>
           </button>
         </div>
       )}

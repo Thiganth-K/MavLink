@@ -474,7 +474,7 @@ export const getAttendanceStats = async (req, res) => {
   logger.debug('getAttendanceStats start', { query: req.query });
   try {
     // Optional query params for date range or batchId
-    const { startDate, endDate, batchId } = req.query;
+    const { startDate, endDate, batchId, deptId } = req.query;
 
     const filter = {};
     if (batchId) filter.batchId = String(batchId).toUpperCase();
@@ -557,8 +557,15 @@ export const getAttendanceStats = async (req, res) => {
       results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptName) r.deptName = r.dept; });
     }
 
-    logger.info('getAttendanceStats success', { durationMs: Date.now() - start, count: results.length });
-    return res.status(200).json(results);
+    // Optional department filter (after enrichment so we have deptId/deptName available)
+    let filtered = results;
+    if (deptId && typeof deptId === 'string') {
+      const key = String(deptId).toUpperCase();
+      filtered = results.filter(r => String(r.dept || '').toUpperCase() === key || String(r.deptId || '').toUpperCase() === key);
+    }
+
+    logger.info('getAttendanceStats success', { durationMs: Date.now() - start, count: filtered.length, deptFilter: deptId || null });
+    return res.status(200).json(filtered);
   } catch (error) {
     logger.error('getAttendanceStats error', { error: error.message });
     return res.status(500).json({ success: false, message: 'Failed to compute attendance stats', error: error.message });

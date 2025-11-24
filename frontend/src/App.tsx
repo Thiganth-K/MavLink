@@ -15,9 +15,10 @@ import AdminFooter from './components/Admin/AdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
- 
 import ViewAnalysisPage from './pages/ViewAnalysisPage';
+import ViewBatchesPage from './pages/ViewBatchesPage';
 import AdminBatchMappingPage from './pages/AdminBatchMapping';
+import StudentAnalysisDashboard from './pages/StudentAnalysisDashboard';
 
 function App() {
   useEffect(() => {
@@ -222,6 +223,26 @@ function App() {
 
   if (path === '/super-admin/viewanalysis') {
     return <ViewAnalysisPage />;
+  }
+
+  if (path === '/super-admin/student-analysis') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <StudentAnalysisDashboard />
+        <SuperAdminFooter />
+      </div>
+    );
+  }
+
+  if (path === '/super-admin/viewbatches') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <ViewBatchesPage />
+        <SuperAdminFooter />
+      </div>
+    );
   }
 
   if (path === '/super-admin/admin-batch-mapping') {

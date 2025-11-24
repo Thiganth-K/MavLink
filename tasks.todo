@@ -1,7 +1,7 @@
 ✔ Change the admin manages only the view students and attendance marking @done (11/19/2025, 7:40:28 PM)
-☐ Super admin can add and edit students
-☐ Add batch option in superadmin panel
-☐ Make a cards for each operation in super admin panel
+✔ Super admin can add and edit students @done (11/24/2025, 6:50:47 PM)
+✔ Add batch option in superadmin panel @done (11/24/2025, 6:50:50 PM)
+✔ Make a cards for each operation in super admin panel @done (11/24/2025, 6:50:52 PM)
 ✔ And a navbar for admin panel (Home, Mark attendance, View Attendance, Select batch, Logout) @done (11/19/2025, 7:49:43 PM)
 ✔ Add a search option to search students in view students page @done (11/19/2025, 7:49:46 PM)
 ✔ Footer creation @done (11/19/2025, 7:55:32 PM)
@@ -11,20 +11,29 @@
 ✔ View attendance day by day option @done (11/19/2025, 10:18:52 PM)
 ✔ Add toggle FN/AN for attendance marking and update the database accordingly @done (11/20/2025, 1:00:12 AM)
 ✔ Submission button in mark attendance page in bottom of the page and after taking attendance give a summary of attendance marked @done (11/19/2025, 10:41:07 PM)
-☐ nav bar and the footer need to be updated in the superadmin note the superadmin need to have a separate file for the footer and navbar and fix the allignments for them
+✔ nav bar and the footer need to be updated in the superadmin note the superadmin need to have a separate file for the footer and navbar and fix the allignments for them @done (11/24/2025, 6:40:33 PM)
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 ☐ need 5 design templates for the login page 
 ☐ need 5 design remplates for the admin dashboard 
 ☐ need 5 design templates for the superadmin dashboard 
 ☐ recommendations for text fonts for the project (professional texts)
-☐ add a profile view feature for the admin 
-☐ the attendance marking page need to have a better design
-☐ the attendance view page need to view all day records 
-☐ the superadmin need to have graphical comparisions among the batches(depts)
-☐ the superadmin need to have a feature to export the student data and attendance data in excel 
-☐ the superadmin can able to map the admin to a particular batch(dept)
-☐ multiple admin can be mapped to the same batch(dept)
-☐ the superadmin to have a better admin administration panel to view all the admins and their mapped batches(depts)
-☐ the superadmin to have a better student administration panel to view all the students and their mapped batches(depts)
-☐ the superadmin to have a better batch management panel to view all the batches(depts) and their mapped admins and students
+✔ add a profile view feature for the admin @done (11/24/2025, 6:40:23 PM)
+✔ the attendance marking page need to have a better design @done (11/24/2025, 6:40:20 PM)
+✔ the attendance view page need to view all day records @done (11/24/2025, 6:40:14 PM)
+✔ the superadmin need to have graphical comparisions among the batches(depts) @done (11/24/2025, 6:40:12 PM)
+✔ the superadmin need to have a feature to export the student data and attendance data in excel @done (11/24/2025, 6:40:09 PM)
+✔ the superadmin can able to map the admin to a particular batch(dept) @done (11/24/2025, 6:40:03 PM)
+
+✔ the superadmin to have a better admin administration panel to view all the admins and their mapped batches(depts) @done (11/24/2025, 6:39:51 PM)
+✔ the superadmin to have a better student administration panel to view all the students and their mapped batches(depts) @done (11/24/2025, 6:39:32 PM)
+✔ the superadmin to have a better batch management panel to view all the batches(depts) and their mapped admins and students @done (11/24/2025, 6:39:28 PM)
 --------------------------------------------------------------------------------------------------------------------------------------
+☐ Individual student(attendance) analysis report generation feature for superadmin
+✔ Mark attendance page need to have attendance percentage display for each student in the list @done (11/24/2025, 6:40:45 PM)
+☐ View attendance page need to have filters for date range
+☐ superadmin nnew feature to have a export data of specific department and specific date and overall data options like that...
+☐ admin to superadmin chat feature
+☐ superadmin to have a notification feature, here the admin requests are viewed and responsed
+☐ clear notification feature for superadmin and the admin 
+☐ change the theme to purple and white try the glass morphism effect tooo
+

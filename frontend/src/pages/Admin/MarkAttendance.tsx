@@ -15,6 +15,7 @@ export default function MarkAttendance() {
   const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; total: number } | null>(null);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
+  const [attendanceStats, setAttendanceStats] = useState<{ [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; total: number } }>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -56,6 +57,8 @@ export default function MarkAttendance() {
       else studentList = await studentAPI.getStudents(batchId);
       studentList.sort((a: Student, b: Student) => (a.regno || '').localeCompare(b.regno || ''));
       setStudents(studentList);
+      // Fetch cumulative stats after loading students
+      await fetchAttendanceStats(batchId || activeBatchId || undefined);
     } catch (e: any) {
       toast.error(e.message || 'Failed to fetch students');
       setStudents([]);
@@ -82,12 +85,35 @@ export default function MarkAttendance() {
       });
       setAttendanceMap(newAttendanceMap);
       setAttendanceReasons(newAttendanceReasons);
+      // Refresh stats as attendance may have changed earlier
+      await fetchAttendanceStats(activeBatchId || undefined);
     } catch (e: any) {
       toast.error(e.message || 'Failed to fetch attendance');
       setAttendanceRecords([]);
     } finally {
       setIsLoading(false);
       (window as any).hideGlobalLoader?.();
+    }
+  };
+
+  const fetchAttendanceStats = async (batchId?: string) => {
+    try {
+      const stats = await attendanceAPI.getAttendanceStats(undefined, undefined, batchId);
+      const map: { [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; total: number } } = {};
+      stats.forEach(s => {
+        const reg = (s.regno || '').toUpperCase();
+        const total = s.totalClasses || 0;
+        const present = s.present || 0;
+        const absent = s.absent || 0;
+        const onDuty = s.onDuty || 0;
+        const percentage = total > 0 ? Math.round((present / total) * 1000) / 10 : 0; // present only
+        const combinedPercentage = total > 0 ? Math.round(((present + onDuty) / total) * 1000) / 10 : 0; // treating On-Duty as attended
+        map[reg] = { percentage, combinedPercentage, present, absent, onDuty, total };
+      });
+      setAttendanceStats(map);
+    } catch (err: any) {
+      // Non-fatal; show toast once
+      toast.error(err.message || 'Failed to load attendance percentages');
     }
   };
 
@@ -241,6 +267,7 @@ export default function MarkAttendance() {
                 <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
                 <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
                 <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
+                <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attd %</th>
                 <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attendance</th>
               </tr>
             </thead>
@@ -250,6 +277,25 @@ export default function MarkAttendance() {
                   <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
                   <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
                   <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
+                  <td className="border border-blue-200 px-4 py-3 text-center">
+                    {(() => {
+                      const reg = (student.regno || '').toUpperCase();
+                      const stat = attendanceStats[reg];
+                      if (!stat) return <span className="text-gray-400 text-sm">--</span>;
+                      const pct = stat.combinedPercentage; // using combined (Present + On-Duty)
+                      let cls = 'bg-gray-200 text-gray-700';
+                      if (pct >= 75) cls = 'bg-green-600 text-white';
+                      else if (pct >= 60) cls = 'bg-yellow-500 text-white';
+                      else if (pct >= 40) cls = 'bg-orange-500 text-white';
+                      else cls = 'bg-red-600 text-white';
+                      return (
+                        <span
+                          title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Absent: ${stat.absent} | Total: ${stat.total} | Pure Present%: ${stat.percentage.toFixed(1)}%`}
+                          className={`inline-block min-w-[60px] px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${cls}`}
+                        >{pct.toFixed(1)}%</span>
+                      );
+                    })()}
+                  </td>
                   <td className="border border-blue-200 px-4 py-3">
                     <div className="flex gap-2 justify-center">
                       <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>

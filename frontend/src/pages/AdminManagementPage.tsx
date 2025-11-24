@@ -107,12 +107,6 @@ export default function AdminManagementPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-supergreenDark">Admin Management</h1>
           <button
-            onClick={() => { window.location.href = '/super-admin'; }}
-            className="px-4 py-2 bg-white border border-supergreenDark/30 text-supergreenDark rounded-lg shadow hover:border-supergreenAccent hover:shadow-md transition-colors"
-          >Back to Dashboard</button>
-        </div>
-        <div className="flex items-center gap-3 mb-6">
-          <button
             onClick={() => {
               if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
             }}
@@ -120,7 +114,13 @@ export default function AdminManagementPage() {
           >
             {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
           </button>
+          <button
+            onClick={() => { window.location.href = '/super-admin'; }}
+            className="px-4 py-2 bg-white border border-supergreenDark/30 text-supergreenDark rounded-lg shadow hover:border-supergreenAccent hover:shadow-md transition-colors"
+          >Back to Dashboard</button>
         </div>
+          
+        
 
         {showCreateForm && (
           <div className="bg-white rounded-xl shadow p-6 mb-8 border border-supergreenDark/30">
