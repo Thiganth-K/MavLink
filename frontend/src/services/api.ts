@@ -593,10 +593,11 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  getAttendanceStats: async (startDate?: string, endDate?: string, batchId?: string): Promise<AttendanceStats[]> => {
+  getAttendanceStats: async (startDate?: string, endDate?: string, batchId?: string, deptId?: string): Promise<AttendanceStats[]> => {
     const params: string[] = [];
     if (startDate && endDate) params.push(`startDate=${startDate}`, `endDate=${endDate}`);
     if (batchId) params.push(`batchId=${encodeURIComponent(batchId)}`);
+    if (deptId) params.push(`deptId=${encodeURIComponent(deptId)}`);
     const query = params.length ? `?${params.join('&')}` : '';
     const url = `${API_BASE_URL}/attendance/stats${query}`;
 

@@ -96,6 +96,19 @@ export default function SuperAdminDashboard() {
               Generates an Excel workbook containing Admins, Batches, Departments, Students & Attendance.
             </div>
           </button>
+          <button
+            onClick={() => { window.location.pathname = '/super-admin/student-analysis'; }}
+            className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold group-hover:scale-105 transition">SA</div>
+              <div>
+                <h3 className="text-lg font-bold text-supergreenDark underline-animate">Student Analysis</h3>
+                <p className="text-sm text-supergreen/80 mt-1">Drill into student attendance performance</p>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">Interactive dashboard: distribution, trends, top & bottom performers.</div>
+          </button>
         </div>
       )}
 
