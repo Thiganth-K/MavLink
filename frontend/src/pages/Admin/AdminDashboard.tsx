@@ -200,6 +200,12 @@ export default function AdminDashboard() {
                     >
                       View Attendance
                     </button>
+                      <button
+                        onClick={() => { window.location.href = '/admin-dashboard/chat'; }}
+                        className="px-6 py-3 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors shadow-lg"
+                      >
+                        Contact Superadmin
+                      </button>
                   </div>
 
                   {/* Modern interactive search bar */}

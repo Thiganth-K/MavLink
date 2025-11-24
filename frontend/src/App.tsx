@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import Login from './pages/login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import SuperAdminMessages from './pages/SuperAdminMessages';
 import AdminManagementPage from './pages/AdminManagementPage';
 import BatchManagementPage from './pages/BatchManagementPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminChat from './components/AdminChat';
 import StudentManagement from './pages/StudentManagement';
 import ViewAttendance from './pages/Admin/ViewAttendance';
 import MarkAttendance from './pages/Admin/MarkAttendance';
@@ -156,6 +158,16 @@ function App() {
     );
   }
 
+  if (path === '/super-admin/messages') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminMessages />
+        <SuperAdminFooter />
+      </div>
+    );
+  }
+
   if (path === '/super-admin/adminManagement') {
     return (
       <div className="min-h-screen flex flex-col">
@@ -179,6 +191,7 @@ function App() {
   if (path.startsWith('/admin-dashboard')) {
     let content: any = null;
     if (path === '/admin-dashboard') content = <AdminDashboard />;
+    else if (path === '/admin-dashboard/chat') content = <div className="max-w-7xl mx-auto p-6 flex-grow"><AdminChat /></div>;
     else if (path === '/admin-dashboard/view-attendance') content = <div className="max-w-7xl mx-auto p-6 flex-grow"><ViewAttendance /></div>;
     else if (path === '/admin-dashboard/mark-attendance') content = <div className="max-w-7xl mx-auto p-6 flex-grow"><MarkAttendance /></div>;
     else if (path === '/admin-dashboard/view-students') content = <div className="max-w-7xl mx-auto p-6 flex-grow"><ViewStudents /></div>;

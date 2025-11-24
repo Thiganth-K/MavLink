@@ -1,4 +1,6 @@
-//import React from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { notificationAPI } from '../../services/api';
+import { FiBell } from 'react-icons/fi';
 
 export default function AdminNavbar() {
   const firstLetter = (() => {
@@ -9,6 +11,30 @@ export default function AdminNavbar() {
       return String(name)[0].toUpperCase();
     } catch (e) { return 'A'; }
   })();
+
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unread, setUnread] = useState(0);
+  const pollRef = useRef<number | null>(null);
+
+  const load = async () => {
+    try {
+      const res = await notificationAPI.list();
+      const arr = Array.isArray(res) ? res : [];
+      setNotifications(arr.slice(0, 20));
+      setUnread(arr.filter((n: any) => !n.read).length);
+    } catch (e) { console.error('load notifications', e); }
+  };
+
+  useEffect(() => {
+    load();
+    pollRef.current = window.setInterval(load, 10000) as unknown as number;
+    const onNotifs = () => { load().catch(() => {}); };
+    window.addEventListener('notificationsChanged', onNotifs as EventListener);
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); window.removeEventListener('notificationsChanged', onNotifs as EventListener); };
+  }, []);
+
+  
 
   return (
     <nav className="bg-blue-950 shadow-lg sticky top-0 z-50">
@@ -30,6 +56,51 @@ export default function AdminNavbar() {
             <a href="/admin-dashboard/view-students" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">View Students</a>
             <a href="/admin-dashboard/view-attendance" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">View Attendance</a>
             <a href="/admin-dashboard/mark-attendance" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">Mark Attendance</a>
+
+            <div className="relative">
+              <button
+                onClick={async () => {
+                  // toggle open; when opening, just load notifications but DO NOT mark them read.
+                  const willOpen = !open;
+                  if (willOpen) {
+                    try {
+                      await load();
+                    } catch (e) { /* ignore */ }
+                    setOpen(true);
+                  } else {
+                    setOpen(false);
+                  }
+                }}
+                className="p-2 rounded-full hover:bg-blue-800/40 relative"
+                aria-label="Notifications"
+              >
+                <FiBell size={18} className="text-white" />
+                {unread > 0 && <span className="absolute -top-1 -right-1 inline-flex items-center justify-center bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">{unread}</span>}
+              </button>
+              {open && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white text-black rounded-lg shadow-lg border z-50">
+                  <div className="px-3 py-2 border-b font-semibold">Notifications</div>
+                  <div className="max-h-60 overflow-auto">
+                    {notifications.length === 0 && <div className="p-3 text-sm text-gray-600">No notification</div>}
+                    {notifications.map((n: any) => (
+                      <button
+                        key={n._id || n.id}
+                        onClick={() => {
+                          try {
+                            // Do NOT mark the notification read here. Only navigate to chat.
+                            window.location.href = '/admin-dashboard/chat';
+                          } catch (e) { console.error(e); }
+                        }}
+                        className="w-full text-left p-3 border-b flex justify-between items-start gap-2"
+                      >
+                        <div className="text-sm">{n.message || (n.meta && n.meta.preview) || n.text}</div>
+                        {!n.read && <span className="text-xs text-blue-600">New</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button
               title="Profile"

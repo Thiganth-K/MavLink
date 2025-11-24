@@ -408,6 +408,130 @@ export const studentAPI = {
   },
 };
 
+// Chat & Notifications API
+export const chatAPI = {
+  adminSend: async (content: string) => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = 'ADMIN';
+
+    const res = await fetch(`${API_BASE_URL}/chat/admin/send`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ content })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to send message');
+    }
+    return res.json();
+  },
+
+  superadminReply: async (toAdminId: string, content: string) => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = 'SUPER_ADMIN';
+
+    const res = await fetch(`${API_BASE_URL}/chat/superadmin/reply`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ toAdminId, content })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to send reply');
+    }
+    return res.json();
+  },
+
+  listMessages: async (withAdminId?: string) => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const role = localStorage.getItem('role') || '';
+
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role) headers['X-Role'] = role;
+
+    const q = withAdminId ? `?withAdminId=${encodeURIComponent(withAdminId)}` : '';
+    const res = await fetch(`${API_BASE_URL}/chat/messages${q}`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch messages');
+    }
+    return res.json();
+  },
+
+  markMessageRead: async (id: string) => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const role = localStorage.getItem('role') || '';
+
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role) headers['X-Role'] = role;
+
+    const res = await fetch(`${API_BASE_URL}/chat/${id}/read`, {
+      method: 'POST',
+      headers
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to mark message');
+    }
+    return res.json();
+  }
+};
+
+export const notificationAPI = {
+  list: async () => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const role = localStorage.getItem('role') || '';
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role) headers['X-Role'] = role;
+
+    const res = await fetch(`${API_BASE_URL}/notifications`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch notifications');
+    }
+    return res.json();
+  },
+
+  markRead: async (id: string) => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const role = localStorage.getItem('role') || '';
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role) headers['X-Role'] = role;
+
+    const res = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'POST',
+      headers
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to mark notification');
+    }
+    return res.json();
+  }
+};
+
 // Backend API Response Interfaces
 interface AttendanceAPIResponse {
   success: boolean;

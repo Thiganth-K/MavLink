@@ -109,6 +109,19 @@ export default function SuperAdminDashboard() {
             </div>
             <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">Interactive dashboard: distribution, trends, top & bottom performers.</div>
           </button>
+          <button
+            onClick={() => { window.location.pathname = '/super-admin/messages'; }}
+            className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold group-hover:scale-105 transition">MSG</div>
+              <div>
+                <h3 className="text-lg font-bold text-supergreenDark underline-animate">Messages</h3>
+                <p className="text-sm text-supergreen/80 mt-1">View and reply to admin requests</p>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">Open the messaging panel to respond to admin requests and manage notifications.</div>
+          </button>
         </div>
       )}
 

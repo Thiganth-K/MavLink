@@ -23,7 +23,6 @@
 ✔ the superadmin need to have graphical comparisions among the batches(depts) @done (11/24/2025, 6:40:12 PM)
 ✔ the superadmin need to have a feature to export the student data and attendance data in excel @done (11/24/2025, 6:40:09 PM)
 ✔ the superadmin can able to map the admin to a particular batch(dept) @done (11/24/2025, 6:40:03 PM)
-
 ✔ the superadmin to have a better admin administration panel to view all the admins and their mapped batches(depts) @done (11/24/2025, 6:39:51 PM)
 ✔ the superadmin to have a better student administration panel to view all the students and their mapped batches(depts) @done (11/24/2025, 6:39:32 PM)
 ✔ the superadmin to have a better batch management panel to view all the batches(depts) and their mapped admins and students @done (11/24/2025, 6:39:28 PM)
@@ -31,9 +30,8 @@
 ☐ Individual student(attendance) analysis report generation feature for superadmin
 ✔ Mark attendance page need to have attendance percentage display for each student in the list @done (11/24/2025, 6:40:45 PM)
 ☐ View attendance page need to have filters for date range
-☐ superadmin nnew feature to have a export data of specific department and specific date and overall data options like that...
-☐ admin to superadmin chat feature
-☐ superadmin to have a notification feature, here the admin requests are viewed and responsed
+☐ superadmin new feature to have a export data of specific department and specific date and overall data options like that...
+✔ admin to superadmin chat feature @done (11/25/2025, 1:30:46 AM)
+✔ superadmin to have a notification feature, here the admin requests are viewed and responsed @done (11/25/2025, 1:30:51 AM)
 ☐ clear notification feature for superadmin and the admin 
-☐ change the theme to purple and white try the glass morphism effect tooo
-
+☐ change the theme to purple and white try the glass morphism effect tooo 
