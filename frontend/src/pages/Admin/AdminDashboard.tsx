@@ -7,6 +7,7 @@ import type { Student } from '../../services/api';
 import MarkAttendance from './MarkAttendance';
 import ViewAttendance from './ViewAttendance';
 import ViewStudents from './ViewStudents';
+import { FiSearch, FiX } from 'react-icons/fi';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'home' | 'students' | 'attendance' | 'mark'>('home');
@@ -158,7 +159,18 @@ export default function AdminDashboard() {
               }
               .animate-popIn { animation: popIn 0.32s ease-out both; }
 
-              .search-input:focus { box-shadow: 0 6px 20px rgba(14, 42, 88, 0.12); }
+              /* Search bar styling (scoped) */
+              .search-wrapper { display: flex; align-items: center; border-radius: 9999px; overflow: hidden; transition: box-shadow .15s ease, border-color .15s ease; }
+              .search-wrapper { border: 2px solid rgba(59,130,246,0.24); }
+              .search-wrapper:focus-within { box-shadow: 0 6px 20px rgba(14, 42, 88, 0.12); border-color: rgba(59,130,246,0.6); }
+              .search-input { flex: 1; padding: 0.75rem 1rem; background: transparent; color: #0f172a; border: none; }
+              .search-input::placeholder { color: rgba(59,130,246,0.5); }
+              .search-input:focus { outline: none; }
+              .search-btn { height: 100%; padding: 0 0.9rem; background-color: #2563eb; color: white; display: flex; align-items: center; justify-content: center; border: none; }
+              .search-btn:hover { background-color: #1e40af; }
+              .search-btn:focus { outline: 2px solid rgba(255,255,255,0.12); outline-offset: -2px; }
+
+              .search-input:focus { box-shadow: none; }
             `}</style>
             {/* Hero Section */}
             <div className="p-12 w-full">
@@ -190,66 +202,86 @@ export default function AdminDashboard() {
                     </button>
                   </div>
 
-                  {/* Search bar below the two buttons */}
+                  {/* Modern interactive search bar */}
                   <div className="mt-6 w-full max-w-3xl">
-                    <div className="flex w-full">
-                      <input
-                        type="search"
-                        value={heroSearch}
-                        onChange={(e) => setHeroSearch(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { localStorage.setItem('adminSearchQuery', heroSearch); window.location.href = '/admin-dashboard/view-students'; } }}
-                        placeholder="Search students by regno or name"
-                        className="search-input px-4 py-3 border border-blue-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none flex-grow"
-                      />
-                      <button
-                        onClick={() => { localStorage.setItem('adminSearchQuery', heroSearch); window.location.href = '/admin-dashboard/view-students'; }}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors ml-3 shadow-sm"
-                      >
-                        Search
-                      </button>
-                    </div>
+                    <div className="flex justify-center">
+                      <div className="w-full relative">
+                        <div className="search-wrapper px-2 bg-white/80 dark:bg-white/10 rounded-full shadow-sm">
+                          <div className="flex items-center w-full">
+                            <div className="pl-3 pr-2 text-blue-500">
+                              <FiSearch className="w-5 h-5" />
+                            </div>
+                            <input
+                              type="search"
+                              value={heroSearch}
+                              onChange={(e) => setHeroSearch(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  localStorage.setItem('adminSearchQuery', heroSearch);
+                                  window.location.href = '/admin-dashboard/view-students';
+                                }
+                              }}
+                              placeholder="Search students by regno or name"
+                              aria-label="Search students"
+                              className="search-input flex-grow text-sm lg:text-base"
+                            />
+                            {heroSearch && (
+                              <button
+                                onClick={() => setHeroSearch('')}
+                                className="search-btn ml-2 mr-1 rounded-full"
+                                aria-label="Clear search"
+                                title="Clear"
+                                type="button"
+                              >
+                                <FiX className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
 
-                    {/* Results table (styled like ViewStudents) - only show when user has typed */}
-                    {heroSearch.trim() && (
-                      <div className="mt-4 bg-white rounded-xl shadow-xl p-4 overflow-x-auto animate-popIn">
-                      <table className="w-full border-collapse border border-blue-200">
-                        <thead>
-                          <tr className="bg-blue-100">
-                            <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                            <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                            <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-                            <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                            <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {isSearching ? (
-                            <tr>
-                              <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Searching...</td>
-                            </tr>
-                          ) : !heroSearch.trim() ? (
-                            <tr>
-                              <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Type to search students</td>
-                            </tr>
-                          ) : searchResults.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No results</td>
-                            </tr>
-                          ) : (
-                            searchResults.map((s) => (
-                              <tr key={s._id || s.regno} className="hover:bg-blue-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
-                                <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.regno}</td>
-                                <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.studentname}</td>
-                                <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.email}</td>
-                                <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.dept}</td>
-                                <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.phno}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
+                        {/* Results table (styled like ViewStudents) - only show when user has typed */}
+                        {heroSearch.trim() && (
+                          <div className="mt-4 bg-white rounded-xl shadow-xl p-4 overflow-x-auto animate-popIn">
+                            <table className="w-full border-collapse border border-blue-200">
+                              <thead>
+                                <tr className="bg-blue-100">
+                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
+                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
+                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
+                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
+                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {isSearching ? (
+                                  <tr>
+                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Searching...</td>
+                                  </tr>
+                                ) : !heroSearch.trim() ? (
+                                  <tr>
+                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Type to search students</td>
+                                  </tr>
+                                ) : searchResults.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No results</td>
+                                  </tr>
+                                ) : (
+                                  searchResults.map((s) => (
+                                    <tr key={s._id || s.regno} className="hover:bg-blue-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
+                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.regno}</td>
+                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.studentname}</td>
+                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.email}</td>
+                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.dept}</td>
+                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.phno}</td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    )}
                   </div>
                 </div>
               </div>
