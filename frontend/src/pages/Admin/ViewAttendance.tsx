@@ -55,6 +55,8 @@ export default function ViewAttendance() {
   const [selectedDateForDetail, setSelectedDateForDetail] = useState<string | null>(null);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   useEffect(() => {
     fetchAssignedBatches();
@@ -84,20 +86,47 @@ export default function ViewAttendance() {
     }
   };
 
-  const fetchAttendanceSummary = async (days = 30, batchId?: string) => {
+  const buildDatesBetween = (start: string, end: string) => {
+    const s = new Date(start + 'T00:00:00');
+    const e = new Date(end + 'T00:00:00');
+    const dates: string[] = [];
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dates.push(`${yyyy}-${mm}-${dd}`);
+    }
+    return dates;
+  };
+
+  const fetchAttendanceSummary = async (days = 30, batchId?: string, start?: string | null, end?: string | null) => {
     try {
       (window as any).showGlobalLoader?.('attendance-summary');
       setIsLoading(true);
-      const dates: string[] = [];
-      const today = new Date();
-      for (let i = 0; i < days; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        dates.push(`${yyyy}-${mm}-${dd}`);
+      let dates: string[] = [];
+      if (start && end) {
+        // validate
+        const sDate = new Date(start + 'T00:00:00');
+        const eDate = new Date(end + 'T00:00:00');
+        if (isNaN(sDate.getTime()) || isNaN(eDate.getTime()) || sDate > eDate) {
+          throw new Error('Invalid date range');
+        }
+        // limit to 180 days to avoid huge requests
+        const diffDays = Math.floor((eDate.getTime() - sDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (diffDays > 180) throw new Error('Date range too large (max 180 days)');
+        dates = buildDatesBetween(start, end);
+      } else {
+        const today = new Date();
+        for (let i = 0; i < days; i++) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - i);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          dates.push(`${yyyy}-${mm}-${dd}`);
+        }
       }
+
       const resp = await attendanceAPI.getAttendanceByDateSummary(dates, batchId || activeBatchId || undefined);
       setAttendanceSummary(resp.data || []);
       // If the overlay is visible, force-hide it now that summary is set (avoid long overlay specifically for this page)
@@ -164,15 +193,37 @@ export default function ViewAttendance() {
           <div className="mb-4 flex items-center justify-between">
             <p className="text-violet-800">Click on any date card to view detailed attendance</p>
             <div>
-              <label className="text-violet-900 font-medium mr-2">Batch:</label>
-              <select
-                value={activeBatchId}
-                onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
-                className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
-              >
-                <option value="">All assigned batches</option>
-                {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
-              </select>
+              <div className="flex items-center gap-3">
+                <label className="text-violet-900 font-medium">Batch:</label>
+                <select
+                  value={activeBatchId}
+                  onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
+                  className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                >
+                  <option value="">All assigned batches</option>
+                  {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
+                </select>
+
+                <div className="flex items-center gap-2">
+                  <label className="text-violet-900 font-medium">From:</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
+                  <label className="text-violet-900 font-medium">To:</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
+                  <button
+                    onClick={() => fetchAttendanceSummary(0, activeBatchId || undefined, startDate || null, endDate || null)}
+                    className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+                  >
+                    Apply
+                  </button>
+                </div>
+
+                <div className="ml-3 flex items-center gap-2">
+                  <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 6); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 7</button>
+                  <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 29); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 30</button>
+                  <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 89); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 90</button>
+                  <button onClick={() => { setStartDate(''); setEndDate(''); fetchAttendanceSummary(30, activeBatchId || undefined); }} className="px-2 py-1 bg-gray-50 rounded text-sm">Clear</button>
+                </div>
+              </div>
             </div>
           </div>
 

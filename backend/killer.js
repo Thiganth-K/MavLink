@@ -1,7 +1,7 @@
 // killer.js - destructive purge script
 // Usage Examples (PowerShell):
-//   node killer.js --preserve-superadmin          # Remove all admins except SUPER_ADMIN, plus batches, students, attendance
-//   node killer.js --nuke-all                     # Remove EVERYTHING (admins incl. SUPER_ADMIN, batches, students, attendance, departments)
+//   node killer.js --preserve-superadmin          # Remove all admins except SUPER_ADMIN, plus batches, students, attendance, chats, notifications
+//   node killer.js --nuke-all                     # Remove EVERYTHING (all collections including SUPER_ADMIN)
 //   node killer.js --keep-departments            # Keep Department collection while purging others
 //   FORCE=1 node killer.js --nuke-all            # Skip interactive confirmation (env FORCE=1)
 
@@ -16,6 +16,8 @@ import Batch from './src/models/Batch.js';
 import Student from './src/models/Student.js';
 import Attendance from './src/models/Attendance.js';
 import Department from './src/models/Department.js';
+import ChatMessage from './src/models/ChatMessage.js';
+import Notification from './src/models/Notification.js';
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -54,8 +56,10 @@ async function purge() {
   console.log(` - Delete batches (all)`);
   console.log(` - Delete students (all)`);
   console.log(` - Delete attendance records (all)`);
+  console.log(` - Delete chat messages (all)`);
+  console.log(` - Delete notifications (all)`);
   console.log(` - Delete admins ${preserveSuperAdmin ? '(excluding SUPER_ADMIN)' : '(including SUPER_ADMIN)'}`);
-  console.log(` - Delete departments ${keepDepartments ? '(SKIPPED)' : '(all, unless preserve-superadmin without nuke-all? still deleting unless keep flag)'}`);
+  console.log(` - Delete departments ${keepDepartments ? '(SKIPPED)' : '(all)'}`);
 
   const ok = await confirmPrompt('Proceed with purge?');
   if (!ok) {
@@ -63,7 +67,7 @@ async function purge() {
     process.exit(0);
   }
 
-  const summary = { adminsRemoved: 0, batchesRemoved: 0, studentsRemoved: 0, attendanceRemoved: 0, departmentsRemoved: 0 };
+  const summary = { adminsRemoved: 0, batchesRemoved: 0, studentsRemoved: 0, attendanceRemoved: 0, chatMessagesRemoved: 0, notificationsRemoved: 0, departmentsRemoved: 0 };
 
   // Attendance first (optional order). Simpler to just delete all.
   const attRes = await Attendance.deleteMany({});
@@ -79,6 +83,16 @@ async function purge() {
   const studRes = await Student.deleteMany({});
   summary.studentsRemoved = studRes.deletedCount || 0;
   console.log(`Removed ${summary.studentsRemoved} students.`);
+
+  // Chat Messages
+  const chatRes = await ChatMessage.deleteMany({});
+  summary.chatMessagesRemoved = chatRes.deletedCount || 0;
+  console.log(`Removed ${summary.chatMessagesRemoved} chat messages.`);
+
+  // Notifications
+  const notifRes = await Notification.deleteMany({});
+  summary.notificationsRemoved = notifRes.deletedCount || 0;
+  console.log(`Removed ${summary.notificationsRemoved} notifications.`);
 
   // Admins
   let adminFilter = {};
