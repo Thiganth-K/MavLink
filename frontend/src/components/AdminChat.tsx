@@ -88,7 +88,7 @@ const AdminChat: React.FC = () => {
               const fromAdmin = m.from?.role === 'ADMIN';
               return (
                 <div key={m._id} className={`max-w-[75%] ${fromAdmin ? 'ml-auto text-right' : 'mr-auto text-left'}`}>
-                  <div className={`inline-block px-4 py-2 rounded-lg ${fromAdmin ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                  <div className={`inline-block px-4 py-2 rounded-lg ${fromAdmin ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
                     <div className="text-xs opacity-70">{m.from?.username || m.from?.role || ''} • {new Date(m.createdAt).toLocaleString()}</div>
                     <div className="mt-1 text-sm whitespace-pre-wrap">{m.content}</div>
                   </div>
@@ -130,7 +130,7 @@ const AdminChat: React.FC = () => {
                 placeholder="Write your message to superadmin"
                 style={{height: 'auto'}}
               />
-              <button onClick={send} disabled={loading || !content.trim()} className="p-3 rounded-full bg-blue-600 text-white disabled:opacity-50 hover:bg-blue-700 flex items-center justify-center">
+              <button onClick={send} disabled={loading || !content.trim()} className="p-3 rounded-full bg-violet-600 text-white disabled:opacity-50 hover:bg-violet-700 flex items-center justify-center">
                 <FiSend size={18} />
               </button>
             </div>

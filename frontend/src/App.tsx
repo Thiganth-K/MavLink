@@ -197,7 +197,7 @@ function App() {
     else if (path === '/admin-dashboard/view-students') content = <div className="max-w-7xl mx-auto p-6 flex-grow"><ViewStudents /></div>;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-200 flex flex-col">
         <AdminNavbar />
         <div id="global-loader" style={{ display: 'none' }} className="fixed inset-0 z-50 bg-black/40 items-center justify-center">
           <div className="w-full h-full flex items-center justify-center">
@@ -211,7 +211,7 @@ function App() {
             <div className="absolute inset-0 bg-black/40" onClick={closeProfile} />
             <aside className="absolute right-0 top-16 bottom-0 w-full max-w-sm bg-white shadow-xl p-6 transform transition-transform" role="dialog" aria-label="Profile panel">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-blue-950">Profile</h3>
+                <h3 className="text-lg font-bold text-purple-950">Profile</h3>
               </div>
               <AdminProfile profileLoading={profileLoading} profileData={profileData} showPassword={showPassword} setShowPassword={setShowPassword} onLogout={handleLogout} />
             </aside>

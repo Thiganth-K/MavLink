@@ -181,7 +181,7 @@ export default function BatchManagement({ onClose }: Props) {
 	return (
 		<div className="bg-white rounded-xl shadow-xl p-6">
 			<div className="flex justify-between items-center mb-6">
-				<h2 className="text-2xl font-bold text-blue-950">Batch Management</h2>
+				<h2 className="text-2xl font-bold text-violet-950">Batch Management</h2>
 				<div className="flex gap-3">
 					<button
 						onClick={() => {
@@ -191,7 +191,7 @@ export default function BatchManagement({ onClose }: Props) {
 								setShowForm(true);
 							}
 						}}
-						className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+						className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
 					>
 						{showForm ? (editingBatch ? 'Cancel Edit' : 'Cancel') : 'Create New Batch'}
 					</button>
@@ -199,57 +199,57 @@ export default function BatchManagement({ onClose }: Props) {
 			</div>
 
 			{(showForm || editingBatch) && (
-				<div className="bg-blue-50 p-6 rounded-lg mb-6">
-					<h3 className="text-xl font-semibold text-blue-950 mb-4">{editingBatch ? 'Edit Batch' : 'Create New Batch'}</h3>
+				<div className="bg-violet-50 p-6 rounded-lg mb-6">
+					<h3 className="text-xl font-semibold text-violet-950 mb-4">{editingBatch ? 'Edit Batch' : 'Create New Batch'}</h3>
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="grid md:grid-cols-2 gap-4">
 							<div>
-								<label className="block text-blue-900 mb-1 font-medium">Batch ID (unique)</label>
+								<label className="block text-violet-900 mb-1 font-medium">Batch ID (unique)</label>
 								<input
 									type="text"
 									value={batchId}
 									onChange={(e) => setBatchId(e.target.value.toUpperCase())}
-									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+									className="w-full px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
 									required={!editingBatch}
 									disabled={!!editingBatch}
 								/>
 							</div>
 							<div>
-								<label className="block text-blue-900 mb-1 font-medium">Batch Name</label>
+								<label className="block text-violet-900 mb-1 font-medium">Batch Name</label>
 								<input
 									type="text"
 									value={batchName}
 									onChange={(e) => setBatchName(e.target.value)}
-									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+									className="w-full px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
 									required
 								/>
 							</div>
 							<div>
-								<label className="block text-blue-900 mb-1 font-medium">Batch Year</label>
+								<label className="block text-violet-900 mb-1 font-medium">Batch Year</label>
 								<input
 									type="number"
 									value={batchYear}
 									onChange={(e) => setBatchYear(e.target.value ? Number(e.target.value) : '')}
-									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+									className="w-full px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
 									required
 								/>
 							</div>
 							<div>
-								<label className="block text-blue-900 mb-1 font-medium">Department (auto)</label>
+								<label className="block text-violet-900 mb-1 font-medium">Department (auto)</label>
 								<input
 									type="text"
 									value={deptId}
 									readOnly
 									placeholder="Detected from students CSV"
-									className="w-full px-4 py-2 border border-dashed border-blue-300 bg-gray-50 rounded-lg focus:outline-none text-blue-700"
+									className="w-full px-4 py-2 border border-dashed border-violet-300 bg-gray-50 rounded-lg focus:outline-none text-violet-700"
 								/>
 							</div>
 							<div>
-								<label className="block text-blue-900 mb-1 font-medium">Assign Admin (optional)</label>
+								<label className="block text-violet-900 mb-1 font-medium">Assign Admin (optional)</label>
 								<select
 									value={adminId}
 									onChange={(e) => setAdminId(e.target.value)}
-									className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+									className="w-full px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
 								>
 									<option value="">None</option>
 									{admins.map(a => <option key={a._id} value={a.adminId}>{a.adminId} - {a.username}</option>)}
@@ -257,17 +257,17 @@ export default function BatchManagement({ onClose }: Props) {
 							</div>
 						</div>
 						<div>
-							<label className="block text-blue-900 mb-1 font-medium">Students (CSV lines)</label>
+							<label className="block text-violet-900 mb-1 font-medium">Students (CSV lines)</label>
 							<textarea
 								placeholder="name,regno,dept,email,mobile\nJane Doe,REG123,CSE,jane@example.com,9876543210"
 								value={studentsText}
 								onChange={(e) => setStudentsText(e.target.value)}
 								rows={8}
-								className="w-full px-4 py-2 border border-blue-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+								className="w-full px-4 py-2 border border-violet-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
 							/>
 							<div className="mt-2 text-sm">
 								{previewError && <span className="text-red-600">{previewError}</span>}
-								{!previewError && <span className="text-blue-700">Parsed students: {previewCount}</span>}
+								{!previewError && <span className="text-violet-700">Parsed students: {previewCount}</span>}
 								{missingDeptMessage && !previewError && (
 									<div className="text-amber-600 mt-1">{missingDeptMessage}</div>
 								)}
@@ -277,7 +277,7 @@ export default function BatchManagement({ onClose }: Props) {
 							<button
 								type="submit"
 								disabled={isLoading}
-								className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+								className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50"
 							>
 								{isLoading ? 'Saving...' : (editingBatch ? 'Update Batch' : 'Create Batch')}
 							</button>
@@ -298,43 +298,43 @@ export default function BatchManagement({ onClose }: Props) {
 			{isLoading ? (
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 					{[...Array(3)].map((_, i) => (
-						<div key={i} className="bg-white rounded-xl border border-blue-200 shadow animate-pulse p-5">
-							<div className="h-6 w-32 bg-blue-100 rounded mb-3" />
-							<div className="h-4 w-24 bg-blue-100 rounded mb-5" />
+						<div key={i} className="bg-white rounded-xl border border-violet-200 shadow animate-pulse p-5">
+							<div className="h-6 w-32 bg-violet-100 rounded mb-3" />
+							<div className="h-4 w-24 bg-violet-100 rounded mb-5" />
 							<div className="flex gap-3">
-								<div className="h-9 w-20 bg-blue-100 rounded" />
-								<div className="h-9 w-20 bg-blue-100 rounded" />
+								<div className="h-9 w-20 bg-violet-100 rounded" />
+								<div className="h-9 w-20 bg-violet-100 rounded" />
 							</div>
 						</div>
 					))}
 				</div>
 			) : batches.length === 0 ? (
-				<div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-blue-800 text-center">
+				<div className="bg-violet-50 border border-violet-200 rounded-xl p-6 text-violet-800 text-center">
 					No batches found. Create one.
 				</div>
 			) : (
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 					{batches.map(batch => (
-						<div key={batch._id} className="bg-white rounded-xl border border-blue-200 shadow hover:shadow-lg transition p-5 flex flex-col">
+						<div key={batch._id} className="bg-white rounded-xl border border-violet-200 shadow hover:shadow-lg transition p-5 flex flex-col">
 							<div className="flex items-start justify-between mb-4">
 								<div>
-									<p className="text-blue-950 font-semibold leading-tight">{batch.batchName}</p>
-									<p className="text-sm text-blue-700">Year: {batch.batchYear}</p>
-									<p className="text-xs text-blue-600">Batch ID: {batch.batchId}</p>
-									{batch.deptId && <p className="text-xs text-blue-600">Dept: {batch.deptId}</p>}
+									<p className="text-violet-950 font-semibold leading-tight">{batch.batchName}</p>
+									<p className="text-sm text-violet-700">Year: {batch.batchYear}</p>
+									<p className="text-xs text-violet-600">Batch ID: {batch.batchId}</p>
+									{batch.deptId && <p className="text-xs text-violet-600">Dept: {batch.deptId}</p>}
 									{batch.adminId ? (
-										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Admin: {batch.adminId}</span>
+										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-violet-100 text-violet-700">Admin: {batch.adminId}</span>
 									) : (
 										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">No Admin</span>
 									)}
-									<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+									<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-violet-100 text-violet-700">
 										{batch.students.length} students
 									</span>
 								</div>
 							</div>
 							{batch.students.length > 0 && (
 								<details className="mb-3">
-									<summary className="cursor-pointer text-sm text-blue-600">View students</summary>
+									<summary className="cursor-pointer text-sm text-violet-600">View students</summary>
 									<ul className="mt-2 text-xs max-h-40 overflow-auto divide-y">
 										{batch.students.map((s, idx) => (
 											<li key={idx} className="py-1">

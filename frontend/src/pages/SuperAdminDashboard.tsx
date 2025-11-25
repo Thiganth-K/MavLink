@@ -27,7 +27,7 @@ export default function SuperAdminDashboard() {
 
   return (
     
-    <div className="min-h-screen  flex flex-col bg-gradient-to-br from-supercream to-green-200 pt-8 px-6 pb-4 ">
+    <div className="min-h-screen  flex flex-col bg-gradient-to-br from-supercream to-violet-200 pt-8 px-6 pb-4 ">
       <Toaster position="top-right" />
       <header className={`mb-8 ${mounted ? 'animate-fadeSlide' : 'opacity-0'} text-center`}> 
         <h1 className="text-4xl font-extrabold text-supergreenDark tracking-tight underline-animate inline-block">

@@ -6,7 +6,7 @@ export default function ViewAnalysisPage() {
   return (
     <div className="min-h-screen flex flex-col">
   <SuperAdminNavbar onLogout={() => {}} />
-  <main className="p-6 bg-gradient-to-br from-supercream to-green-200 flex-grow">
+  <main className="p-6 bg-gradient-to-br from-supercream to-violet-200 flex-grow">
     <div className="max-w-6xl mx-auto">
       
       {/* Header row */}

@@ -37,12 +37,12 @@ export default function AdminNavbar() {
   
 
   return (
-    <nav className="bg-blue-950 shadow-lg sticky top-0 z-50">
+    <nav className="bg-violet-950 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-3">
             <svg
-              className="w-8 h-8 text-blue-400"
+              className="w-8 h-8 text-violet-400"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -52,10 +52,10 @@ export default function AdminNavbar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <a href="/admin-dashboard" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">Home</a>
-            <a href="/admin-dashboard/view-students" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">View Students</a>
-            <a href="/admin-dashboard/view-attendance" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">View Attendance</a>
-            <a href="/admin-dashboard/mark-attendance" className="px-4 py-2 rounded-lg font-medium text-blue-200 hover:bg-blue-800 hover:text-white">Mark Attendance</a>
+            <a href="/admin-dashboard" className="px-4 py-2 rounded-lg font-medium text-violet-200 hover:bg-violet-800 hover:text-white">Home</a>
+            <a href="/admin-dashboard/view-students" className="px-4 py-2 rounded-lg font-medium text-violet-200 hover:bg-violet-800 hover:text-white">View Students</a>
+            <a href="/admin-dashboard/view-attendance" className="px-4 py-2 rounded-lg font-medium text-violet-200 hover:bg-violet-800 hover:text-white">View Attendance</a>
+            <a href="/admin-dashboard/mark-attendance" className="px-4 py-2 rounded-lg font-medium text-violet-200 hover:bg-violet-800 hover:text-white">Mark Attendance</a>
 
             <div className="relative">
               <button
@@ -71,7 +71,7 @@ export default function AdminNavbar() {
                     setOpen(false);
                   }
                 }}
-                className="p-2 rounded-full hover:bg-blue-800/40 relative"
+                className="p-2 rounded-full hover:bg-violet-800/40 relative"
                 aria-label="Notifications"
               >
                 <FiBell size={18} className="text-white" />
@@ -94,7 +94,7 @@ export default function AdminNavbar() {
                         className="w-full text-left p-3 border-b flex justify-between items-start gap-2"
                       >
                         <div className="text-sm">{n.message || (n.meta && n.meta.preview) || n.text}</div>
-                        {!n.read && <span className="text-xs text-blue-600">New</span>}
+                        {!n.read && <span className="text-xs text-violet-600">New</span>}
                       </button>
                     ))}
                   </div>
@@ -108,7 +108,7 @@ export default function AdminNavbar() {
               onClick={() => { try { window.dispatchEvent(new CustomEvent('toggleProfile')); } catch (e) {} }}
               className="ml-4 relative w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow-md"
             >
-                <span className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">{firstLetter}</span>
+                <span className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold">{firstLetter}</span>
             </button>
           </div>
         </div>

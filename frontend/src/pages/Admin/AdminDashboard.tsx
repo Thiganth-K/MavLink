@@ -111,7 +111,7 @@ export default function AdminDashboard() {
   // Global loader helpers are provided by the App-level layout so they are available across admin pages.
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-violet-100 to-violet-300 flex flex-col">
       <Toaster position="top-center" />
       {/* App-level global overlay loader is mounted in `App.tsx` so we don't duplicate it here */}
       
@@ -161,13 +161,13 @@ export default function AdminDashboard() {
 
               /* Search bar styling (scoped) */
               .search-wrapper { display: flex; align-items: center; border-radius: 9999px; overflow: hidden; transition: box-shadow .15s ease, border-color .15s ease; }
-              .search-wrapper { border: 2px solid rgba(59,130,246,0.24); }
-              .search-wrapper:focus-within { box-shadow: 0 6px 20px rgba(14, 42, 88, 0.12); border-color: rgba(59,130,246,0.6); }
+              .search-wrapper { border: 2px solid rgba(124,58,237,0.24); }
+              .search-wrapper:focus-within { box-shadow: 0 6px 20px rgba(14, 42, 88, 0.12); border-color: rgba(124,58,237,0.6); }
               .search-input { flex: 1; padding: 0.75rem 1rem; background: transparent; color: #0f172a; border: none; }
-              .search-input::placeholder { color: rgba(59,130,246,0.5); }
+              .search-input::placeholder { color: rgba(124,58,237,0.5); }
               .search-input:focus { outline: none; }
-              .search-btn { height: 100%; padding: 0 0.9rem; background-color: #2563eb; color: white; display: flex; align-items: center; justify-content: center; border: none; }
-              .search-btn:hover { background-color: #1e40af; }
+              .search-btn { height: 100%; padding: 0 0.9rem; background-color: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; border: none; }
+              .search-btn:hover { background-color: #5b21b6; }
               .search-btn:focus { outline: 2px solid rgba(255,255,255,0.12); outline-offset: -2px; }
 
               .search-input:focus { box-shadow: none; }
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
             {/* Hero Section */}
             <div className="p-12 w-full">
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-blue-950 mb-4 hero-title animate-superIn">
+                <h1 className="text-4xl font-bold text-violet-950 mb-4 hero-title animate-superIn">
                   {(() => {
                     const tc = (s: string) => s.split(/\s+/).map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : '').join(' ');
                     return tc('welcome to mavlink,');
@@ -183,20 +183,20 @@ export default function AdminDashboard() {
                   &nbsp;
                   <span className="hero-username sparkle">{displayName}!!</span>
                 </h1>
-                <p className="text-xl text-blue-800 mb-8">
+                <p className="text-xl text-violet-800 mb-8">
                   Manage students and track attendance efficiently
                 </p>
                 <div className="flex justify-center gap-4 flex-col items-center animate-heroPop">
                   <div className="flex gap-4">
                     <button
                       onClick={() => { window.location.href = '/admin-dashboard/mark-attendance'; }}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg"
+                      className="px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors shadow-lg"
                     >
                       Mark Attendance
                     </button>
                     <button
                       onClick={() => { window.location.href = '/admin-dashboard/view-attendance'; }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
+                      className="px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors shadow-lg"
                     >
                       View Attendance
                     </button>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                       <div className="w-full relative">
                         <div className="search-wrapper px-2 bg-white/80 dark:bg-white/10 rounded-full shadow-sm">
                           <div className="flex items-center w-full">
-                            <div className="pl-3 pr-2 text-blue-500">
+                            <div className="pl-3 pr-2 text-violet-500">
                               <FiSearch className="w-5 h-5" />
                             </div>
                             <input
@@ -248,37 +248,37 @@ export default function AdminDashboard() {
                         {/* Results table (styled like ViewStudents) - only show when user has typed */}
                         {heroSearch.trim() && (
                           <div className="mt-4 bg-white rounded-xl shadow-xl p-4 overflow-x-auto animate-popIn">
-                            <table className="w-full border-collapse border border-blue-200">
+                            <table className="w-full border-collapse border border-violet-200">
                               <thead>
-                                <tr className="bg-blue-100">
-                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Email</th>
-                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                                  <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Phone</th>
+                                <tr className="bg-violet-100">
+                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg Number</th>
+                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Student Name</th>
+                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Email</th>
+                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Department</th>
+                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Phone</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {isSearching ? (
                                   <tr>
-                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Searching...</td>
+                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Searching...</td>
                                   </tr>
                                 ) : !heroSearch.trim() ? (
                                   <tr>
-                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">Type to search students</td>
+                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Type to search students</td>
                                   </tr>
                                 ) : searchResults.length === 0 ? (
                                   <tr>
-                                    <td colSpan={5} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No results</td>
+                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No results</td>
                                   </tr>
                                 ) : (
                                   searchResults.map((s) => (
-                                    <tr key={s._id || s.regno} className="hover:bg-blue-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
-                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.regno}</td>
-                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.studentname}</td>
-                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.email}</td>
-                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.dept}</td>
-                                      <td className="border border-blue-200 px-4 py-3 text-blue-900">{s.phno}</td>
+                                    <tr key={s._id || s.regno} className="hover:bg-violet-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
+                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.regno}</td>
+                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.studentname}</td>
+                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.email}</td>
+                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.dept}</td>
+                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.phno}</td>
                                     </tr>
                                   ))
                                 )}

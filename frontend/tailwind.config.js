@@ -7,10 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        supercream: '#F3FDEB', // light cream-green background
-        supergreen: '#0E5F3A', // primary dark green
-        supergreenDark: '#0B4A2E', // deeper shade for footers/borders
-        supergreenAccent: '#1B7F4D', // accent (hover, focus)
+        supercream: '#F5F3FF', // light lavender background
+        supergreen: '#6E2CAF', // primary purple (brand)
+        supergreenDark: '#4B1D8C', // deeper purple for headers/footers
+        supergreenAccent: '#A100FF', // accent purple (hover, focus)
       }
     },
   },

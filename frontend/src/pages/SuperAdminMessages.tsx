@@ -170,7 +170,7 @@ const SuperAdminMessages: React.FC = () => {
                     <li key={aid} className="flex justify-center">
                       <button
                         onClick={() => setSelectedAdmin(aid)}
-                        className={`w-full max-w-xs flex items-center justify-between gap-3 px-4 py-2 rounded ${selectedAdmin === aid ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-200'} shadow-sm`}
+                        className={`w-full max-w-xs flex items-center justify-between gap-3 px-4 py-2 rounded ${selectedAdmin === aid ? 'bg-purple-50 border border-purple-200' : 'bg-white border border-gray-200'} shadow-sm`}
                       >
                         <span className="truncate">{displayName}</span>
                         {unread > 0 && <span className="ml-2 inline-flex items-center justify-center bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">{unread}</span>}
@@ -205,7 +205,7 @@ const SuperAdminMessages: React.FC = () => {
                         const fromSuper = m.from?.role === 'SUPER_ADMIN';
                         return (
                           <div key={m._id} className={`max-w-[75%] ${fromSuper ? 'ml-auto text-right' : 'mr-auto text-left'}`}>
-                            <div className={`inline-block px-4 py-2 rounded-lg break-words ${fromSuper ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                            <div className={`inline-block px-4 py-2 rounded-lg break-words ${fromSuper ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
                               <div className="text-xs opacity-70">{m.from?.username || m.from?.role || 'User'} • {new Date(m.createdAt).toLocaleString()}</div>
                               <div className="mt-1 text-sm whitespace-pre-wrap">{m.content}</div>
                             </div>

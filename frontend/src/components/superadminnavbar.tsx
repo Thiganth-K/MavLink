@@ -91,7 +91,7 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
                       <div className="text-xs text-gray-600 mt-1">{n.message || (n.meta && n.meta.preview) || ''}</div>
                     </div>
                     <div className="ml-3 flex-shrink-0">
-                      {!n.read && <span className="text-xs text-blue-600">New</span>}
+                      {!n.read && <span className="text-xs text-violet-600">New</span>}
                     </div>
                   </button>
                 ))}

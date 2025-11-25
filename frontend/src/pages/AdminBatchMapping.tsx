@@ -8,14 +8,14 @@ import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const palette = [
-  'bg-blue-100 border-blue-400 text-blue-900',
-  'bg-green-100 border-green-400 text-green-900',
+  'bg-violet-100 border-violet-400 text-violet-900',
+  'bg-fuchsia-100 border-fuchsia-400 text-fuchsia-900',
   'bg-pink-100 border-pink-400 text-pink-900',
   'bg-purple-100 border-purple-400 text-purple-900',
-  'bg-orange-100 border-orange-400 text-orange-900',
   'bg-indigo-100 border-indigo-400 text-indigo-900',
-  'bg-teal-100 border-teal-400 text-teal-900',
-  'bg-amber-100 border-amber-400 text-amber-900'
+  'bg-violet-200 border-violet-500 text-violet-900',
+  'bg-fuchsia-200 border-fuchsia-500 text-fuchsia-900',
+  'bg-indigo-200 border-indigo-500 text-indigo-900'
 ];
 
 interface AdminCardProps {
@@ -190,7 +190,7 @@ export default function AdminBatchMappingPage() {
                 setLoading(true);
                 try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
               }}
-              className="px-3 py-1.5 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white"
+              className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white"
             >Refresh</button>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function AdminBatchMappingPage() {
             <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Department</label>
             <input value={deptFilter} onChange={e => setDeptFilter(e.target.value)} placeholder="dept id contains..." className="px-2 py-1 rounded border text-sm" />
           </div>
-          {mutating && <div className="text-xs text-blue-700 animate-pulse">Updating...</div>}
+          {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
         </div>
 
         {loading && (
@@ -309,7 +309,7 @@ export default function AdminBatchMappingPage() {
                                 setMutating(false);
                               }
                             }}
-                            className={`w-6 h-6 rounded ${assigned ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-200 hover:bg-gray-300'} flex items-center justify-center text-[10px] font-semibold text-green-950`}
+                            className={`w-6 h-6 rounded ${assigned ? 'bg-violet-500 hover:bg-violet-600' : 'bg-gray-200 hover:bg-gray-300'} flex items-center justify-center text-[10px] font-semibold text-violet-950`}
                             title={assigned ? `Assigned to ${adminsAll.find(a=>a.adminId===adminId)?.username||adminId}` : 'Click to assign'}
                           >
                             {assigned ? '✓' : '+'}
@@ -348,7 +348,7 @@ export default function AdminBatchMappingPage() {
                   const fontSize = 10/globalScale;
                   ctx.beginPath();
                   ctx.arc(node.x!, node.y!, node.type==='admin'?10:8,0,2*Math.PI,false);
-                  ctx.fillStyle = node.type==='admin' ? '#16a34a' : (node.unassigned? '#f59e0b':'#0ea5e9');
+                  ctx.fillStyle = node.type==='admin' ? '#7c3aed' : (node.unassigned? '#a78bfa':'#c4b5fd');
                   ctx.fill();
                   ctx.font = `${fontSize}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
                   ctx.fillStyle='#fff'; ctx.fillText(label,node.x!, node.y!);

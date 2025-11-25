@@ -9,10 +9,10 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 
   return (
     <>
-      <tr className="hover:bg-blue-50">
-        <td className="border border-blue-200 px-4 py-3 text-blue-900">{record.regno}</td>
-        <td className="border border-blue-200 px-4 py-3 text-blue-900">{record.studentname}</td>
-        <td className="border border-blue-200 px-4 py-3 text-center">
+      <tr className="hover:bg-violet-50">
+        <td className="border border-violet-200 px-4 py-3 text-violet-900">{record.regno}</td>
+        <td className="border border-violet-200 px-4 py-3 text-violet-900">{record.studentname}</td>
+        <td className="border border-violet-200 px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2">
             {record.status === 'On-Duty' ? (
               <button
@@ -26,7 +26,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
               </button>
             ) : (
               <span className={`px-3 py-1 rounded-full text-white font-semibold ${
-                record.status === 'Present' ? 'bg-green-500' : 'bg-red-500'
+                record.status === 'Present' ? 'bg-violet-600' : 'bg-red-500'
               }`}>
                 {record.status}
               </span>
@@ -37,7 +37,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 
       {record.status === 'On-Duty' && showReason && (
         <tr>
-          <td colSpan={3} className="border border-blue-200 px-4 py-2 text-sm text-yellow-800 bg-yellow-50">
+          <td colSpan={3} className="border border-violet-200 px-4 py-2 text-sm text-yellow-800 bg-yellow-50">
             <strong>On-Duty Reason:</strong>&nbsp;{record.reason || '-'}
           </td>
         </tr>
@@ -147,11 +147,11 @@ export default function ViewAttendance() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-blue-950">Attendance Records</h2>
+        <h2 className="text-2xl font-bold text-violet-950">Attendance Records</h2>
         {selectedDateForDetail && (
           <button
             onClick={handleBackToSummary}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors font-medium"
           >
             ← Back to Summary
           </button>
@@ -162,13 +162,13 @@ export default function ViewAttendance() {
         // Show cards summary
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-blue-800">Click on any date card to view detailed attendance</p>
+            <p className="text-violet-800">Click on any date card to view detailed attendance</p>
             <div>
-              <label className="text-blue-900 font-medium mr-2">Batch:</label>
+              <label className="text-violet-900 font-medium mr-2">Batch:</label>
               <select
                 value={activeBatchId}
                 onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
-                className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
               >
                 <option value="">All assigned batches</option>
                 {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
@@ -181,7 +181,7 @@ export default function ViewAttendance() {
             <div className="text-center py-8" />
           ) : attendanceSummary.length === 0 ? (
             <div className="bg-white rounded-xl shadow-xl p-12 text-center">
-              <p className="text-blue-600 text-lg">No attendance records found in the last 30 days</p>
+              <p className="text-violet-600 text-lg">No attendance records found in the last 30 days</p>
             </div>
           ) : (
             <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -189,29 +189,29 @@ export default function ViewAttendance() {
                 <div
                   key={summary.date}
                   onClick={() => handleCardClick(summary.date)}
-                  className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-blue-100 hover:border-blue-400"
+                  className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-violet-100 hover:border-violet-400"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-blue-950">
+                    <h3 className="text-xl font-bold text-violet-950">
                       {formatDateForDisplay(summary.date, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                     </h3>
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
 
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold">FN</span>
+                      <span className="px-2 py-1 bg-violet-500 text-white rounded text-xs font-bold">FN</span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                       <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-700 font-medium text-xs">Total</span>
-                        <span className="text-lg font-bold text-blue-950">{summary.fn.total}</span>
+                        <span className="text-lg font-bold text-violet-950">{summary.fn.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-green-50 rounded-lg">
-                        <span className="text-green-700 font-medium text-xs">P</span>
-                        <span className="text-lg font-bold text-green-600">{summary.fn.present}</span>
+                      <div className="flex flex-col items-center justify-center p-2 bg-violet-50 rounded-lg">
+                        <span className="text-violet-700 font-medium text-xs">P</span>
+                        <span className="text-lg font-bold text-violet-600">{summary.fn.present}</span>
                       </div>
                       <div className="flex flex-col items-center justify-center p-2 bg-red-50 rounded-lg">
                         <span className="text-red-700 font-medium text-xs">A</span>
@@ -231,11 +231,11 @@ export default function ViewAttendance() {
                     <div className="grid grid-cols-4 gap-2">
                       <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
                         <span className="text-gray-700 font-medium text-xs">Total</span>
-                        <span className="text-lg font-bold text-blue-950">{summary.an.total}</span>
+                        <span className="text-lg font-bold text-violet-950">{summary.an.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-green-50 rounded-lg">
-                        <span className="text-green-700 font-medium text-xs">P</span>
-                        <span className="text-lg font-bold text-green-600">{summary.an.present}</span>
+                      <div className="flex flex-col items-center justify-center p-2 bg-violet-50 rounded-lg">
+                        <span className="text-violet-700 font-medium text-xs">P</span>
+                        <span className="text-lg font-bold text-violet-600">{summary.an.present}</span>
                       </div>
                       <div className="flex flex-col items-center justify-center p-2 bg-red-50 rounded-lg">
                         <span className="text-red-700 font-medium text-xs">A</span>
@@ -255,28 +255,28 @@ export default function ViewAttendance() {
       ) : (
         // Show detailed attendance for selected date
         <div id="attendance-detail" className="bg-white rounded-xl shadow-xl p-6">
-          <h3 className="text-xl font-bold text-blue-950 mb-4">
+          <h3 className="text-xl font-bold text-violet-950 mb-4">
             Attendance Details for {formatDateForDisplay(selectedDateForDetail, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </h3>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="px-4 py-2 bg-blue-500 text-white rounded-lg font-bold text-lg">Forenoon (FN)</span>
+                <span className="px-4 py-2 bg-violet-500 text-white rounded-lg font-bold text-lg">Forenoon (FN)</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-blue-200">
+                <table className="w-full border-collapse border border-violet-200">
                   <thead>
-                    <tr className="bg-blue-100">
-                      <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg No</th>
-                      <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Name</th>
-                      <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Status</th>
+                    <tr className="bg-violet-100">
+                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
+                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Name</th>
+                      <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {attendanceRecords.filter(r => r.session === 'FN').length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No FN attendance records found</td>
+                        <td colSpan={3} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No FN attendance records found</td>
                       </tr>
                     ) : (
                       attendanceRecords
@@ -302,18 +302,18 @@ export default function ViewAttendance() {
                 <span className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold text-lg">Afternoon (AN)</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-blue-200">
+                <table className="w-full border-collapse border border-violet-200">
                   <thead>
                     <tr className="bg-purple-100">
-                      <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg No</th>
-                      <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Name</th>
-                      <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Status</th>
+                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
+                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Name</th>
+                      <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {attendanceRecords.filter(r => r.session === 'AN').length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No AN attendance records found</td>
+                        <td colSpan={3} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No AN attendance records found</td>
                       </tr>
                     ) : (
                       attendanceRecords

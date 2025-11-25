@@ -97,7 +97,7 @@ export default function StudentAnalysisDashboard() {
       } else {
         distributionChartRef.current = new Chart(canvasEl, {
           type: 'bar',
-          data: { labels, datasets: [{ label: 'Students count', data: values, backgroundColor: ['#dc2626','#f97316','#eab308','#16a34a'], borderRadius: 6 }] },
+          data: { labels, datasets: [{ label: 'Students count', data: values, backgroundColor: ['#ede9fe','#ddd6fe','#c4b5fd','#a78bfa'], borderRadius: 6 }] },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, scales: { x: { title: { display: true, text: 'Attendance % Range' } }, y: { title: { display: true, text: 'Students' }, beginAtZero: true, ticks: { precision: 0 } } } }
         });
       }
@@ -123,7 +123,7 @@ export default function StudentAnalysisDashboard() {
       } else {
         trendChartRef.current = new Chart(canvasEl, {
           type: 'line',
-          data: { labels, datasets: [{ label: 'Attendance % (sorted ascending)', data: values, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.15)', tension: 0.25, pointRadius: 0, borderWidth: 2, fill: true }] },
+          data: { labels, datasets: [{ label: 'Attendance % (sorted ascending)', data: values, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.15)', tension: 0.25, pointRadius: 0, borderWidth: 2, fill: true }] },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, scales: { x: { title: { display: true, text: 'Student Rank (lowest to highest %)' }, ticks: { maxRotation: 0 } }, y: { title: { display: true, text: 'Attendance %' }, beginAtZero: true, suggestedMax: 100 } } }
         });
       }
@@ -133,7 +133,7 @@ export default function StudentAnalysisDashboard() {
   }, [trendData]);
 
   return (
-    <main className="flex-grow p-6 bg-gradient-to-br from-supercream to-green-200">
+    <main className="flex-grow p-6 bg-gradient-to-br from-supercream to-violet-200">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-supergreenDark">Student Analysis Dashboard</h2>
@@ -259,7 +259,7 @@ export default function StudentAnalysisDashboard() {
                 {filteredSorted.map(s => {
                   const pct = s.attendancePercentage || 0;
                   let badge = 'bg-gray-300 text-gray-800';
-                  if (pct >= 75) badge = 'bg-green-600 text-white';
+                  if (pct >= 75) badge = 'bg-violet-600 text-white';
                   else if (pct >= 60) badge = 'bg-yellow-500 text-white';
                   else if (pct >= 40) badge = 'bg-orange-500 text-white';
                   else badge = 'bg-red-600 text-white';

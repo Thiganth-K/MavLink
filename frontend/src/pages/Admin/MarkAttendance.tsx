@@ -215,76 +215,76 @@ export default function MarkAttendance() {
     <div ref={containerRef} className="bg-white rounded-xl shadow-xl p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-blue-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
+          <h2 className="text-2xl font-bold text-violet-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
           {attendanceRecords.length > 0 ? (
             <p className="text-sm text-orange-600 mt-1 font-medium">⚠️ {selectedSession} attendance already marked for {formatDateForDisplay(selectedDate)}. You can update it below.</p>
           ) : (
-            <p className="text-sm text-green-600 mt-1 font-medium">✓ No {selectedSession} attendance marked yet for {formatDateForDisplay(selectedDate)}</p>
+            <p className="text-sm text-violet-600 mt-1 font-medium">✓ No {selectedSession} attendance marked yet for {formatDateForDisplay(selectedDate)}</p>
           )}
         </div>
 
         <div className="flex gap-4 items-center">
-          <label className="text-blue-900 font-medium">Date:</label>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+          <label className="text-violet-900 font-medium">Date:</label>
+          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none" />
 
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-            <button onClick={() => setSelectedSession('FN')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'FN' ? 'bg-blue-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>FN</button>
+            <button onClick={() => setSelectedSession('FN')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'FN' ? 'bg-violet-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>FN</button>
             <button onClick={() => setSelectedSession('AN')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'AN' ? 'bg-purple-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>AN</button>
           </div>
 
-          <select value={activeBatchId} onChange={(e) => { setActiveBatchId(e.target.value); fetchStudents(e.target.value); }} className="px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <select value={activeBatchId} onChange={(e) => { setActiveBatchId(e.target.value); fetchStudents(e.target.value); }} className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none">
             {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
             {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
           </select>
 
-          <button onClick={handleSubmit} disabled={isLoading} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-semibold">{attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`}</button>
+          <button onClick={handleSubmit} disabled={isLoading} className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold">{attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`}</button>
         </div>
       </div>
 
       <div className="mb-4 flex gap-3">
-        <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium">Mark All Present</button>
+        <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors font-medium">Mark All Present</button>
         <button onClick={handleMarkAllAbsent} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium">Mark All Absent</button>
         <button onClick={handleClearAll} className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">Clear All</button>
         <div className="flex-1" />
-        <span className="text-sm text-blue-600 font-medium self-center">Quick actions to mark all students at once</span>
+        <span className="text-sm text-violet-600 font-medium self-center">Quick actions to mark all students at once</span>
       </div>
 
       {students.length === 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-blue-200">
+          <table className="w-full border-collapse border border-violet-200">
             <tbody>
               <tr>
-                <td colSpan={4} className="border border-blue-200 px-4 py-8 text-center text-blue-600">No students found</td>
+                <td colSpan={4} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No students found</td>
               </tr>
             </tbody>
           </table>
         </div>
       ) : (
         <div id="markattendance-data" className="overflow-x-auto">
-          <table className="w-full border-collapse border border-blue-200">
+          <table className="w-full border-collapse border border-violet-200">
             <thead>
-              <tr className="bg-blue-100">
-                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Reg Number</th>
-                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Student Name</th>
-                <th className="border border-blue-200 px-4 py-3 text-left text-blue-950 font-semibold">Department</th>
-                <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attd %</th>
-                <th className="border border-blue-200 px-4 py-3 text-center text-blue-950 font-semibold">Attendance</th>
+              <tr className="bg-violet-100">
+                <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg Number</th>
+                <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Student Name</th>
+                <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Department</th>
+                <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Attd %</th>
+                <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Attendance</th>
               </tr>
             </thead>
             <tbody>
               {students.map((student) => (
-                <tr key={student._id} className="hover:bg-blue-50">
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.regno}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.studentname}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-blue-900">{student.dept}</td>
-                  <td className="border border-blue-200 px-4 py-3 text-center">
+                <tr key={student._id} className="hover:bg-violet-50">
+                  <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.regno}</td>
+                  <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.studentname}</td>
+                  <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.dept}</td>
+                  <td className="border border-violet-200 px-4 py-3 text-center">
                     {(() => {
                       const reg = (student.regno || '').toUpperCase();
                       const stat = attendanceStats[reg];
                       if (!stat) return <span className="text-gray-400 text-sm">--</span>;
                       const pct = stat.combinedPercentage; // using combined (Present + On-Duty)
                       let cls = 'bg-gray-200 text-gray-700';
-                      if (pct >= 75) cls = 'bg-green-600 text-white';
+                      if (pct >= 75) cls = 'bg-violet-600 text-white';
                       else if (pct >= 60) cls = 'bg-yellow-500 text-white';
                       else if (pct >= 40) cls = 'bg-orange-500 text-white';
                       else cls = 'bg-red-600 text-white';
@@ -296,15 +296,15 @@ export default function MarkAttendance() {
                       );
                     })()}
                   </td>
-                  <td className="border border-blue-200 px-4 py-3">
+                  <td className="border border-violet-200 px-4 py-3">
                     <div className="flex gap-2 justify-center">
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
                       <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
                       <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'}`}>On-Duty</button>
                     </div>
                     {attendanceMap[student._id!] === 'On-Duty' && (
                       <div className="mt-2">
-                        <input type="text" value={attendanceReasons?.[student._id!] || ''} onChange={(e) => handleReasonChange(student._id!, e.target.value)} placeholder="Reason for On-Duty (required)" className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-yellow-300 focus:outline-none" />
+                        <input type="text" value={attendanceReasons?.[student._id!] || ''} onChange={(e) => handleReasonChange(student._id!, e.target.value)} placeholder="Reason for On-Duty (required)" className="w-full px-3 py-2 border border-violet-200 rounded-lg focus:ring-2 focus:ring-yellow-300 focus:outline-none" />
                       </div>
                     )}
                   </td>
@@ -316,7 +316,7 @@ export default function MarkAttendance() {
       )}
 
       <div className="mt-6 flex justify-center">
-        <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-semibold text-lg shadow-lg">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
+        <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold text-lg shadow-lg">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
       </div>
 
       {showSummary && submittedSummary && (
@@ -324,20 +324,20 @@ export default function MarkAttendance() {
           <div className="absolute inset-0 bg-black/40" onClick={closeSummary} />
 
           <div className="relative w-full max-w-3xl p-6">
-            <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-blue-200 transform origin-center animate-modalIn">
+            <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-violet-200 transform origin-center animate-modalIn">
               <div className="absolute top-3 right-3">
                 <button onClick={closeSummary} className="text-gray-600 hover:text-gray-800 bg-transparent rounded-md px-2 py-1">✕</button>
               </div>
 
               <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-blue-950 mb-2">✓ {selectedSession} Attendance Submitted Successfully</h3>
-                <p className="text-blue-700">{selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{formatDateForDisplay(selectedDate, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
+                <h3 className="text-2xl font-bold text-violet-950 mb-2">✓ {selectedSession} Attendance Submitted Successfully</h3>
+                <p className="text-violet-700">{selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{formatDateForDisplay(selectedDate, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
               </div>
 
               <div className="grid grid-cols-4 gap-4 mb-4">
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <div className="text-gray-600 font-medium mb-1">Total</div>
-                  <div className="text-3xl font-bold text-blue-950">{submittedSummary.total}</div>
+                  <div className="text-3xl font-bold text-violet-950">{submittedSummary.total}</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4 text-center">
                   <div className="text-green-700 font-medium mb-1">Present</div>
@@ -357,10 +357,10 @@ export default function MarkAttendance() {
               </div>
 
               <div className="flex justify-center gap-4">
-                <button onClick={closeSummary} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Mark New Attendance</button>
+                <button onClick={closeSummary} className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors font-medium">Mark New Attendance</button>
                 <button
                   onClick={() => { window.location.href = '/admin-dashboard/view-attendance'; }}
-                  className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors font-semibold"
+                  className="px-6 py-2 bg-violet-700 text-white rounded-lg hover:bg-violet-800 transition-colors font-semibold"
                   aria-label="View all attendance records"
                 >
                   View All Records

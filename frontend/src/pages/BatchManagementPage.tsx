@@ -14,7 +14,7 @@ export default function BatchManagementPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-supercream to-green-200 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-supercream to-violet-200 p-6">
       <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">

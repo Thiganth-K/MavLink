@@ -101,7 +101,7 @@ export default function AdminManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-supercream to-green-200 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-supercream to-violet-200 p-6">
       <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
@@ -236,11 +236,11 @@ export default function AdminManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="bg-white rounded-xl border border-supergreenDark/20 shadow animate-pulse p-5">
-                  <div className="h-6 w-32 bg-blue-100 rounded mb-3" />
-                  <div className="h-4 w-24 bg-blue-100 rounded mb-5" />
+                  <div className="h-6 w-32 bg-violet-100 rounded mb-3" />
+                  <div className="h-4 w-24 bg-violet-100 rounded mb-5" />
                   <div className="flex gap-3">
-                    <div className="h-9 w-20 bg-blue-100 rounded" />
-                    <div className="h-9 w-20 bg-blue-100 rounded" />
+                    <div className="h-9 w-20 bg-violet-100 rounded" />
+                    <div className="h-9 w-20 bg-violet-100 rounded" />
                   </div>
                 </div>
               ))}
