@@ -196,6 +196,7 @@ export const getAttendanceByDate = async (req, res) => {
       entries.forEach(e => {
         const rec = {
           batchId: doc.batchId,
+          dateIST: toISTDateString(doc.date),
           session: doc.session,
           studentId: e.studentId,
           regno: e.regno,
@@ -252,7 +253,7 @@ export const getAttendanceByDateAndSession = async (req, res) => {
     const flattened = [];
     docs.forEach(doc => {
       const entries = Array.isArray(doc.entries) ? doc.entries : [];
-      entries.forEach(e => flattened.push({ batchId: doc.batchId, studentId: e.studentId, regno: e.regno, studentname: e.studentname, status: e.status, reason: e.reason || null, markedBy: doc.markedBy, markedAt: doc.markedAt }));
+      entries.forEach(e => flattened.push({ batchId: doc.batchId, dateIST: toISTDateString(doc.date), studentId: e.studentId, regno: e.regno, studentname: e.studentname, status: e.status, reason: e.reason || null, markedBy: doc.markedBy, markedAt: doc.markedAt }));
     });
 
     const presentCount = flattened.filter(r => r.status === 'Present').length;
@@ -292,8 +293,9 @@ export const getSessionSummaryByDate = async (req, res) => {
     docs.forEach(doc => {
       const entries = Array.isArray(doc.entries) ? doc.entries : [];
       entries.forEach(e => {
-        if (doc.session === 'FN') fnEntries.push(e);
-        else if (doc.session === 'AN') anEntries.push(e);
+        const eWithDate = Object.assign({}, e, { dateIST: toISTDateString(doc.date) });
+        if (doc.session === 'FN') fnEntries.push(eWithDate);
+        else if (doc.session === 'AN') anEntries.push(eWithDate);
       });
     });
 

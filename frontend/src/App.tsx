@@ -21,6 +21,7 @@ import ViewAnalysisPage from './pages/ViewAnalysisPage';
 import ViewBatchesPage from './pages/ViewBatchesPage';
 import AdminBatchMappingPage from './pages/AdminBatchMapping';
 import StudentAnalysisDashboard from './pages/StudentAnalysisDashboard';
+import SuperAdminExport from './pages/SuperAdminExport';
 
 function App() {
   useEffect(() => {
@@ -243,6 +244,16 @@ function App() {
       <div className="min-h-screen flex flex-col">
         <SuperAdminNavbar onLogout={() => {}} />
         <StudentAnalysisDashboard />
+        <SuperAdminFooter />
+      </div>
+    );
+  }
+
+  if (path === '/super-admin/export') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminExport />
         <SuperAdminFooter />
       </div>
     );

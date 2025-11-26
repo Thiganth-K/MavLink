@@ -218,6 +218,25 @@ export const superAdminAPI = {
     }
 
     return response.json();
+  },
+  exportAdvanced: async (params: { deptIds?: string[] | 'ALL'; preset?: 'today' | 'thisWeek' | 'thisMonth' | 'all'; startDate?: string; endDate?: string }): Promise<Blob> => {
+    const q: string[] = [];
+    if (params.deptIds) {
+      if (Array.isArray(params.deptIds)) q.push(`deptIds=${encodeURIComponent(params.deptIds.join(','))}`);
+      else q.push(`deptIds=${params.deptIds}`);
+    }
+    if (params.preset) q.push(`preset=${params.preset}`);
+    if (params.startDate) q.push(`startDate=${params.startDate}`);
+    if (params.endDate) q.push(`endDate=${params.endDate}`);
+    const query = q.length ? `?${q.join('&')}` : '';
+    const response = await fetch(`${API_BASE_URL}/superadmin/export-advanced${query}`, {
+      headers: { 'X-Role': localStorage.getItem('role') || '' }
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to export data');
+    }
+    return response.blob();
   }
 };
 // Mapping types & API
