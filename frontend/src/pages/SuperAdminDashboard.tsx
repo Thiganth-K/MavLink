@@ -66,36 +66,7 @@ export default function SuperAdminDashboard() {
             </div>
             <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">Open detailed graphs and analysis</div>
           </button>
-          <button
-            onClick={async () => {
-              try {
-                const blob = await (await import('../services/api')).superAdminAPI.exportData();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'mavlink_export.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-                toast.success('Export downloaded');
-              } catch (err: any) {
-                toast.error(err.message || 'Export failed');
-              }
-            }}
-            className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold group-hover:scale-105 transition">EX</div>
-              <div>
-                <h3 className="text-lg font-bold text-supergreenDark underline-animate">Export Data</h3>
-                <p className="text-sm text-supergreen/80 mt-1">Download full platform snapshot</p>
-              </div>
-            </div>
-            <div className="mt-2 text-xs text-supergreenDark/60 leading-relaxed">
-              Generates an Excel workbook containing Admins, Batches, Departments, Students & Attendance.
-            </div>
-          </button>
+          {/* Export Data feature removed */}
           <button
             onClick={() => { window.location.pathname = '/super-admin/student-analysis'; }}
             className="group relative overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 animate-fadeSlide flex flex-col justify-between"
