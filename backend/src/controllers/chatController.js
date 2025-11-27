@@ -10,8 +10,21 @@ export const adminSendMessage = async (req, res) => {
     if (!content) return res.status(400).json({ message: 'content required' });
 
     // Find the SUPER_ADMIN account (assumes single superadmin)
-    const superAdmin = await Admin.findOne({ role: 'SUPER_ADMIN' });
-    if (!superAdmin) return res.status(500).json({ message: 'SUPER_ADMIN not configured' });
+      let superAdmin = await Admin.findOne({ role: 'SUPER_ADMIN' });
+      if (!superAdmin) {
+        // Attempt to create a SUPER_ADMIN record from environment variables if available
+        const envUser = process.env.SUPER_ADMIN_USERNAME || process.env.SUPER_ADMIN || null;
+        const envPass = process.env.SUPER_ADMIN_PASSWORD || 'change_me_super';
+        const adminIdCandidate = envUser ? String(envUser).toUpperCase() : 'SUPERADMIN';
+        try {
+          superAdmin = await Admin.create({ adminId: adminIdCandidate, username: envUser || 'superadmin', password: envPass, role: 'SUPER_ADMIN', assignedBatchIds: [] });
+          // created
+        } catch (createErr) {
+          // If create fails (e.g., duplicate or validation), re-query and if still missing return error
+          superAdmin = await Admin.findOne({ role: 'SUPER_ADMIN' });
+          if (!superAdmin) return res.status(500).json({ message: 'SUPER_ADMIN not configured' });
+        }
+      }
 
     const msg = await ChatMessage.create({
       from: sender._id,
