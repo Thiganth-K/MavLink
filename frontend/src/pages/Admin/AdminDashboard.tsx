@@ -7,6 +7,7 @@ import type { Student } from '../../services/api';
 import MarkAttendance from './MarkAttendance';
 import ViewAttendance from './ViewAttendance';
 import ViewStudents from './ViewStudents';
+import AdminLayout from '../../components/Admin/AdminLayout';
 import { FiSearch, FiX } from 'react-icons/fi';
 
 export default function AdminDashboard() {
@@ -111,13 +112,11 @@ export default function AdminDashboard() {
   // Global loader helpers are provided by the App-level layout so they are available across admin pages.
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-100 to-violet-300 flex flex-col">
+    <AdminLayout>
       <Toaster position="top-center" />
       {/* App-level global overlay loader is mounted in `App.tsx` so we don't duplicate it here */}
       
-      {/* Navbar removed: App-level AdminNavbar will provide header */}
-
-      <div className="max-w-7xl mx-auto p-6 flex-grow">
+      <div className="w-full">
         {/* Home/Hero Section */}
         {activeTab === 'home' && (
           <div className="space-y-6 animate-fadeIn flex items-center justify-center min-h-[calc(100vh-8rem)]">
@@ -200,12 +199,7 @@ export default function AdminDashboard() {
                     >
                       View Attendance
                     </button>
-                      <button
-                        onClick={() => { window.location.href = '/admin-dashboard/chat'; }}
-                        className="px-6 py-3 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors shadow-lg"
-                      >
-                        Contact Superadmin
-                      </button>
+                      {/* Contact Superadmin button moved to profile */}
                   </div>
 
                   {/* Modern interactive search bar */}
@@ -311,10 +305,9 @@ export default function AdminDashboard() {
         {activeTab === 'mark' && (
           <MarkAttendance />
         )}
-      </div>
-      
       {/* Footer removed: App-level AdminFooter will provide footer */}
       {/* Profile drawer moved to app-level layout */}
     </div>
+    </AdminLayout>
   );
 }

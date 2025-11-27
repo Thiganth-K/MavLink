@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../../services/api';
 import { getTodayIST, formatDateForDisplay } from '../../utils/dateUtils';
+import ResponsiveTable from '../../components/Admin/ResponsiveTable';
 
 export default function MarkAttendance() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -213,7 +214,7 @@ export default function MarkAttendance() {
 
   return (
     <div ref={containerRef} className="bg-white rounded-xl shadow-xl p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-violet-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
           {attendanceRecords.length > 0 ? (
@@ -223,45 +224,100 @@ export default function MarkAttendance() {
           )}
         </div>
 
-        <div className="flex gap-4 items-center">
-          <label className="text-violet-900 font-medium">Date:</label>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none" />
-
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-            <button onClick={() => setSelectedSession('FN')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'FN' ? 'bg-violet-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>FN</button>
-            <button onClick={() => setSelectedSession('AN')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'AN' ? 'bg-purple-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>AN</button>
+        <div className="flex flex-col md:flex-row gap-3 md:items-center mt-4 md:mt-0">
+          <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+            <label className="text-violet-900 font-medium">Date:</label>
+            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full md:w-auto px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none" />
           </div>
 
-          <select value={activeBatchId} onChange={(e) => { setActiveBatchId(e.target.value); fetchStudents(e.target.value); }} className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none">
-            {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
-            {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
-          </select>
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 w-full md:w-auto">
+            <button onClick={() => setSelectedSession('FN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'FN' ? 'bg-violet-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>FN</button>
+            <button onClick={() => setSelectedSession('AN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'AN' ? 'bg-purple-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>AN</button>
+          </div>
 
-          <button onClick={handleSubmit} disabled={isLoading} className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold">{attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`}</button>
+          <div className="w-full md:w-auto">
+            <select value={activeBatchId} onChange={(e) => { setActiveBatchId(e.target.value); fetchStudents(e.target.value); }} className="w-full md:w-auto px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none">
+              {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
+              {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
+            </select>
+          </div>
+
+          <div className="w-full md:w-auto">
+            <button onClick={handleSubmit} disabled={isLoading} className="w-full md:w-auto px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold">{attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`}</button>
+          </div>
         </div>
       </div>
 
       <div className="mb-4 flex gap-3">
+        <div className="flex-1" />
         <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors font-medium">Mark All Present</button>
         <button onClick={handleMarkAllAbsent} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium">Mark All Absent</button>
         <button onClick={handleClearAll} className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">Clear All</button>
-        <div className="flex-1" />
-        <span className="text-sm text-violet-600 font-medium self-center">Quick actions to mark all students at once</span>
       </div>
 
-      {students.length === 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-violet-200">
+        {students.length === 0 ? (
+        <ResponsiveTable
+          mobileView={<div className="space-y-3">
+            <div className="bg-white rounded-lg p-4 border border-violet-100 text-center text-violet-600">No students found</div>
+          </div>}
+        >
+          <table className="min-w-[720px] w-full border-collapse border border-violet-200">
             <tbody>
               <tr>
-                <td colSpan={4} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No students found</td>
+                <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No students found</td>
               </tr>
             </tbody>
           </table>
-        </div>
+        </ResponsiveTable>
       ) : (
-        <div id="markattendance-data" className="overflow-x-auto">
-          <table className="w-full border-collapse border border-violet-200">
+        <ResponsiveTable
+          mobileView={(
+            <div className="space-y-3">
+              {students.map((student) => {
+                const reg = (student.regno || '').toUpperCase();
+                const stat = attendanceStats[reg];
+                const pct = stat ? stat.combinedPercentage : null;
+                let pctCls = 'bg-gray-200 text-gray-700';
+                if (pct !== null) {
+                  if (pct >= 75) pctCls = 'bg-violet-600 text-white';
+                  else if (pct >= 60) pctCls = 'bg-yellow-500 text-white';
+                  else if (pct >= 40) pctCls = 'bg-orange-500 text-white';
+                  else pctCls = 'bg-red-600 text-white';
+                }
+
+                return (
+                  <div key={student._id} className="bg-white rounded-lg p-4 border border-violet-100">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-violet-900">{student.regno} — {student.studentname}</div>
+                        <div className="text-sm text-gray-600">{student.dept}</div>
+                        <div className="mt-2">
+                          {pct === null ? <span className="text-gray-400 text-sm">--</span> : (
+                            <span className={`inline-block min-w-[60px] px-2 py-1 rounded-full text-xs font-semibold ${pctCls}`}>{pct.toFixed(1)}%</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'}`}>OD</button>
+                      </div>
+
+                    </div>
+
+                    {attendanceMap[student._id!] === 'On-Duty' && (
+                      <div className="mt-3">
+                        <input type="text" value={attendanceReasons?.[student._id!] || ''} onChange={(e) => handleReasonChange(student._id!, e.target.value)} placeholder="Reason for On-Duty (required)" className="w-full px-3 py-2 border border-violet-200 rounded-lg focus:ring-2 focus:ring-yellow-300 focus:outline-none" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        >
+          <table id="markattendance-data" className="min-w-[720px] w-full border-collapse border border-violet-200">
             <thead>
               <tr className="bg-violet-100">
                 <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg Number</th>
@@ -298,9 +354,9 @@ export default function MarkAttendance() {
                   </td>
                   <td className="border border-violet-200 px-4 py-3">
                     <div className="flex gap-2 justify-center">
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-4 py-2 rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'}`}>On-Duty</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'}`}>On-Duty</button>
                     </div>
                     {attendanceMap[student._id!] === 'On-Duty' && (
                       <div className="mt-2">
@@ -312,7 +368,7 @@ export default function MarkAttendance() {
               ))}
             </tbody>
           </table>
-        </div>
+        </ResponsiveTable>
       )}
 
       <div className="mt-6 flex justify-center">
@@ -375,6 +431,6 @@ export default function MarkAttendance() {
           </div>
         </div>
       )}
-    </div>
+      </div>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Attendance, AttendanceSummary, CombinedAttendanceSummary } from '../../services/api';
 import { formatDateForDisplay, formatTimestampIST } from '../../utils/dateUtils';
 import { attendanceAPI, batchAPI } from '../../services/api';
+import ResponsiveTable from '../../components/Admin/ResponsiveTable';
 
 function ViewAttendanceRow({ record }: { record: Attendance }) {
   const [showReason, setShowReason] = useState(false);
@@ -249,68 +250,70 @@ export default function ViewAttendance() {
           ) : (
             <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getCombinedSummary().map((summary) => (
-                <div
+                <button
                   key={summary.date}
+                  type="button"
                   onClick={() => handleCardClick(summary.date)}
-                  className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-violet-100 hover:border-violet-400"
+                  aria-label={`View attendance details for ${formatDateForDisplay(summary.date)}`}
+                  className="w-full min-w-0 text-left bg-white rounded-xl shadow-lg p-3 md:p-5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-violet-100 hover:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 break-words"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-violet-950">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base md:text-lg font-bold text-violet-950 truncate">
                       {formatDateForDisplay(summary.date, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                     </h3>
-                    <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-5 md:h-5 text-violet-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
 
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-violet-500 text-white rounded text-xs font-bold">FN</span>
+                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-violet-500 text-white rounded text-xs font-bold">FN</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700 font-medium text-xs">Total</span>
-                        <span className="text-lg font-bold text-violet-950">{summary.fn.total}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 min-w-0">
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-50 rounded-md w-full min-w-0">
+                        <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
+                        <span className="text-sm md:text-base font-bold text-violet-950 truncate">{summary.fn.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-violet-50 rounded-lg">
-                        <span className="text-violet-700 font-medium text-xs">P</span>
-                        <span className="text-lg font-bold text-violet-600">{summary.fn.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-violet-50 rounded-md w-full min-w-0">
+                        <span className="text-violet-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-violet-600 truncate">{summary.fn.present}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-red-50 rounded-lg">
-                        <span className="text-red-700 font-medium text-xs">A</span>
-                        <span className="text-lg font-bold text-red-600">{summary.fn.absent}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 rounded-md w-full min-w-0">
+                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                        <span className="text-sm md:text-base font-bold text-red-600 truncate">{summary.fn.absent}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-yellow-50 rounded-lg">
-                        <span className="text-yellow-700 font-medium text-xs">OD</span>
-                        <span className="text-lg font-bold text-yellow-600">{summary.fn.onDuty}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 rounded-md w-full min-w-0">
+                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                        <span className="text-sm md:text-base font-bold text-yellow-600 truncate">{summary.fn.onDuty}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-purple-500 text-white rounded text-xs font-bold">AN</span>
+                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-500 text-white rounded text-xs font-bold">AN</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700 font-medium text-xs">Total</span>
-                        <span className="text-lg font-bold text-violet-950">{summary.an.total}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 min-w-0">
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-50 rounded-md w-full min-w-0">
+                        <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
+                        <span className="text-sm md:text-base font-bold text-violet-950 truncate">{summary.an.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-violet-50 rounded-lg">
-                        <span className="text-violet-700 font-medium text-xs">P</span>
-                        <span className="text-lg font-bold text-violet-600">{summary.an.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-violet-50 rounded-md w-full min-w-0">
+                        <span className="text-violet-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-violet-600 truncate">{summary.an.present}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-red-50 rounded-lg">
-                        <span className="text-red-700 font-medium text-xs">A</span>
-                        <span className="text-lg font-bold text-red-600">{summary.an.absent}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 rounded-md w-full min-w-0">
+                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                        <span className="text-sm md:text-base font-bold text-red-600 truncate">{summary.an.absent}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-2 bg-yellow-50 rounded-lg">
-                        <span className="text-yellow-700 font-medium text-xs">OD</span>
-                        <span className="text-lg font-bold text-yellow-600">{summary.an.onDuty}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 rounded-md w-full min-w-0">
+                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                        <span className="text-sm md:text-base font-bold text-yellow-600 truncate">{summary.an.onDuty}</span>
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -327,8 +330,9 @@ export default function ViewAttendance() {
               <div className="flex items-center gap-2 mb-3">
                 <span className="px-4 py-2 bg-violet-500 text-white rounded-lg font-bold text-lg">Forenoon (FN)</span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-violet-200">
+              <div>
+                <ResponsiveTable>
+                  <table className="min-w-[520px] w-full border-collapse border border-violet-200">
                   <thead>
                     <tr className="bg-violet-100">
                       <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
@@ -350,7 +354,8 @@ export default function ViewAttendance() {
                         ))
                     )}
                   </tbody>
-                </table>
+                  </table>
+                </ResponsiveTable>
                 {attendanceRecords.filter(r => r.session === 'FN').length > 0 && (
                   <div className="mt-3 text-sm text-gray-600">
                     <p>Marked by: {attendanceRecords.find(r => r.session === 'FN')?.markedBy}</p>
@@ -364,8 +369,9 @@ export default function ViewAttendance() {
               <div className="flex items-center gap-2 mb-3">
                 <span className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold text-lg">Afternoon (AN)</span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-violet-200">
+              <div>
+                <ResponsiveTable>
+                  <table className="min-w-[520px] w-full border-collapse border border-violet-200">
                   <thead>
                     <tr className="bg-purple-100">
                       <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
@@ -387,7 +393,8 @@ export default function ViewAttendance() {
                         ))
                     )}
                   </tbody>
-                </table>
+                  </table>
+                </ResponsiveTable>
                 {attendanceRecords.filter(r => r.session === 'AN').length > 0 && (
                   <div className="mt-3 text-sm text-gray-600">
                     <p>Marked by: {attendanceRecords.find(r => r.session === 'AN')?.markedBy}</p>
@@ -399,6 +406,6 @@ export default function ViewAttendance() {
           </div>
         </div>
       )}
-    </div>
+      </div>
   );
 }

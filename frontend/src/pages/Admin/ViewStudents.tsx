@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { studentAPI, batchAPI, type Student } from '../../services/api';
+import ResponsiveTable from '../../components/Admin/ResponsiveTable';
 
 export default function ViewStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [attendanceStats, setAttendanceStats] = useState<Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }>>({});
 
   useEffect(() => {
     fetchAssignedBatches();
@@ -45,6 +49,32 @@ export default function ViewStudents() {
       }
       studentList.sort((a: Student, b: Student) => (a.regno || '').localeCompare(b.regno || ''));
       setStudents(studentList);
+      // also fetch attendance stats for the same batch and current date range
+      try {
+        const s = startDate || undefined;
+        const e = endDate || undefined;
+        // if no explicit range, default to last 30 days
+        let stats: any[] = [];
+        if (!s || !e) {
+          const today = new Date();
+          const sDate = new Date();
+          sDate.setDate(today.getDate() - 29);
+          const sStr = sDate.toISOString().slice(0, 10);
+          const eStr = today.toISOString().slice(0, 10);
+          stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(sStr, eStr, batchId || activeBatchId || undefined);
+        } else {
+          stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(s, e, batchId || activeBatchId || undefined);
+        }
+        const map: Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }> = {};
+        stats.forEach((st: any) => {
+          // prefer regno key if available, fallback to _id
+          const key = st.regno || st._id || '';
+          map[key] = { present: st.present || 0, absent: st.absent || 0, onDuty: st.onDuty || 0, attendancePercentage: Math.round((st.attendancePercentage || 0) * 100) / 100 };
+        });
+        setAttendanceStats(map);
+      } catch (err) {
+        setAttendanceStats({});
+      }
     } catch (e: any) {
       toast.error(e.message || 'Failed to fetch students');
       setStudents([]);
@@ -55,7 +85,7 @@ export default function ViewStudents() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-xl p-6">
+    <div className="max-w-screen-2xl mx-auto px-6 py-6 bg-white rounded-xl shadow-xl w-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-violet-950">Students List</h2>
         <div>{/* Batch selector */}
@@ -68,12 +98,20 @@ export default function ViewStudents() {
             {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
             {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
           </select>
+          <div className="ml-4 inline-flex items-center gap-2">
+            <label className="text-violet-900 font-medium">From:</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
+            <label className="text-violet-900 font-medium">To:</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
+            <button onClick={() => fetchStudents(activeBatchId || undefined)} className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700">Apply</button>
+            <button onClick={() => { setStartDate(''); setEndDate(''); fetchStudents(activeBatchId || undefined); }} className="px-2 py-1 bg-gray-50 rounded text-sm">Clear</button>
+          </div>
         </div>
       </div>
 
           {isLoading ? (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-violet-200">
+              <table className="min-w-[720px] w-full border-collapse border border-violet-200">
                 <tbody>
                   <tr>
                     <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Loading students...</td>
@@ -83,13 +121,15 @@ export default function ViewStudents() {
             </div>
           ) : students.length === 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-violet-200">
+              <ResponsiveTable>
+                <table className="min-w-[720px] w-full border-collapse border border-violet-200">
                 <tbody>
                   <tr>
                     <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No students found</td>
                   </tr>
                 </tbody>
-              </table>
+                </table>
+              </ResponsiveTable>
             </div>
           ) : (
             <div id="students-data" className="overflow-x-auto">
@@ -101,6 +141,10 @@ export default function ViewStudents() {
                     <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Email</th>
                     <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Department</th>
                     <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Phone</th>
+                    <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Days Present</th>
+                    <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Days Absent</th>
+                    <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Days OD</th>
+                    <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Attendance %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -111,12 +155,16 @@ export default function ViewStudents() {
                       <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.email}</td>
                       <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.dept}</td>
                       <td className="border border-violet-200 px-4 py-3 text-violet-900">{student.phno}</td>
+                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].present : '-'}</td>
+                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].absent : '-'}</td>
+                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].onDuty : '-'}</td>
+                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{attendanceStats[student.regno || student._id || ''] ? `${attendanceStats[student.regno || student._id || ''].attendancePercentage}%` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-    </div>
+      </div>
   );
 }

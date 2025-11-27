@@ -1,5 +1,7 @@
 //import React from 'react';
-import { FaEye, FaEyeSlash, FaSignOutAlt } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaSignOutAlt, FaComments } from 'react-icons/fa';
+import { useState } from 'react';
+import AdminChatModal from './AdminChat';
 
 type Props = {
   profileLoading: boolean;
@@ -10,6 +12,7 @@ type Props = {
 };
 
 export default function AdminProfile({ profileLoading, profileData, showPassword, setShowPassword, onLogout }: Props) {
+  const [openChat, setOpenChat] = useState(false);
   return (
     <div>
       {profileLoading ? (
@@ -59,8 +62,15 @@ export default function AdminProfile({ profileLoading, profileData, showPassword
           </div>
 
           <div className="pt-3">
-            <button onClick={onLogout} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"><FaSignOutAlt /> Logout</button>
+                    <div className="space-y-2">
+                      <button onClick={() => setOpenChat(true)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2" aria-label="Open chat">
+                        <FaComments className="w-4 h-4" />
+                        <span>Chat</span>
+                      </button>
+                      <button onClick={onLogout} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"><FaSignOutAlt /> Logout</button>
+                    </div>
           </div>
+                  {openChat && <AdminChatModal onClose={() => setOpenChat(false)} />}
         </div>
       )}
     </div>
