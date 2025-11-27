@@ -4,6 +4,8 @@ import Department from "../models/Department.js";
 import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import logger from "../utils/logger.js";
+import ExcelJS from "exceljs";
+import { parseISTDate, getNextISTDay, getTodayIST, toISTDateString } from '../utils/dateUtils.js';
 
 // ---------- LOGIN ----------
 export const loginController = async (req, res) => {
@@ -202,5 +204,189 @@ export const getAdminBatchMapping = async (req, res) => {
   } catch (err) {
     logger.error('getAdminBatchMapping error', { error: err.message });
     return res.status(500).json({ message: 'Failed to build mapping', error: err.message });
+  }
+};
+
+// ---------- ADVANCED EXPORT (filtered by departments and date presets) ----------
+// GET /api/superadmin/export-advanced?deptIds=a,b&preset=today|thisWeek|thisMonth|all&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+// If deptIds omitted or equals 'ALL', exports all departments.
+// If preset provided, overrides start/endDate.
+export const exportAdvancedData = async (req, res) => {
+  const start = Date.now();
+  logger.debug('exportAdvancedData start', { query: req.query });
+  try {
+    const role = req.headers['x-role'] || req.headers['X-Role'];
+    if (role !== 'SUPER_ADMIN') {
+      logger.warn('exportAdvancedData forbidden', { role });
+      return res.status(403).json({ message: 'SUPER_ADMIN role required for export' });
+    }
+
+    const { deptIds, preset, startDate: qStart, endDate: qEnd } = req.query || {};
+
+    // Resolve date range using IST-aware helpers. We'll treat startDate as inclusive (IST midnight)
+    // and endDate as inclusive by making the query use an exclusive upper bound (next IST day).
+    let startDate = qStart ? parseISTDate(String(qStart)) : null;
+    let endDate = qEnd ? parseISTDate(String(qEnd)) : null;
+
+    const p = String(preset || '').toLowerCase();
+    if (p) {
+      if (p === 'today') {
+        const todayStr = getTodayIST();
+        startDate = parseISTDate(todayStr);
+        endDate = parseISTDate(todayStr);
+      } else if (p === 'thisweek') {
+        const todayStr = getTodayIST();
+        const todayIST = parseISTDate(todayStr);
+        const day = todayIST.getUTCDay(); // 0..6, Sun=0
+        const diffToMonday = (day + 6) % 7;
+        const monday = new Date(todayIST);
+        monday.setUTCDate(todayIST.getUTCDate() - diffToMonday);
+        const sunday = new Date(monday);
+        sunday.setUTCDate(monday.getUTCDate() + 6);
+        startDate = parseISTDate(new Date(monday).toISOString().slice(0,10));
+        endDate = parseISTDate(new Date(sunday).toISOString().slice(0,10));
+      } else if (p === 'thismonth') {
+        const todayStr = getTodayIST();
+        const [yy, mm] = todayStr.split('-');
+        const year = Number(yy);
+        const month = Number(mm);
+        const firstStr = `${year}-${String(month).padStart(2,'0')}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const lastStr = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+        startDate = parseISTDate(firstStr);
+        endDate = parseISTDate(lastStr);
+      } else if (p === 'all') {
+        startDate = null;
+        endDate = null;
+      }
+    }
+
+    // Determine departments filter
+    let deptFilterIds = [];
+    if (deptIds && String(deptIds).trim().length) {
+      if (String(deptIds).toUpperCase() !== 'ALL') {
+        deptFilterIds = String(deptIds).split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    // Fetch datasets
+    const [admins, departments] = await Promise.all([
+      Admin.find().lean(),
+      Department.find().lean()
+    ]);
+
+    // Batches filtered by departments (or all)
+    const batchQuery = deptFilterIds.length ? { deptId: { $in: deptFilterIds } } : {};
+    const batches = await Batch.find(batchQuery).lean();
+    const batchIds = new Set(batches.map(b => b.batchId));
+
+    // Students filtered by those batches (or all departments if none specified)
+    const students = await Student.find(deptFilterIds.length ? { dept: { $in: departments.filter(d => deptFilterIds.includes(d.deptId)).map(d => d.deptName) } } : {}).lean();
+
+    // Attendance filtered by batchId set and date range
+    const attendanceQuery = {};
+    if (batchIds.size) attendanceQuery['batchId'] = { $in: Array.from(batchIds) };
+    if (startDate && endDate) {
+      // Use exclusive upper bound for end date: date >= startDate && date < nextDay(endDate)
+      const endExclusive = getNextISTDay(endDate);
+      attendanceQuery['date'] = { $gte: startDate, $lt: endExclusive };
+    }
+    const attendance = await Attendance.find(attendanceQuery).lean();
+
+    // Build workbook
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'MavLink';
+    wb.created = new Date();
+
+    const metaSheet = wb.addWorksheet('ExportMeta');
+    metaSheet.addRow(['GeneratedAt', new Date().toISOString()]);
+    metaSheet.addRow(['Preset', p || 'custom']);
+    metaSheet.addRow(['StartDate', startDate ? startDate.toISOString().slice(0,10) : '']);
+    metaSheet.addRow(['EndDate', endDate ? endDate.toISOString().slice(0,10) : '']);
+    metaSheet.addRow(['DeptIds', deptFilterIds.length ? deptFilterIds.join(',') : 'ALL']);
+
+    const adminSheet = wb.addWorksheet('Admins');
+    adminSheet.columns = [
+      { header: 'adminId', key: 'adminId', width: 16 },
+      { header: 'username', key: 'username', width: 20 },
+      { header: 'role', key: 'role', width: 14 },
+      { header: 'assignedBatchIds', key: 'assignedBatchIds', width: 40 }
+    ];
+    admins.forEach(a => adminSheet.addRow({
+      adminId: a.adminId,
+      username: a.username,
+      role: a.role,
+      assignedBatchIds: (a.assignedBatchIds || []).join(',')
+    }));
+
+    const deptSheet = wb.addWorksheet('Departments');
+    deptSheet.columns = [
+      { header: 'deptId', key: 'deptId', width: 12 },
+      { header: 'deptName', key: 'deptName', width: 24 }
+    ];
+    (deptFilterIds.length ? departments.filter(d => deptFilterIds.includes(d.deptId)) : departments)
+      .forEach(d => deptSheet.addRow({ deptId: d.deptId, deptName: d.deptName }));
+
+    const batchSheet = wb.addWorksheet('Batches');
+    batchSheet.columns = [
+      { header: 'batchId', key: 'batchId', width: 16 },
+      { header: 'batchName', key: 'batchName', width: 20 },
+      { header: 'batchYear', key: 'batchYear', width: 10 },
+      { header: 'deptId', key: 'deptId', width: 12 },
+      { header: 'adminId', key: 'adminId', width: 16 }
+    ];
+    batches.forEach(b => batchSheet.addRow({ batchId: b.batchId, batchName: b.batchName, batchYear: b.batchYear, deptId: b.deptId, adminId: b.adminId || '' }));
+
+    const studentSheet = wb.addWorksheet('Students');
+    studentSheet.columns = [
+      { header: 'regno', key: 'regno', width: 16 },
+      { header: 'studentname', key: 'studentname', width: 20 },
+      { header: 'dept', key: 'dept', width: 12 },
+      { header: 'batchId', key: 'batchId', width: 16 },
+      { header: 'email', key: 'email', width: 28 },
+      { header: 'phno', key: 'phno', width: 16 }
+    ];
+    students.forEach(s => studentSheet.addRow({ regno: s.regno, studentname: s.studentname, dept: s.dept, batchId: s.batchId || '', email: s.email, phno: s.phno }));
+
+    const attendanceSheet = wb.addWorksheet('Attendance');
+    attendanceSheet.columns = [
+      { header: 'batchId', key: 'batchId', width: 12 },
+      { header: 'date', key: 'date', width: 14 },
+      { header: 'session', key: 'session', width: 8 },
+      { header: 'markedBy', key: 'markedBy', width: 18 },
+      { header: 'regno', key: 'regno', width: 14 },
+      { header: 'studentname', key: 'studentname', width: 20 },
+      { header: 'status', key: 'status', width: 12 },
+      { header: 'reason', key: 'reason', width: 30 }
+    ];
+    attendance.forEach(a => {
+      const dateStr = a.date ? toISTDateString(new Date(a.date)) : '';
+      (a.entries || []).forEach(entry => {
+        attendanceSheet.addRow({
+          batchId: a.batchId,
+          date: dateStr,
+          session: a.session,
+          markedBy: a.markedBy,
+          regno: entry.regno,
+          studentname: entry.studentname,
+          status: entry.status,
+          reason: entry.reason || ''
+        });
+      });
+    });
+
+    [metaSheet, adminSheet, deptSheet, batchSheet, studentSheet, attendanceSheet].forEach(sh => {
+      sh.getRow(1).font = { bold: true };
+      sh.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="mavlink_export_advanced.xlsx"');
+    await wb.xlsx.write(res);
+    res.end();
+    logger.info('exportAdvancedData success', { durationMs: Date.now() - start, admins: admins.length, batches: batches.length, departments: departments.length, students: students.length, attendanceDocs: attendance.length });
+  } catch (err) {
+    logger.error('exportAdvancedData error', { error: err.message });
+    res.status(500).json({ message: 'Failed to export data', error: err.message });
   }
 };

@@ -7,7 +7,7 @@ import cors from 'cors';
 import { dropLegacyAttendanceIndexes } from './utils/indexCleanup.js';
 import logger from './utils/logger.js';
 
-import superAdminRoutes from '../src/routes/superAdminRoutes.js';
+import superAdminRoutes from './routes/superAdminRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import studentRoutes from "./routes/studentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";

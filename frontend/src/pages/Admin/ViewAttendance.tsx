@@ -125,6 +125,18 @@ export default function ViewAttendance() {
           const dd = String(d.getDate()).padStart(2, '0');
           dates.push(`${yyyy}-${mm}-${dd}`);
         }
+        // Include tomorrow as well so attendance marked for the next day (e.g., future date selections) appears in the summary
+        try {
+          const tom = new Date();
+          tom.setDate(tom.getDate() + 1);
+          const tyyyy = tom.getFullYear();
+          const tmm = String(tom.getMonth() + 1).padStart(2, '0');
+          const tdd = String(tom.getDate()).padStart(2, '0');
+          const tomStr = `${tyyyy}-${tmm}-${tdd}`;
+          if (!dates.includes(tomStr)) dates.unshift(tomStr);
+        } catch (err) {
+          // ignore if date computation fails
+        }
       }
 
       const resp = await attendanceAPI.getAttendanceByDateSummary(dates, batchId || activeBatchId || undefined);
