@@ -11,25 +11,27 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
   return (
     <>
       <tr className="hover:bg-violet-50">
-        <td className="border border-violet-200 px-4 py-3 text-violet-900">{record.regno}</td>
-        <td className="border border-violet-200 px-4 py-3 text-violet-900">{record.studentname}</td>
-        <td className="border border-violet-200 px-4 py-3 text-center">
-          <div className="flex items-center justify-center gap-2">
+        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-violet-900 text-sm md:text-base w-20 md:w-32">{record.regno}</td>
+        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-violet-900 text-sm md:text-base min-w-0 truncate">{record.studentname}</td>
+        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-center w-20 md:w-24">
+          <div className="flex flex-col items-center md:flex-row md:justify-center gap-2">
             {record.status === 'On-Duty' ? (
               <button
                 onClick={() => setShowReason(s => !s)}
-                className="px-3 py-1 rounded-full text-white font-semibold bg-yellow-500 hover:bg-yellow-600"
+                className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full text-white font-semibold bg-yellow-500 hover:bg-yellow-600"
                 aria-expanded={showReason}
                 aria-label={showReason ? 'Hide On-Duty reason' : 'Show On-Duty reason'}
                 title={showReason ? 'Hide On-Duty reason' : 'Show On-Duty reason'}
               >
-                {showReason ? 'On-Duty • Hide' : 'On-Duty'}
+                <span className="hidden md:inline">{showReason ? 'On-Duty • Hide' : 'On-Duty'}</span>
+                <span className="md:hidden">{showReason ? 'OD • Hide' : 'OD'}</span>
               </button>
             ) : (
-              <span className={`px-3 py-1 rounded-full text-white font-semibold ${
+              <span className={`px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full text-white font-semibold ${
                 record.status === 'Present' ? 'bg-violet-600' : 'bg-red-500'
               }`}>
-                {record.status}
+                <span className="hidden md:inline">{record.status}</span>
+                <span className="md:hidden">{record.status === 'Present' ? 'P' : 'A'}</span>
               </span>
             )}
           </div>
@@ -38,12 +40,95 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 
       {record.status === 'On-Duty' && showReason && (
         <tr>
-          <td colSpan={3} className="border border-violet-200 px-4 py-2 text-sm text-yellow-800 bg-yellow-50">
+          <td colSpan={3} className="border border-violet-200 px-2 py-1 md:px-4 md:py-2 text-sm text-yellow-800 bg-yellow-50">
             <strong>On-Duty Reason:</strong>&nbsp;{record.reason || '-'}
           </td>
         </tr>
       )}
     </>
+  );
+}
+
+// Mobile toggle + responsive tables component
+function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords: Attendance[] }) {
+  const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
+
+  const renderSession = (session: 'FN' | 'AN') => {
+    const records = attendanceRecords.filter(r => r.session === session);
+    const headerBg = session === 'FN' ? 'bg-violet-100' : 'bg-purple-100';
+    const badgeBg = session === 'FN' ? 'bg-violet-500' : 'bg-purple-500';
+
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`px-4 py-2 text-white rounded-lg font-bold text-lg ${badgeBg}`}>{session === 'FN' ? 'Forenoon (FN)' : 'Afternoon (AN)'}</span>
+        </div>
+        <div>
+          <ResponsiveTable>
+            <table className="min-w-[320px] w-full table-fixed border-collapse border border-violet-200">
+              <thead>
+                <tr className={headerBg}>
+                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-left text-violet-950 font-semibold text-sm md:text-base w-20 md:w-32">Reg No</th>
+                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-left text-violet-950 font-semibold text-sm md:text-base min-w-0">Name</th>
+                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-center text-violet-950 font-semibold text-sm md:text-base w-20 md:w-24">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="border border-violet-200 px-2 py-6 md:px-4 md:py-8 text-center text-violet-600">No {session} attendance records found</td>
+                  </tr>
+                ) : (
+                  records
+                    .sort((a, b) => (a.regno || '').localeCompare(b.regno || ''))
+                    .map((record, idx) => (
+                      <ViewAttendanceRow key={record._id ?? `${record.regno}-${session}-${idx}`} record={record} />
+                    ))
+                )}
+              </tbody>
+            </table>
+          </ResponsiveTable>
+
+          {records.length > 0 && (
+            <div className="mt-3 text-sm text-gray-600">
+              <p>Marked by: {records.find(r => r.session === session)?.markedBy}</p>
+              <p>Marked at: {formatTimestampIST(records.find(r => r.session === session)?.markedAt!)}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {/* mobile toggle */}
+      <div className="flex items-center justify-center gap-2 mb-4 md:hidden">
+        <button
+          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'FN' ? 'bg-violet-600 text-white' : 'bg-gray-100 text-violet-800'}`}
+          onClick={() => setSelectedSession('FN')}
+        >
+          FN
+        </button>
+        <button
+          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'AN' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-violet-800'}`}
+          onClick={() => setSelectedSession('AN')}
+        >
+          AN
+        </button>
+      </div>
+
+      {/* mobile: single session view */}
+      <div className="block md:hidden">
+        {renderSession(selectedSession)}
+      </div>
+
+      {/* desktop/tablet: two-column view */}
+      <div className="hidden md:grid md:grid-cols-2 gap-6">
+        <div>{renderSession('FN')}</div>
+        <div>{renderSession('AN')}</div>
+      </div>
+    </div>
   );
 }
 
@@ -203,34 +288,41 @@ export default function ViewAttendance() {
       {!selectedDateForDetail ? (
         // Show cards summary
         <div>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <p className="text-violet-800">Click on any date card to view detailed attendance</p>
-            <div>
-              <div className="flex items-center gap-3">
-                <label className="text-violet-900 font-medium">Batch:</label>
-                <select
-                  value={activeBatchId}
-                  onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
-                  className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
-                >
-                  <option value="">All assigned batches</option>
-                  {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
-                </select>
-
-                <div className="flex items-center gap-2">
-                  <label className="text-violet-900 font-medium">From:</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
-                  <label className="text-violet-900 font-medium">To:</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
-                  <button
-                    onClick={() => fetchAttendanceSummary(0, activeBatchId || undefined, startDate || null, endDate || null)}
-                    className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+            <div className="w-full md:w-auto">
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <label className="text-violet-900 font-medium">Batch:</label>
+                  <select
+                    value={activeBatchId}
+                    onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
+                    className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
                   >
-                    Apply
-                  </button>
+                    <option value="">All assigned batches</option>
+                    {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
+                  </select>
                 </div>
 
-                <div className="ml-3 flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-violet-900 font-medium">From:</label>
+                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-violet-900 font-medium">To:</label>
+                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
+                    <button
+                      onClick={() => fetchAttendanceSummary(0, activeBatchId || undefined, startDate || null, endDate || null)}
+                      className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 md:ml-3">
                   <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 6); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 7</button>
                   <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 29); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 30</button>
                   <button onClick={() => { const e = new Date(); const s = new Date(); s.setDate(e.getDate() - 89); setStartDate(s.toISOString().slice(0,10)); setEndDate(e.toISOString().slice(0,10)); fetchAttendanceSummary(0, activeBatchId || undefined, s.toISOString().slice(0,10), e.toISOString().slice(0,10)); }} className="px-2 py-1 bg-gray-100 rounded text-sm">Last 90</button>
@@ -320,90 +412,15 @@ export default function ViewAttendance() {
         </div>
       ) : (
         // Show detailed attendance for selected date
-        <div id="attendance-detail" className="bg-white rounded-xl shadow-xl p-6">
+          <div id="attendance-detail" className="bg-white rounded-xl shadow-xl p-6">
           <h3 className="text-xl font-bold text-violet-950 mb-4">
             Attendance Details for {formatDateForDisplay(selectedDateForDetail, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </h3>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-4 py-2 bg-violet-500 text-white rounded-lg font-bold text-lg">Forenoon (FN)</span>
-              </div>
-              <div>
-                <ResponsiveTable>
-                  <table className="min-w-[520px] w-full border-collapse border border-violet-200">
-                  <thead>
-                    <tr className="bg-violet-100">
-                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
-                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Name</th>
-                      <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceRecords.filter(r => r.session === 'FN').length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No FN attendance records found</td>
-                      </tr>
-                    ) : (
-                      attendanceRecords
-                        .filter(r => r.session === 'FN')
-                        .sort((a, b) => (a.regno || '').localeCompare(b.regno || ''))
-                        .map((record) => (
-                          <ViewAttendanceRow key={record._id} record={record} />
-                        ))
-                    )}
-                  </tbody>
-                  </table>
-                </ResponsiveTable>
-                {attendanceRecords.filter(r => r.session === 'FN').length > 0 && (
-                  <div className="mt-3 text-sm text-gray-600">
-                    <p>Marked by: {attendanceRecords.find(r => r.session === 'FN')?.markedBy}</p>
-                    <p>Marked at: {formatTimestampIST(attendanceRecords.find(r => r.session === 'FN')?.markedAt!)}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold text-lg">Afternoon (AN)</span>
-              </div>
-              <div>
-                <ResponsiveTable>
-                  <table className="min-w-[520px] w-full border-collapse border border-violet-200">
-                  <thead>
-                    <tr className="bg-purple-100">
-                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg No</th>
-                      <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Name</th>
-                      <th className="border border-violet-200 px-4 py-3 text-center text-violet-950 font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceRecords.filter(r => r.session === 'AN').length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No AN attendance records found</td>
-                      </tr>
-                    ) : (
-                      attendanceRecords
-                        .filter(r => r.session === 'AN')
-                        .sort((a, b) => (a.regno || '').localeCompare(b.regno || ''))
-                        .map((record) => (
-                          <ViewAttendanceRow key={record._id} record={record} />
-                        ))
-                    )}
-                  </tbody>
-                  </table>
-                </ResponsiveTable>
-                {attendanceRecords.filter(r => r.session === 'AN').length > 0 && (
-                  <div className="mt-3 text-sm text-gray-600">
-                    <p>Marked by: {attendanceRecords.find(r => r.session === 'AN')?.markedBy}</p>
-                    <p>Marked at: {formatTimestampIST(attendanceRecords.find(r => r.session === 'AN')?.markedAt!)}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Mobile: toggle between FN/AN. Desktop/md+: show both side-by-side */}
+          <MobileSessionToggleAndTables
+            attendanceRecords={attendanceRecords}
+          />
         </div>
       )}
       </div>

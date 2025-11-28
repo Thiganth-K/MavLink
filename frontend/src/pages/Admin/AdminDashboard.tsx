@@ -1,313 +1,232 @@
-import { useState, useEffect, useRef } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI } from '../../services/api';
-import type { Student } from '../../services/api';
- 
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 
-import MarkAttendance from './MarkAttendance';
-import ViewAttendance from './ViewAttendance';
-import ViewStudents from './ViewStudents';
-import AdminLayout from '../../components/Admin/AdminLayout';
-import { FiSearch, FiX } from 'react-icons/fi';
+type Student = {
+  regNumber: string
+  name: string
+  email?: string
+  department?: string
+  phone?: string
+}
 
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'home' | 'students' | 'attendance' | 'mark'>('home');
-  const [heroSearch, setHeroSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Student[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchTimeoutRef = useRef<number | null>(null);
-  const [displayName, setDisplayName] = useState('Admin');
+const toTitleCase = (s: string) => {
+  return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+}
 
-  // Debounced live-search: query assigned students and show results below the input
-  useEffect(() => {
-    if (!heroSearch || !heroSearch.trim()) {
-      setSearchResults([]);
-      setIsSearching(false);
-      if (searchTimeoutRef.current) {
-        window.clearTimeout(searchTimeoutRef.current);
-        searchTimeoutRef.current = null;
-      }
-      return;
-    }
-
-    setIsSearching(true);
-    if (searchTimeoutRef.current) {
-      window.clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        const results = await studentAPI.searchStudents(heroSearch);
-        setSearchResults(results || []);
-      } catch (err) {
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        window.clearTimeout(searchTimeoutRef.current);
-        searchTimeoutRef.current = null;
-      }
-    };
-  }, [heroSearch]);
-
-  // Check if user is authenticated as ADMIN (not SUPER_ADMIN)
-  useEffect(() => {
-    const role = localStorage.getItem('role');
-    const user = localStorage.getItem('user');
-    
-    if (!user || role !== 'ADMIN') {
-      toast.error('Access denied. Admin privileges required.');
-      window.location.href = '/';
-      return;
-    }
-
-    // Always show home on page load/refresh by clearing any hash
-    try { window.location.hash = ''; } catch(e) {}
-    setActiveTab('home');
-
-    // read username for hero greeting
+const AdminDashboard: React.FC = () => {
+  const safeNavigate = (path: string) => {
     try {
-      const u = user ? JSON.parse(user) : null;
-      const rawName = (u && (u.username || u.name || u.adminId)) || 'Admin';
-      const titleCased = String(rawName).split(/\s+/).map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : '').join(' ');
-      setDisplayName(titleCased || 'Admin');
-    } catch (e) {
-      setDisplayName('Admin');
-    }
-  }, []);
-
-  // Listen for in-app navigation events and hash changes so child components can request tab changes
-  useEffect(() => {
-    const onNavigate = (e: any) => {
-      const target = (e && e.detail) || (window.location.hash ? window.location.hash.replace('#', '') : null);
-      if (!target) return;
-      if (target === 'attendance' || target === 'students' || target === 'mark' || target === 'home') {
-        setActiveTab(target as any);
+      if (typeof window !== 'undefined') {
+        window.location.href = path
       }
-    };
+    } catch (e) {
+      // ignore
+    }
+  }
 
-    const onHash = () => {
-      const h = window.location.hash.replace('#', '');
-      if (h === 'attendance' || h === 'students' || h === 'mark' || h === 'home') setActiveTab(h as any);
-    };
+  const adminName = useMemo(() => {
+    try {
+      const maybe =
+        localStorage.getItem('adminName') ||
+        (() => {
+          const raw = localStorage.getItem('admin')
+          if (!raw) return ''
+          try {
+            const parsed = JSON.parse(raw)
+            return parsed?.name || parsed?.fullName || ''
+          } catch {
+            return ''
+          }
+        })() ||
+        (() => {
+          const raw = localStorage.getItem('user')
+          if (!raw) return ''
+          try {
+            const parsed = JSON.parse(raw)
+            return parsed?.name || parsed?.fullName || ''
+          } catch {
+            return ''
+          }
+        })()
+      return maybe || 'Admin'
+    } catch {
+      return 'Admin'
+    }
+  }, [])
 
-    window.addEventListener('navigate', onNavigate as EventListener);
-    window.addEventListener('hashchange', onHash);
+  const title = toTitleCase('welcome to mavlink')
 
-    // apply current hash if present
-    onHash();
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Student[] | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const debounceRef = useRef<number | null>(null)
+  const activeFetchRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    // live search: debounce and fetch
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+
+    if (!query.trim()) {
+      setResults(null)
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    debounceRef.current = window.setTimeout(() => {
+      // abort previous
+      if (activeFetchRef.current) activeFetchRef.current.abort()
+      const ac = new AbortController()
+      activeFetchRef.current = ac
+
+      // Try to fetch search results from API, fallback to empty
+      fetch(`/api/students?search=${encodeURIComponent(query)}`, { signal: ac.signal })
+        .then((res) => {
+          if (!res.ok) throw new Error('Network error')
+          return res.json()
+        })
+        .then((data) => {
+          // Expecting an array of students; normalize if needed
+          if (Array.isArray(data)) {
+            setResults(
+              data.map((s: any) => ({
+                regNumber: s.regNumber || s.reg || s.registration || s.id || '',
+                name: s.name || s.fullName || '',
+                email: s.email || s.contactEmail || '',
+                department: s.department || s.dept || '',
+                phone: s.phone || s.mobile || s.contact || '',
+              }))
+            )
+          } else {
+            setResults([])
+          }
+        })
+        .catch(() => {
+          if (ac.signal.aborted) return
+          setResults([])
+        })
+        .finally(() => {
+          setIsLoading(false)
+          activeFetchRef.current = null
+        })
+    }, 350)
 
     return () => {
-      window.removeEventListener('navigate', onNavigate as EventListener);
-      window.removeEventListener('hashchange', onHash);
-    };
-  }, []);
+      if (debounceRef.current) window.clearTimeout(debounceRef.current)
+      if (activeFetchRef.current) activeFetchRef.current.abort()
+    }
+  }, [query])
 
-  // handleLogout is provided by the app-level layout now
+  const onSubmitSearch = (q: string) => {
+    const trimmed = q.trim()
+    localStorage.setItem('adminSearchQuery', trimmed)
+    safeNavigate('/admin-dashboard/view-students')
+  }
 
-  // Global loader helpers are provided by the App-level layout so they are available across admin pages.
+  const onRowClick = (s: Student) => {
+    const key = s.regNumber || s.name
+    if (key) localStorage.setItem('adminSearchQuery', key)
+    safeNavigate('/admin-dashboard/view-students')
+  }
 
   return (
-    <AdminLayout>
-      <Toaster position="top-center" />
-      {/* App-level global overlay loader is mounted in `App.tsx` so we don't duplicate it here */}
-      
-      <div className="w-full">
-        {/* Home/Hero Section */}
-        {activeTab === 'home' && (
-          <div className="space-y-6 animate-fadeIn flex items-center justify-center min-h-[calc(100vh-8rem)]">
-            <style>{`
-              @keyframes fadeIn {
-                from {
-                  opacity: 0;
-                  transform: translateY(20px);
-                }
-                to {
-                  opacity: 1;
-                  transform: translateY(0);
-                }
-              }
-              .animate-fadeIn {
-                animation: fadeIn 0.6s ease-out;
-              }
-              /* Super in animation for hero title */
-              @keyframes superIn {
-                0% { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(6px); }
-                60% { opacity: 1; transform: translateY(-6px) scale(1.02); filter: blur(0); }
-                100% { opacity: 1; transform: translateY(0) scale(1); filter: none; }
-              }
-              .animate-superIn { animation: superIn 520ms cubic-bezier(.2,.9,.2,1) both; }
+    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto animate-superIn">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6 sm:p-8 lg:flex lg:items-center lg:justify-between">
+          <div className="lg:flex-1">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              <span className="animate-popIn">{title}</span>
+              <span className="text-indigo-600 ml-2">{adminName}</span>
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Quick actions and student search</p>
 
-              .hero-title { font-weight: 800; letter-spacing: -0.02em; }
-              .hero-username { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 0.5rem; background: linear-gradient(90deg,#fff7ed,#fff3b0); color: #1a2b4a; box-shadow: 0 6px 22px rgba(26,43,74,0.08); transform-origin: center; }
-              .hero-username.sparkle { animation: popGlow 900ms ease-out; }
-              @keyframes popGlow { 0% { transform: scale(.96); box-shadow: 0 0 0 rgba(255,243,186,0); } 60% { transform: scale(1.03); box-shadow: 0 10px 30px rgba(255,193,7,0.12); } 100% { transform: scale(1); box-shadow: 0 6px 18px rgba(26,43,74,0.06); } }
-              @keyframes heroPop {
-                from { opacity: 0; transform: translateY(12px) scale(.995); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-              }
-              .animate-heroPop { animation: heroPop 0.45s cubic-bezier(.2,.9,.2,1) both; }
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => safeNavigate('/admin-dashboard/mark-attendance')}
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-sm transition"
+              >
+                Mark Attendance
+              </button>
 
-              @keyframes popIn {
-                from { opacity: 0; transform: translateY(6px) scale(.997); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-              }
-              .animate-popIn { animation: popIn 0.32s ease-out both; }
-
-              /* Search bar styling (scoped) */
-              .search-wrapper { display: flex; align-items: center; border-radius: 9999px; overflow: hidden; transition: box-shadow .15s ease, border-color .15s ease; }
-              .search-wrapper { border: 2px solid rgba(124,58,237,0.24); }
-              .search-wrapper:focus-within { box-shadow: 0 6px 20px rgba(14, 42, 88, 0.12); border-color: rgba(124,58,237,0.6); }
-              .search-input { flex: 1; padding: 0.75rem 1rem; background: transparent; color: #0f172a; border: none; }
-              .search-input::placeholder { color: rgba(124,58,237,0.5); }
-              .search-input:focus { outline: none; }
-              .search-btn { height: 100%; padding: 0 0.9rem; background-color: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; border: none; }
-              .search-btn:hover { background-color: #5b21b6; }
-              .search-btn:focus { outline: 2px solid rgba(255,255,255,0.12); outline-offset: -2px; }
-
-              .search-input:focus { box-shadow: none; }
-            `}</style>
-            {/* Hero Section */}
-            <div className="p-12 w-full">
-              <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-violet-950 mb-4 hero-title animate-superIn">
-                  {(() => {
-                    const tc = (s: string) => s.split(/\s+/).map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : '').join(' ');
-                    return tc('welcome to mavlink,');
-                  })()}
-                  &nbsp;
-                  <span className="hero-username sparkle">{displayName}!!</span>
-                </h1>
-                <p className="text-xl text-violet-800 mb-8">
-                  Manage students and track attendance efficiently
-                </p>
-                <div className="flex justify-center gap-4 flex-col items-center animate-heroPop">
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => { window.location.href = '/admin-dashboard/mark-attendance'; }}
-                      className="px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors shadow-lg"
-                    >
-                      Mark Attendance
-                    </button>
-                    <button
-                      onClick={() => { window.location.href = '/admin-dashboard/view-attendance'; }}
-                      className="px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors shadow-lg"
-                    >
-                      View Attendance
-                    </button>
-                      {/* Contact Superadmin button moved to profile */}
-                  </div>
-
-                  {/* Modern interactive search bar */}
-                  <div className="mt-6 w-full max-w-3xl">
-                    <div className="flex justify-center">
-                      <div className="w-full relative">
-                        <div className="search-wrapper px-2 bg-white/80 dark:bg-white/10 rounded-full shadow-sm">
-                          <div className="flex items-center w-full">
-                            <div className="pl-3 pr-2 text-violet-500">
-                              <FiSearch className="w-5 h-5" />
-                            </div>
-                            <input
-                              type="search"
-                              value={heroSearch}
-                              onChange={(e) => setHeroSearch(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  localStorage.setItem('adminSearchQuery', heroSearch);
-                                  window.location.href = '/admin-dashboard/view-students';
-                                }
-                              }}
-                              placeholder="Search students by regno or name"
-                              aria-label="Search students"
-                              className="search-input flex-grow text-sm lg:text-base"
-                            />
-                            {heroSearch && (
-                              <button
-                                onClick={() => setHeroSearch('')}
-                                className="search-btn ml-2 mr-1 rounded-full"
-                                aria-label="Clear search"
-                                title="Clear"
-                                type="button"
-                              >
-                                <FiX className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Results table (styled like ViewStudents) - only show when user has typed */}
-                        {heroSearch.trim() && (
-                          <div className="mt-4 bg-white rounded-xl shadow-xl p-4 overflow-x-auto animate-popIn">
-                            <table className="w-full border-collapse border border-violet-200">
-                              <thead>
-                                <tr className="bg-violet-100">
-                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg Number</th>
-                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Student Name</th>
-                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Email</th>
-                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Department</th>
-                                  <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Phone</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {isSearching ? (
-                                  <tr>
-                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Searching...</td>
-                                  </tr>
-                                ) : !heroSearch.trim() ? (
-                                  <tr>
-                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Type to search students</td>
-                                  </tr>
-                                ) : searchResults.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No results</td>
-                                  </tr>
-                                ) : (
-                                  searchResults.map((s) => (
-                                    <tr key={s._id || s.regno} className="hover:bg-violet-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regno || s.studentname || ''); window.location.href = '/admin-dashboard/view-students'; }}>
-                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.regno}</td>
-                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.studentname}</td>
-                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.email}</td>
-                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.dept}</td>
-                                      <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.phno}</td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Removed inline search/results — students handled in ViewStudents component */}
+              <button
+                onClick={() => safeNavigate('/admin-dashboard/view-attendance')}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 rounded-full shadow-sm transition"
+              >
+                View Attendance
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Student List Section */}
-        {activeTab === 'students' && (
-          <ViewStudents />
-        )}
+          <div className="mt-6 lg:mt-0 lg:ml-6 lg:w-1/2">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onSubmitSearch(query)
+                }}
+                placeholder="Search students by reg number or name"
+                className="w-full pl-11 pr-4 py-3 rounded-full border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                aria-label="Search students"
+              />
+            </div>
 
-        {/* View Attendance Section (moved to component) */}
-        {activeTab === 'attendance' && (
-          <ViewAttendance />
-        )}
+            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+              <div className="p-3">
+                {(!query || !query.trim()) && (
+                  <div className="text-sm text-gray-500">Type a registration number or name to search students.</div>
+                )}
 
-        {/* Mark Attendance Section */}
-        {activeTab === 'mark' && (
-          <MarkAttendance />
-        )}
-      {/* Footer removed: App-level AdminFooter will provide footer */}
-      {/* Profile drawer moved to app-level layout */}
+                {query && (
+                  <div className="overflow-auto">
+                    <table className="min-w-full text-sm text-left">
+                      <thead>
+                        <tr className="text-xs text-gray-500 uppercase">
+                          <th className="px-3 py-2">Reg Number</th>
+                          <th className="px-3 py-2">Student Name</th>
+                          <th className="px-3 py-2">Email</th>
+                          <th className="px-3 py-2">Department</th>
+                          <th className="px-3 py-2">Phone</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {isLoading && (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500 animate-pulse">Loading results...</td>
+                          </tr>
+                        )}
+
+                        {!isLoading && results && results.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500">No results</td>
+                          </tr>
+                        )}
+
+                        {!isLoading && results && results.length > 0 && results.map((s) => (
+                          <tr key={s.regNumber || s.email || s.name} className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer animate-popIn" onClick={() => onRowClick(s)}>
+                            <td className="px-3 py-2 align-middle">{s.regNumber}</td>
+                            <td className="px-3 py-2 align-middle">{s.name}</td>
+                            <td className="px-3 py-2 align-middle">{s.email}</td>
+                            <td className="px-3 py-2 align-middle">{s.department}</td>
+                            <td className="px-3 py-2 align-middle">{s.phone}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    </AdminLayout>
-  );
+  )
 }
+
+export default AdminDashboard

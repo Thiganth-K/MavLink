@@ -2,10 +2,16 @@ import React from "react";
 
 const angles = [0, 45, 90, 135, 180, 225, 270, 315];
 
-const Loader: React.FC = () => {
+type Props = {
+  className?: string;
+};
+
+const Loader: React.FC<Props> = ({ className = "" }) => {
+  // The inner spans use percentages for size so they scale with the container.
+  // Outer container uses responsive Tailwind sizes so loader is mobile-friendly.
   return (
-    <div className="relative flex h-12 w-12 items-center justify-start">
-      <div className="relative flex h-full w-full items-center justify-start">
+    <div className={`relative flex items-center justify-center ${className} h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12`}>
+      <div className="relative flex h-full w-full items-center justify-center">
         {angles.map((angle, index) => (
           <div
             key={index}
@@ -13,14 +19,14 @@ const Loader: React.FC = () => {
             style={{ transform: `rotate(${angle}deg)` }}
           >
             <span
-              className="block rounded-full opacity-50"
+              className="block rounded-full opacity-60"
               style={{
                 height: "20%",
                 width: "20%",
                 backgroundColor: "#183153",
                 animation: "pulseAnim 1s ease-in-out infinite",
                 animationDelay: `${-0.125 * index}s`,
-                boxShadow: "0 0 20px rgba(18, 31, 53, 0.3)",
+                boxShadow: "0 0 18px rgba(18, 31, 53, 0.22)",
               }}
             />
           </div>

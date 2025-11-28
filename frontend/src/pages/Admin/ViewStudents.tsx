@@ -8,8 +8,7 @@ export default function ViewStudents() {
   const [isLoading, setIsLoading] = useState(false);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  // date filters removed from UI; stats always fetched for last 30 days
   const [attendanceStats, setAttendanceStats] = useState<Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }>>({});
 
   useEffect(() => {
@@ -51,20 +50,14 @@ export default function ViewStudents() {
       setStudents(studentList);
       // also fetch attendance stats for the same batch and current date range
       try {
-        const s = startDate || undefined;
-        const e = endDate || undefined;
-        // if no explicit range, default to last 30 days
+        // always fetch stats for the last 30 days (date filters removed from UI)
         let stats: any[] = [];
-        if (!s || !e) {
-          const today = new Date();
-          const sDate = new Date();
-          sDate.setDate(today.getDate() - 29);
-          const sStr = sDate.toISOString().slice(0, 10);
-          const eStr = today.toISOString().slice(0, 10);
-          stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(sStr, eStr, batchId || activeBatchId || undefined);
-        } else {
-          stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(s, e, batchId || activeBatchId || undefined);
-        }
+        const today = new Date();
+        const sDate = new Date();
+        sDate.setDate(today.getDate() - 29);
+        const sStr = sDate.toISOString().slice(0, 10);
+        const eStr = today.toISOString().slice(0, 10);
+        stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(sStr, eStr, batchId || activeBatchId || undefined);
         const map: Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }> = {};
         stats.forEach((st: any) => {
           // prefer regno key if available, fallback to _id
@@ -86,25 +79,23 @@ export default function ViewStudents() {
 
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6 bg-white rounded-xl shadow-xl w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-violet-950">Students List</h2>
-        <div>{/* Batch selector */}
-          <label className="text-violet-900 font-medium mr-2">Batch:</label>
-          <select
-            value={activeBatchId}
-            onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchStudents(v); }}
-            className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
-          >
-            {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
-            {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
-          </select>
-          <div className="ml-4 inline-flex items-center gap-2">
-            <label className="text-violet-900 font-medium">From:</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
-            <label className="text-violet-900 font-medium">To:</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
-            <button onClick={() => fetchStudents(activeBatchId || undefined)} className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700">Apply</button>
-            <button onClick={() => { setStartDate(''); setEndDate(''); fetchStudents(activeBatchId || undefined); }} className="px-2 py-1 bg-gray-50 rounded text-sm">Clear</button>
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <h2 className="text-2xl font-bold text-violet-950">Students List</h2>
+          <div className="w-full md:w-auto mt-2 md:mt-0">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="w-full md:w-auto">
+                <label className="text-violet-900 font-medium mr-2">Batch:</label>
+                <select
+                  value={activeBatchId}
+                  onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchStudents(v); }}
+                  className="w-full md:w-auto px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                >
+                  {assignedBatches.length === 0 && <option value="">No batches assigned</option>}
+                  {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>

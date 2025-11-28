@@ -213,7 +213,7 @@ export default function MarkAttendance() {
   };
 
   return (
-    <div ref={containerRef} className="bg-white rounded-xl shadow-xl p-6">
+    <div ref={containerRef} className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-violet-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
@@ -243,7 +243,7 @@ export default function MarkAttendance() {
           </div>
 
           <div className="w-full md:w-auto">
-            <button onClick={handleSubmit} disabled={isLoading} className="w-full md:w-auto px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold">{attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`}</button>
+            <button onClick={handleSubmit} disabled={isLoading} className="w-full md:w-auto px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 font-semibold">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
           </div>
         </div>
       </div>
@@ -381,16 +381,17 @@ export default function MarkAttendance() {
 
           <div className="relative w-full max-w-3xl p-6">
             <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-violet-200 transform origin-center animate-modalIn">
-              <div className="absolute top-3 right-3">
-                <button onClick={closeSummary} className="text-gray-600 hover:text-gray-800 bg-transparent rounded-md px-2 py-1">✕</button>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-violet-950 mb-1">✓ {selectedSession} Attendance Submitted Successfully</h3>
+                  <p className="text-violet-700 text-sm">{selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{formatDateForDisplay(selectedDate, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
+                </div>
+                <div className="flex-shrink-0 ml-4">
+                  <button onClick={closeSummary} className="text-gray-600 hover:text-gray-800 bg-transparent rounded-md px-2 py-1">✕</button>
+                </div>
               </div>
 
-              <div className="text-center mb-4">
-                <h3 className="text-2xl font-bold text-violet-950 mb-2">✓ {selectedSession} Attendance Submitted Successfully</h3>
-                <p className="text-violet-700">{selectedSession === 'FN' ? 'Forenoon' : 'Afternoon'} attendance for <span className="font-semibold">{formatDateForDisplay(selectedDate, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></p>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <div className="text-gray-600 font-medium mb-1">Total</div>
                   <div className="text-3xl font-bold text-violet-950">{submittedSummary.total}</div>

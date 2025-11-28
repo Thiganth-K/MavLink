@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { notificationAPI } from '../../services/api';
 import { FiBell } from 'react-icons/fi';
 
@@ -12,12 +12,12 @@ export default function AdminNavbar() {
     } catch (e) { return 'A'; }
   })();
 
-  const [open, setOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unread, setUnread] = useState(0);
-  const pollRef = useRef<number | null>(null);
-  const notifRef = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [unread, setUnread] = React.useState(0);
+  const pollRef = React.useRef<number | null>(null);
+  const notifRef = React.useRef<HTMLDivElement | null>(null);
 
   const load = async () => {
     try {
@@ -28,7 +28,7 @@ export default function AdminNavbar() {
     } catch (e) { console.error('load notifications', e); }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     load();
     pollRef.current = window.setInterval(load, 10000) as unknown as number;
     const onNotifs = () => { load().catch(() => {}); };
@@ -49,7 +49,7 @@ export default function AdminNavbar() {
   
 
   return (
-    <nav className="bg-violet-950 shadow-lg sticky top-0 z-50">
+    <nav className="bg-violet-950 shadow-lg sticky top-0 z-50 h-16">
       <style>{`
         @keyframes shake {
           0% { transform: translateX(0) rotate(0); }

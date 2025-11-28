@@ -12,8 +12,6 @@ import MarkAttendance from './pages/Admin/MarkAttendance';
 import ViewStudents from './pages/Admin/ViewStudents';
 import SuperAdminNavbar from './components/superadminnavbar';
 import SuperAdminFooter from './components/superadminfooter';
-import AdminNavbar from './components/Admin/AdminNavbar';
-import AdminFooter from './components/Admin/AdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
@@ -21,6 +19,7 @@ import ViewBatchesPage from './pages/ViewBatchesPage';
 import AdminBatchMappingPage from './pages/AdminBatchMapping';
 import StudentAnalysisDashboard from './pages/StudentAnalysisDashboard';
 import SuperAdminExport from './pages/SuperAdminExport';
+import AdminLayout from './components/Admin/AdminLayout';
 
 function App() {
   useEffect(() => {
@@ -198,28 +197,28 @@ function App() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-200 flex flex-col">
-        <AdminNavbar />
-        <div id="global-loader" style={{ display: 'none' }} className="fixed inset-0 z-50 bg-black/40 items-center justify-center">
+        <div id="global-loader" style={{ display: 'none' }} className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
           <div className="w-full h-full flex items-center justify-center">
-            <Loader />
+            <Loader className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" />
           </div>
         </div>
 
         {/* Global profile drawer (available on all admin pages) */}
         {showProfile && (
-          <div className="fixed inset-0 z-60 flex">
-            <div className="absolute inset-0 bg-black/40" onClick={closeProfile} />
-            <aside className="absolute right-0 top-16 bottom-0 w-full max-w-sm bg-white shadow-xl p-6 transform transition-transform" role="dialog" aria-label="Profile panel">
+          <>
+            <div className="fixed inset-x-0 top-16 bottom-0 bg-black/40 z-30" onClick={closeProfile} />
+            <aside className="fixed right-0 top-16 bottom-0 w-full max-w-sm bg-white shadow-xl p-6 transform transition-transform z-40" role="dialog" aria-label="Profile panel">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-purple-950">Profile</h3>
               </div>
               <AdminProfile profileLoading={profileLoading} profileData={profileData} showPassword={showPassword} setShowPassword={setShowPassword} onLogout={handleLogout} />
             </aside>
-          </div>
+          </>
         )}
 
-        {content}
-        <AdminFooter />
+        <AdminLayout>
+          {content}
+        </AdminLayout>
       </div>
     );
   }

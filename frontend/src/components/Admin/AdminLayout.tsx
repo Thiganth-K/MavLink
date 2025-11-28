@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: Props) {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <AdminNavbar />
 
-      <main className="flex-grow w-full">
+      <main className="flex-grow w-full pt-16">
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           {children}
         </div>
