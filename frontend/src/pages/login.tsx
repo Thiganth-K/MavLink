@@ -70,140 +70,123 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @keyframes scaleIn {
-          0% {
-            transform: scale(0);
-            opacity: 0;
-          }
-          50% {
-            transform: scale(1.1);
-          }
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        @keyframes drawCheck {
-          0% {
-            stroke-dashoffset: 30;
-          }
-          100% {
-            stroke-dashoffset: 0;
-          }
-        }
-        @keyframes ripple {
-          0% {
-            transform: scale(1);
-            opacity: 0.6;
-          }
-          100% {
-            transform: scale(1.8);
-            opacity: 0;
-          }
-        }
-        .animate-scale-in {
-          animation: scaleIn 0.5s ease-out forwards;
-        }
-        .animate-draw-check {
-          animation: drawCheck 0.6s ease-out 0.3s forwards;
-          stroke-dasharray: 30;
-          stroke-dashoffset: 30;
-        }
-        .animate-ripple {
-          animation: ripple 1s ease-out infinite;
-        }
-      `}</style>
-      
-      <div className="min-h-screen bg-gradient-to-br from-white to-violet-100 flex items-center justify-center ">
-        <Toaster position="top-center" />
+        @keyframes scaleIn { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes drawCheck { 0% { stroke-dashoffset: 30; } 100% { stroke-dashoffset: 0; } }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
+        .animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }
+        .animate-draw-check { animation: drawCheck 0.6s ease-out 0.3s forwards; stroke-dasharray: 30; stroke-dashoffset: 30; }
+        .animate-ripple { animation: ripple 1s ease-out infinite; }
 
-        <div className="rounded-3xl shadow-2xl p-10 w-full max-w-md border-4 border-violet-200 outline outline-4 outline-violet-950 relative bg-white">
+        
+
+        
+      `}</style>
+
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Toaster position="top-center" />
+        <div className="rounded-3xl p-[2px] bg-gradient-to-r from-fuchsia-700 to-purple-600 w-full max-w-md">
+          <div className="rounded-3xl shadow-2xl p-10 relative bg-white border border-transparent text-black">
           {/* Success Animation Overlay inside the box */}
           {showSuccess && (
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl backdrop-blur-sm bg-white/30">
-              <div>
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70">
+              <div className="p-6">
                 <div className="relative">
                   {/* Outer Circle with scale animation */}
-                  <div className="w-24 h-24 bg-violet-500 rounded-full flex items-center justify-center animate-scale-in">
-                    {/* Inner white circle */}
-                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                      {/* Checkmark with draw animation */}
+                  <div className="w-24 h-24 rounded-full flex items-center justify-center animate-scale-in bg-gradient-to-r from-fuchsia-700 to-purple-600">
+                    {/* Inner colored circle */}
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-white bg-white">
+                      {/* Checkmark with gradient stroke and draw animation */}
                       <svg
-                        className="w-16 h-16 text-violet-500"
-                        fill="none"
-                        stroke="currentColor"
+                        className="w-12 h-12"
                         viewBox="0 0 24 24"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden
                       >
+                        <defs>
+                          <linearGradient id="tickGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#C026D3" />
+                            <stop offset="100%" stopColor="#7C3AED" />
+                          </linearGradient>
+                        </defs>
                         <path
                           d="M5 13l4 4L19 7"
                           className="animate-draw-check"
+                          stroke="url(#tickGrad)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
                         />
                       </svg>
                     </div>
                   </div>
                   {/* Success ripple effect */}
-                  <div className="absolute inset-0 w-24 h-24 bg-violet-400 rounded-full animate-ripple"></div>
+                  <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 opacity-30 animate-ripple"></div>
                 </div>
               </div>
               {/* Success Text */}
-              <p className="mt-6 text-xl font-bold text-violet-700">
+              <p className="mt-6 text-xl font-bold text-white">
                 {animationType === 'login' ? 'Logged in Successfully!!' : 'Logged out Successfully!!'}
               </p>
             </div>
           )}
 
-          <div className="flex flex-col items-center mb-6">
-          <div className="w-20 h-20 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg">
-            <svg
-              className="w-10 h-10"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-violet-900 mt-4">MavLink</h2>
-          <p className="text-violet-700 text-sm">Please login to continue</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-violet-900 mb-1 font-medium">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className="w-full px-4 py-3 border border-violet-400 rounded-lg bg-violet-50 text-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-600"
-              required
-            />
+            <div className="flex flex-col items-center mb-6">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-md bg-white">
+              <svg className="w-10 h-10 text-black" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mt-4 text-black">MavLink</h2>
+            <p className="text-black text-sm">Please login to continue</p>
           </div>
 
+        <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off" spellCheck={false}>
           <div>
-            <label className="block text-violet-900 mb-1 font-medium">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 border border-violet-400 rounded-lg bg-violet-50 text-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-600"
-              required
-            />
+            <label className="block mb-1 font-medium text-black">Username</label>
+            <div className="rounded-lg border border-black">
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  required
+                  className="login-input w-full px-4 py-3 rounded-md text-black placeholder:text-black caret-black outline-none border-none"
+                  style={{ color: '#000', WebkitTextFillColor: '#000', backgroundColor: '#fff', WebkitBoxShadow: '0 0 0px 1000px #fff inset' }}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-black">Password</label>
+            <div className="rounded-lg bg-white border border-black">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="login-input w-full px-4 py-3 rounded-md bg-white text-black placeholder:text-black caret-black outline-none border-none"
+                  style={{ color: '#000', WebkitTextFillColor: '#000', backgroundColor: '#fff', WebkitBoxShadow: '0 0 0px 1000px #fff inset' }}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-violet-700 text-white font-semibold rounded-lg shadow-md hover:bg-violet-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+          </div>
+        </div>
       </div>
-    </div>
     </>
   );
 }

@@ -375,9 +375,66 @@ export const exportAdvancedData = async (req, res) => {
       });
     });
 
-    [metaSheet, adminSheet, deptSheet, batchSheet, studentSheet, attendanceSheet].forEach(sh => {
+    // Calculate attendance percentage for each student
+    const studentAttendanceMap = new Map();
+    attendance.forEach(a => {
+      (a.entries || []).forEach(entry => {
+        const key = entry.regno;
+        if (!studentAttendanceMap.has(key)) {
+          studentAttendanceMap.set(key, {
+            regno: entry.regno,
+            studentname: entry.studentname,
+            totalClasses: 0,
+            present: 0,
+            absent: 0,
+            onDuty: 0
+          });
+        }
+        const stats = studentAttendanceMap.get(key);
+        stats.totalClasses++;
+        if (entry.status === 'Present') stats.present++;
+        else if (entry.status === 'Absent') stats.absent++;
+        else if (entry.status === 'On-Duty') stats.onDuty++;
+      });
+    });
+
+    // Create Attendance Summary sheet
+    const summarySheet = wb.addWorksheet('Attendance Summary');
+    summarySheet.columns = [
+      { header: 'regno', key: 'regno', width: 16 },
+      { header: 'studentname', key: 'studentname', width: 20 },
+      { header: 'totalClasses', key: 'totalClasses', width: 14 },
+      { header: 'present', key: 'present', width: 12 },
+      { header: 'absent', key: 'absent', width: 12 },
+      { header: 'onDuty', key: 'onDuty', width: 12 },
+      { header: 'attendancePercentage', key: 'attendancePercentage', width: 20 }
+    ];
+    
+    Array.from(studentAttendanceMap.values())
+      .sort((a, b) => a.regno.localeCompare(b.regno))
+      .forEach(stats => {
+        const percentage = stats.totalClasses > 0 
+          ? ((stats.present / stats.totalClasses) * 100).toFixed(2) 
+          : '0.00';
+        summarySheet.addRow({
+          regno: stats.regno,
+          studentname: stats.studentname,
+          totalClasses: stats.totalClasses,
+          present: stats.present,
+          absent: stats.absent,
+          onDuty: stats.onDuty,
+          attendancePercentage: `${percentage}%`
+        });
+      });
+
+    [metaSheet, adminSheet, deptSheet, batchSheet, studentSheet, attendanceSheet, summarySheet].forEach(sh => {
       sh.getRow(1).font = { bold: true };
       sh.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+      sh.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE8E5F4' }
+      };
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
