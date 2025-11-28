@@ -14,13 +14,6 @@ export default {
       }
     },
   },
-  daisyui: {
-    themes: [
-      {
-        forest,
-      }
-    ]
-  },
   plugins: [
     require('daisyui'),
   ],

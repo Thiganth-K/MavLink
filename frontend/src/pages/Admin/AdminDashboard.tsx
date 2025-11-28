@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
+import { FiSearch } from 'react-icons/fi'
 
 type Student = {
   regNumber: string
@@ -8,9 +9,6 @@ type Student = {
   phone?: string
 }
 
-const toTitleCase = (s: string) => {
-  return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
-}
 
 const AdminDashboard: React.FC = () => {
   const safeNavigate = (path: string) => {
@@ -53,16 +51,51 @@ const AdminDashboard: React.FC = () => {
     }
   }, [])
 
-  const title = toTitleCase('welcome to mavlink')
-
   const [query, setQuery] = useState('')
+  const [allStudents, setAllStudents] = useState<Student[] | null>(null)
   const [results, setResults] = useState<Student[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const debounceRef = useRef<number | null>(null)
-  const activeFetchRef = useRef<AbortController | null>(null)
 
+  // Fetch all students once on mount and normalize fields
   useEffect(() => {
-    // live search: debounce and fetch
+    let mounted = true
+    setIsLoading(true)
+    // Use backend on localhost:3000 during development, otherwise use relative /api
+    const hostIsLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    const apiBase = hostIsLocal ? 'http://localhost:3000/api' : '/api'
+    fetch(`${apiBase}/students`)
+      .then((res) => res.ok ? res.json() : Promise.resolve([]))
+      .then((data: any[]) => {
+        if (!mounted) return
+        const normalized = Array.isArray(data)
+          ? data.map((s: any) => ({
+              regNumber: s.regNumber || s.regno || s.registration || s.id || '',
+              name: s.name || s.studentname || s.fullName || '',
+              email: s.email || s.contactEmail || s.emailAddress || '',
+              department: s.department || s.dept || s.batchId || '',
+              phone: s.phone || s.phno || s.mobile || s.contact || '',
+            }))
+          : []
+
+        setAllStudents(normalized)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setAllStudents([])
+      })
+      .finally(() => {
+        if (!mounted) return
+        setIsLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  // Live client-side filtering of the already-fetched student list
+  useEffect(() => {
     if (debounceRef.current) {
       window.clearTimeout(debounceRef.current)
       debounceRef.current = null
@@ -76,151 +109,110 @@ const AdminDashboard: React.FC = () => {
 
     setIsLoading(true)
     debounceRef.current = window.setTimeout(() => {
-      // abort previous
-      if (activeFetchRef.current) activeFetchRef.current.abort()
-      const ac = new AbortController()
-      activeFetchRef.current = ac
-
-      // Try to fetch search results from API, fallback to empty
-      fetch(`/api/students?search=${encodeURIComponent(query)}`, { signal: ac.signal })
-        .then((res) => {
-          if (!res.ok) throw new Error('Network error')
-          return res.json()
-        })
-        .then((data) => {
-          // Expecting an array of students; normalize if needed
-          if (Array.isArray(data)) {
-            setResults(
-              data.map((s: any) => ({
-                regNumber: s.regNumber || s.reg || s.registration || s.id || '',
-                name: s.name || s.fullName || '',
-                email: s.email || s.contactEmail || '',
-                department: s.department || s.dept || '',
-                phone: s.phone || s.mobile || s.contact || '',
-              }))
-            )
-          } else {
-            setResults([])
-          }
-        })
-        .catch(() => {
-          if (ac.signal.aborted) return
-          setResults([])
-        })
-        .finally(() => {
-          setIsLoading(false)
-          activeFetchRef.current = null
-        })
-    }, 350)
+      const q = query.trim().toLowerCase()
+      const source = allStudents || []
+      const filtered = source.filter((s) => {
+        const hay = `${s.regNumber || ''} ${s.name || ''} ${s.email || ''} ${s.department || ''} ${s.phone || ''}`.toLowerCase()
+        return hay.includes(q)
+      })
+      setResults(filtered)
+      setIsLoading(false)
+    }, 250)
 
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current)
-      if (activeFetchRef.current) activeFetchRef.current.abort()
     }
-  }, [query])
+  }, [query, allStudents])
 
-  const onSubmitSearch = (q: string) => {
-    const trimmed = q.trim()
-    localStorage.setItem('adminSearchQuery', trimmed)
-    safeNavigate('/admin-dashboard/view-students')
-  }
-
-  const onRowClick = (s: Student) => {
-    const key = s.regNumber || s.name
-    if (key) localStorage.setItem('adminSearchQuery', key)
-    safeNavigate('/admin-dashboard/view-students')
-  }
+  
 
   return (
-    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto animate-superIn">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6 sm:p-8 lg:flex lg:items-center lg:justify-between">
-          <div className="lg:flex-1">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              <span className="animate-popIn">{title}</span>
-              <span className="text-indigo-600 ml-2">{adminName}</span>
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Quick actions and student search</p>
+    <div className="w-full px-2 sm:px-4 lg:px-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
+      <div className="mx-auto max-w-3xl w-full animate-superIn text-black text-center">
+        <h2 className="text-3xl sm:text-4xl font-semibold mb-6">Welcome To MavLink,&nbsp;
+          <span className="inline-block bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white px-3 py-0.5 rounded-md font-semibold">
+            {adminName}!!
+          </span>
+        </h2>
 
-            <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => safeNavigate('/admin-dashboard/mark-attendance')}
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-sm transition"
-              >
-                Mark Attendance
-              </button>
+        <div className="flex gap-3 flex-wrap mb-6 justify-center">
+          <button
+            onClick={() => safeNavigate('/admin-dashboard/mark-attendance')}
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-full shadow-sm transition"
+          >
+            Mark Attendance
+          </button>
 
-              <button
-                onClick={() => safeNavigate('/admin-dashboard/view-attendance')}
-                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 rounded-full shadow-sm transition"
-              >
-                View Attendance
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() => safeNavigate('/admin-dashboard/view-attendance')}
+            className="inline-flex items-center px-4 py-2 bg-white text-gray-800 rounded-full shadow-sm transition"
+          >
+            View Attendance
+          </button>
+        </div>
 
-          <div className="mt-6 lg:mt-0 lg:ml-6 lg:w-1/2">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
-              </svg>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') onSubmitSearch(query)
-                }}
-                placeholder="Search students by reg number or name"
-                className="w-full pl-11 pr-4 py-3 rounded-full border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                aria-label="Search students"
-              />
-            </div>
-
-            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-              <div className="p-3">
-                {(!query || !query.trim()) && (
-                  <div className="text-sm text-gray-500">Type a registration number or name to search students.</div>
-                )}
-
-                {query && (
-                  <div className="overflow-auto">
-                    <table className="min-w-full text-sm text-left">
-                      <thead>
-                        <tr className="text-xs text-gray-500 uppercase">
-                          <th className="px-3 py-2">Reg Number</th>
-                          <th className="px-3 py-2">Student Name</th>
-                          <th className="px-3 py-2">Email</th>
-                          <th className="px-3 py-2">Department</th>
-                          <th className="px-3 py-2">Phone</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {isLoading && (
-                          <tr>
-                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500 animate-pulse">Loading results...</td>
-                          </tr>
-                        )}
-
-                        {!isLoading && results && results.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="px-3 py-6 text-center text-gray-500">No results</td>
-                          </tr>
-                        )}
-
-                        {!isLoading && results && results.length > 0 && results.map((s) => (
-                          <tr key={s.regNumber || s.email || s.name} className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer animate-popIn" onClick={() => onRowClick(s)}>
-                            <td className="px-3 py-2 align-middle">{s.regNumber}</td>
-                            <td className="px-3 py-2 align-middle">{s.name}</td>
-                            <td className="px-3 py-2 align-middle">{s.email}</td>
-                            <td className="px-3 py-2 align-middle">{s.department}</td>
-                            <td className="px-3 py-2 align-middle">{s.phone}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+        <div className="mt-0 w-full">
+          <div className="flex justify-center">
+            <div className="relative mx-auto w-full max-w-xl">
+              <div className="search-wrapper px-2 py-1 bg-white/80 dark:bg-white/10 rounded-full shadow-sm w-full">
+                <div className="flex items-center w-full">
+                  <div className="pl-3 pr-2 text-violet-500">
+                    <FiSearch className="w-5 h-5" />
                   </div>
-                )}
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        localStorage.setItem('adminSearchQuery', query);
+                        window.location.href = '/admin-dashboard/view-students';
+                      }
+                    }}
+                    placeholder="Search students by regno or name"
+                    aria-label="Search students"
+                    className="search-input flex-grow text-sm lg:text-base bg-transparent outline-none py-2"
+                  />
+                </div>
               </div>
+
+              {/* Results table (styled like ViewStudents) - only show when user has typed */}
+                {query.trim() && (
+                <div className="mt-2 bg-white rounded-xl shadow-xl p-3 overflow-x-auto animate-popIn">
+                  <table className="w-full border-collapse border border-violet-200">
+                    <thead>
+                      <tr className="bg-violet-100">
+                        <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Reg Number</th>
+                        <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Student Name</th>
+                        <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Email</th>
+                        <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Department</th>
+                        <th className="border border-violet-200 px-4 py-3 text-left text-violet-950 font-semibold">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">Searching...</td>
+                        </tr>
+                      ) : results && results.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="border border-violet-200 px-4 py-8 text-center text-violet-600">No results</td>
+                        </tr>
+                      ) : (
+                        results && results.length > 0 && results.map((s) => (
+                          <tr key={s.regNumber || s.name} className="hover:bg-violet-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regNumber || s.name || ''); window.location.href = '/admin-dashboard/view-students'; }}>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.regNumber}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.name}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.email}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.department}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.phone}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

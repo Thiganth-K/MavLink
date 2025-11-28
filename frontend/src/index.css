@@ -40,3 +40,23 @@
   animation: underlineGrow .9s ease forwards .2s;
   border-radius: 2px;
 }
+
+/* Force white background for all form controls site-wide.
+   This overrides Tailwind gray backgrounds and browser autofill styling. */
+input,
+textarea,
+select,
+.input,
+.textarea,
+.select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+}
+
+/* Also ensure placeholder text is readable */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0,0,0,0.45) !important;
+}

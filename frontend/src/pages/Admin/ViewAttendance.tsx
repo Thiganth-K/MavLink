@@ -10,10 +10,10 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 
   return (
     <>
-      <tr className="hover:bg-violet-50">
-        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-violet-900 text-sm md:text-base w-20 md:w-32">{record.regno}</td>
-        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-violet-900 text-sm md:text-base min-w-0 truncate">{record.studentname}</td>
-        <td className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-center w-20 md:w-24">
+      <tr className="hover:bg-purple-50">
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base w-20 md:w-32">{record.regno}</td>
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base min-w-0 truncate">{record.studentname}</td>
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center w-20 md:w-24">
           <div className="flex flex-col items-center md:flex-row md:justify-center gap-2">
             {record.status === 'On-Duty' ? (
               <button
@@ -28,7 +28,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
               </button>
             ) : (
               <span className={`px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full text-white font-semibold ${
-                record.status === 'Present' ? 'bg-violet-600' : 'bg-red-500'
+                record.status === 'Present' ? 'bg-purple-600' : 'bg-red-500'
               }`}>
                 <span className="hidden md:inline">{record.status}</span>
                 <span className="md:hidden">{record.status === 'Present' ? 'P' : 'A'}</span>
@@ -40,7 +40,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 
       {record.status === 'On-Duty' && showReason && (
         <tr>
-          <td colSpan={3} className="border border-violet-200 px-2 py-1 md:px-4 md:py-2 text-sm text-yellow-800 bg-yellow-50">
+          <td colSpan={3} className="border border-purple-200 px-2 py-1 md:px-4 md:py-2 text-sm text-yellow-800 bg-yellow-50">
             <strong>On-Duty Reason:</strong>&nbsp;{record.reason || '-'}
           </td>
         </tr>
@@ -55,8 +55,8 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
 
   const renderSession = (session: 'FN' | 'AN') => {
     const records = attendanceRecords.filter(r => r.session === session);
-    const headerBg = session === 'FN' ? 'bg-violet-100' : 'bg-purple-100';
-    const badgeBg = session === 'FN' ? 'bg-violet-500' : 'bg-purple-500';
+    const headerBg = session === 'FN' ? 'bg-purple-100' : 'bg-purple-100';
+    const badgeBg = session === 'FN' ? 'bg-purple-500' : 'bg-purple-500';
 
     return (
       <div>
@@ -65,18 +65,18 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
         </div>
         <div>
           <ResponsiveTable>
-            <table className="min-w-[320px] w-full table-fixed border-collapse border border-violet-200">
+            <table className="min-w-[320px] w-full table-fixed border-collapse border border-purple-200">
               <thead>
                 <tr className={headerBg}>
-                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-left text-violet-950 font-semibold text-sm md:text-base w-20 md:w-32">Reg No</th>
-                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-left text-violet-950 font-semibold text-sm md:text-base min-w-0">Name</th>
-                  <th className="border border-violet-200 px-2 py-2 md:px-4 md:py-3 text-center text-violet-950 font-semibold text-sm md:text-base w-20 md:w-24">Status</th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-20 md:w-32">Reg No</th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base min-w-0">Name</th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center text-purple-950 font-semibold text-sm md:text-base w-20 md:w-24">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {records.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="border border-violet-200 px-2 py-6 md:px-4 md:py-8 text-center text-violet-600">No {session} attendance records found</td>
+                    <td colSpan={3} className="border border-purple-200 px-2 py-6 md:px-4 md:py-8 text-center text-purple-600">No {session} attendance records found</td>
                   </tr>
                 ) : (
                   records
@@ -105,13 +105,13 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
       {/* mobile toggle */}
       <div className="flex items-center justify-center gap-2 mb-4 md:hidden">
         <button
-          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'FN' ? 'bg-violet-600 text-white' : 'bg-gray-100 text-violet-800'}`}
+          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'FN' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-purple-800'}`}
           onClick={() => setSelectedSession('FN')}
         >
           FN
         </button>
         <button
-          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'AN' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-violet-800'}`}
+          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'AN' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-purple-800'}`}
           onClick={() => setSelectedSession('AN')}
         >
           AN
@@ -274,11 +274,11 @@ export default function ViewAttendance() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-violet-950">Attendance Records</h2>
+        <h2 className="text-2xl font-bold text-purple-950">Attendance Records</h2>
         {selectedDateForDetail && (
           <button
             onClick={handleBackToSummary}
-            className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors font-medium"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
           >
             ← Back to Summary
           </button>
@@ -289,15 +289,15 @@ export default function ViewAttendance() {
         // Show cards summary
         <div>
           <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-            <p className="text-violet-800">Click on any date card to view detailed attendance</p>
+            <p className="text-purple-800">Click on any date card to view detailed attendance</p>
             <div className="w-full md:w-auto">
               <div className="flex flex-col md:flex-row md:items-center gap-3">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <label className="text-violet-900 font-medium">Batch:</label>
+                  <label className="text-purple-900 font-medium">Batch:</label>
                   <select
                     value={activeBatchId}
                     onChange={(e) => { const v = e.target.value; setActiveBatchId(v); fetchAttendanceSummary(30, v); }}
-                    className="px-4 py-2 border border-violet-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    className="px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   >
                     <option value="">All assigned batches</option>
                     {assignedBatches.map(b => <option key={b.batchId} value={b.batchId}>{b.batchId} - {b.batchName}</option>)}
@@ -306,16 +306,16 @@ export default function ViewAttendance() {
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <label className="text-violet-900 font-medium">From:</label>
+                    <label className="text-purple-900 font-medium">From:</label>
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded" />
                   </div>
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <label className="text-violet-900 font-medium">To:</label>
+                    <label className="text-purple-900 font-medium">To:</label>
                     <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
                     <button
                       onClick={() => fetchAttendanceSummary(0, activeBatchId || undefined, startDate || null, endDate || null)}
-                      className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+                      className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
                     >
                       Apply
                     </button>
@@ -337,7 +337,7 @@ export default function ViewAttendance() {
             <div className="text-center py-8" />
           ) : attendanceSummary.length === 0 ? (
             <div className="bg-white rounded-xl shadow-xl p-12 text-center">
-              <p className="text-violet-600 text-lg">No attendance records found in the last 30 days</p>
+              <p className="text-purple-600 text-lg">No attendance records found in the last 30 days</p>
             </div>
           ) : (
             <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -347,29 +347,29 @@ export default function ViewAttendance() {
                   type="button"
                   onClick={() => handleCardClick(summary.date)}
                   aria-label={`View attendance details for ${formatDateForDisplay(summary.date)}`}
-                  className="w-full min-w-0 text-left bg-white rounded-xl shadow-lg p-3 md:p-5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-violet-100 hover:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 break-words"
+                  className="w-full min-w-0 text-left bg-white rounded-xl shadow-lg p-3 md:p-5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-purple-100 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-300 break-words"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base md:text-lg font-bold text-violet-950 truncate">
+                    <h3 className="text-base md:text-lg font-bold text-purple-950 truncate">
                       {formatDateForDisplay(summary.date, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                     </h3>
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-violet-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <svg className="w-4 h-4 md:w-5 md:h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
 
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-violet-500 text-white rounded text-xs font-bold">FN</span>
+                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-500 text-white rounded text-xs font-bold">FN</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 min-w-0">
                       <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-50 rounded-md w-full min-w-0">
                         <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
-                        <span className="text-sm md:text-base font-bold text-violet-950 truncate">{summary.fn.total}</span>
+                        <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.fn.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-violet-50 rounded-md w-full min-w-0">
-                        <span className="text-violet-700 font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-violet-600 truncate">{summary.fn.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 rounded-md w-full min-w-0">
+                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-purple-600 truncate">{summary.fn.present}</span>
                       </div>
                       <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 rounded-md w-full min-w-0">
                         <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
@@ -389,11 +389,11 @@ export default function ViewAttendance() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 min-w-0">
                       <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-50 rounded-md w-full min-w-0">
                         <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
-                        <span className="text-sm md:text-base font-bold text-violet-950 truncate">{summary.an.total}</span>
+                        <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.an.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-violet-50 rounded-md w-full min-w-0">
-                        <span className="text-violet-700 font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-violet-600 truncate">{summary.an.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 rounded-md w-full min-w-0">
+                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-purple-600 truncate">{summary.an.present}</span>
                       </div>
                       <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 rounded-md w-full min-w-0">
                         <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
@@ -413,7 +413,7 @@ export default function ViewAttendance() {
       ) : (
         // Show detailed attendance for selected date
           <div id="attendance-detail" className="bg-white rounded-xl shadow-xl p-6">
-          <h3 className="text-xl font-bold text-violet-950 mb-4">
+          <h3 className="text-xl font-bold text-purple-950 mb-4">
             Attendance Details for {formatDateForDisplay(selectedDateForDetail, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </h3>
 
