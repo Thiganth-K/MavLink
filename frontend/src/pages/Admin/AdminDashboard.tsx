@@ -30,7 +30,7 @@ const AdminDashboard: React.FC = () => {
           if (!raw) return ''
           try {
             const parsed = JSON.parse(raw)
-            return parsed?.name || parsed?.fullName || ''
+            return parsed?.username || parsed?.name || parsed?.fullName || ''
           } catch {
             return ''
           }
@@ -40,7 +40,7 @@ const AdminDashboard: React.FC = () => {
           if (!raw) return ''
           try {
             const parsed = JSON.parse(raw)
-            return parsed?.name || parsed?.fullName || ''
+            return parsed?.username || parsed?.name || parsed?.fullName || ''
           } catch {
             return ''
           }
@@ -50,6 +50,9 @@ const AdminDashboard: React.FC = () => {
       return 'Admin'
     }
   }, [])
+
+  // Capitalize first letter for display
+  const adminDisplayName = adminName ? `${adminName.charAt(0).toUpperCase()}${adminName.slice(1)}` : 'Admin'
 
   const [query, setQuery] = useState('')
   const [allStudents, setAllStudents] = useState<Student[] | null>(null)
@@ -128,14 +131,15 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="w-full px-2 sm:px-4 lg:px-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
-      <div className="mx-auto max-w-3xl w-full animate-superIn text-black text-center">
-        <h2 className="text-3xl sm:text-4xl font-semibold mb-6">Welcome To MavLink,&nbsp;
+      <div className="mx-auto max-w-3xl w-full animate-superIn text-black">
+        <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-wrap items-center justify-center gap-2">
+          <span>Welcome To MavLink,</span>
           <span className="inline-block bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white px-3 py-0.5 rounded-md font-semibold">
-            {adminName}!!
+            {adminDisplayName}!!
           </span>
         </h2>
 
-        <div className="flex gap-3 flex-wrap mb-6 justify-center">
+        <div className="flex gap-3 flex-wrap mb-6 justify-center items-center">
           <button
             onClick={() => safeNavigate('/admin-dashboard/mark-attendance')}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-full shadow-sm transition"
@@ -145,16 +149,16 @@ const AdminDashboard: React.FC = () => {
 
           <button
             onClick={() => safeNavigate('/admin-dashboard/view-attendance')}
-            className="inline-flex items-center px-4 py-2 bg-white text-gray-800 rounded-full shadow-sm transition"
+            className="inline-flex items-center px-4 py-2 bg-white text-gray-800 rounded-full shadow-sm transition border border-black"
           >
             View Attendance
           </button>
         </div>
 
-        <div className="mt-0 w-full">
-          <div className="flex justify-center">
+        <div className="mt-0 w-full flex justify-center">
+          <div className="flex justify-center w-full">
             <div className="relative mx-auto w-full max-w-xl">
-              <div className="search-wrapper px-2 py-1 bg-white/80 dark:bg-white/10 rounded-full shadow-sm w-full">
+              <div className="search-wrapper px-2 py-1 bg-white/80 dark:bg-white/10 rounded-full shadow-sm w-full border border-black">
                 <div className="flex items-center w-full">
                   <div className="pl-3 pr-2 text-violet-500">
                     <FiSearch className="w-5 h-5" />
