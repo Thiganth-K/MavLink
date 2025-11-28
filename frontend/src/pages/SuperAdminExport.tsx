@@ -79,14 +79,49 @@ export default function SuperAdminExport() {
               <button onClick={quickSelectAll} className="px-3 py-1 bg-violet-600 text-white rounded-lg hover:bg-violet-700">Select All</button>
               <button onClick={quickClearAll} className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Clear</button>
             </div>
-            <div className="max-h-64 overflow-auto border border-violet-200 rounded-lg p-3 space-y-2">
-              {departments.map(d => (
-                <label key={d.deptId} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={selectedDeptIds.includes(d.deptId)} onChange={() => toggleDept(d.deptId)} />
-                  <span className="text-violet-900">{d.deptId} — {d.deptName}</span>
-                </label>
-              ))}
-              {departments.length === 0 && <div className="text-sm text-gray-600">No departments found</div>}
+            <div className="max-h-64 overflow-auto border border-violet-200 rounded-lg p-3 space-y-2 bg-violet-50">
+              {departments.map(d => {
+                const isSelected = selectedDeptIds.includes(d.deptId);
+                return (
+                  <label 
+                    key={d.deptId} 
+                    className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all group border ${
+                      isSelected 
+                        ? 'bg-violet-100 border-violet-400' 
+                        : 'bg-white border-transparent hover:bg-violet-50 hover:border-violet-300'
+                    }`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        checked={isSelected} 
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleDept(d.deptId);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-5 h-5 bg-white border-2 border-violet-400 rounded focus:ring-2 focus:ring-violet-500 focus:ring-offset-0 cursor-pointer appearance-none"
+                      />
+                      {isSelected && (
+                        <svg 
+                          className="absolute top-0 left-0 w-5 h-5 text-violet-600 pointer-events-none" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className={`text-sm font-medium select-none flex-1 ${
+                      isSelected ? 'text-violet-900' : 'text-violet-800 group-hover:text-violet-700'
+                    }`}>
+                      <span className="font-bold">{d.deptId}</span> <span className="text-violet-600">—</span> {d.deptName}
+                    </span>
+                  </label>
+                );
+              })}
+              {departments.length === 0 && <div className="text-sm text-gray-600 text-center py-4">No departments found</div>}
             </div>
           </div>
 
