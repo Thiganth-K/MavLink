@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import BatchManagement from './BatchManagement';
 
@@ -17,14 +17,13 @@ export default function BatchManagementPage() {
     <div className="min-h-screen bg-gradient-to-br from-supercream to-violet-200 p-6">
       <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-supergreenDark">Batch Management</h1>
+        <div className="flex items-center justify-end mb-6">
           <button
             onClick={() => { window.location.href = '/super-admin'; }}
             className="px-4 py-2 bg-white border border-supergreenDark/30 text-supergreenDark rounded-lg shadow hover:border-supergreenAccent hover:shadow-md transition-colors"
           >Back to Dashboard</button>
         </div>
-        <BatchManagement onClose={() => { /* standalone page - no close action */ }} />
+        <BatchManagement />
       </div>
     </div>
   );

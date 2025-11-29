@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { notificationAPI } from '../services/api';
-import { FiBell } from 'react-icons/fi';
+import { FiBell, FiMenu, FiX, FiUserPlus, FiLayers, FiList, FiUsers, FiMap, FiDownload, FiBarChart2, FiMessageSquare } from 'react-icons/fi';
+import { FaSignOutAlt } from 'react-icons/fa';
 
-interface Props { onLogout?: () => void; }
-
-export default function SuperAdminNavbar({ onLogout }: Props) {
+export default function SuperAdminNavbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unread, setUnread] = useState(0);
@@ -45,13 +45,134 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
   };
 
   return (
-    <nav className="w-full bg-supergreen text-supercream shadow-xl mb-0 rounded-none py-4 border-b border-supergreenDark">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <nav className="w-full bg-purple-950 text-supercream shadow-xl mb-0 rounded-none py-3 border-b border-supergreenDark">
+      <div className="flex items-center justify-between gap-3 w-full px-6">
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-extrabold tracking-tight">MavLink</span>
-          <span className="hidden sm:inline-block h-6 w-px bg-supergreenAccent" />
-          <span className="text-lg font-semibold">Super Admin Dashboard</span>
+            {/* Hamburger for mobile */}
+            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 mr-2 rounded-md hover:bg-supergreenAccent/10">
+              <FiMenu className="w-6 h-6" />
+            </button>
+            <svg
+              className="w-8 h-8 text-purple-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          <span className="text-xl sm:text-2xl font-extrabold tracking-tight">MavLink</span>
         </div>
+          {mobileOpen && (
+            <>
+              <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setMobileOpen(false)} />
+              <aside className="fixed left-0 top-0 bottom-0 z-50 w-64 sm:w-80 bg-white p-4 transform translate-x-0 transition-transform duration-300 shadow-lg overflow-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-lg text-black font-semibold">Menu</div>
+                  <button onClick={() => setMobileOpen(false)} className="p-2 rounded-md">
+                    <FiX className="w-6 h-6 text-black" />
+                  </button>
+                </div>
+                <nav>
+                  <ul className="space-y-3">
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/adminManagement'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiUserPlus className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Admin Management</div>
+                          <div className="text-xs text-gray-600">Create, update and assign administrators to batches</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/batch-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiLayers className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Batch Management</div>
+                          <div className="text-xs text-gray-600">Create, organize and link batches to departments</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/viewbatches'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiList className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">View Batches</div>
+                          <div className="text-xs text-gray-600">Browse and inspect batch compositions</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/student-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiUsers className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Student Management</div>
+                          <div className="text-xs text-gray-600">Add, update and organize students</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/admin-batch-mapping'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiMap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Admin ↔ Batch Mapping</div>
+                          <div className="text-xs text-gray-600">Visualize admin ownership across batches</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/export'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiDownload className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Export Data</div>
+                          <div className="text-xs text-gray-600">Download filtered or full Excel exports</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/student-analysis'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiBarChart2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Student Analysis</div>
+                          <div className="text-xs text-gray-600">Drill into student attendance performance</div>
+                        </div>
+                      </button>
+                    </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/messages'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                          <FiMessageSquare className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Messages</div>
+                          <div className="text-xs text-gray-600">View and reply to admin requests</div>
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </aside>
+            </>
+          )}
         <div className="flex items-center gap-3 relative">
           <button
             onClick={() => setOpen(s => !s)}
@@ -72,15 +193,10 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
                     key={n._id || n.id}
                     onClick={async () => {
                       try {
-                        // mark notification removed on server first
-                        await notificationAPI.markRead(n._id || n.id).catch(() => {});
-                        // redirect to conversation with the admin who sent the message
+                        await markRead(n._id || n.id).catch(() => {});
                         const adminId = (n.sender && n.sender.adminId) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
                         if (adminId) {
                           window.location.href = `/super-admin/messages?adminId=${encodeURIComponent(adminId)}`;
-                        } else {
-                          // fallback: reload notifications
-                          await load();
                         }
                       } catch (e) { console.error(e); }
                     }}
@@ -100,7 +216,10 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
           )}
 
           {/* Logout button moved outside the dropdown so it's always visible */}
-          <button onClick={logout} className="ml-2 px-3 py-1 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded">Logout</button>
+          <button onClick={logout} className="ml-2 px-3 py-1 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded flex items-center">
+            <FaSignOutAlt className="w-4 h-4 mr-2" />
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </nav>

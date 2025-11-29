@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { batchAPI, departmentAPI, superAdminAPI, type Batch } from '../services/api';
+import BatchStudentDetails from './BatchStudentDetails';
 
 export default function BatchManagement() {
 	const [batches, setBatches] = useState<Batch[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showForm, setShowForm] = useState(false);
 	const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+	const [selectedBatchForDetail, setSelectedBatchForDetail] = useState<Batch | null>(null);
 	const [batchId, setBatchId] = useState('');
 	const [batchName, setBatchName] = useState('');
 	const [batchYear, setBatchYear] = useState<number | ''>('');
@@ -175,24 +177,36 @@ export default function BatchManagement() {
 	};
 
 	return (
-		<div className="bg-white rounded-xl shadow-xl p-6">
-			<div className="flex justify-between items-center mb-6">
-				<h2 className="text-2xl font-bold text-purple-950">Batch Management</h2>
-				<div className="flex gap-3">
-					<button
-						onClick={() => {
-							if (showForm) {
-								resetForm();
-							} else {
-								setShowForm(true);
-							}
-						}}
-						className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-					>
-						{showForm ? (editingBatch ? 'Cancel Edit' : 'Cancel') : 'Create New Batch'}
-					</button>
-				</div>
+		<div className="space-y-6">
+			<div className="flex justify-between items-center">
+				<h1 className="text-2xl font-bold text-purple-950">
+					{selectedBatchForDetail ? 'Student Details' : 'Batch Management'}
+				</h1>
 			</div>
+
+			{selectedBatchForDetail ? (
+				<BatchStudentDetails
+					batch={selectedBatchForDetail}
+					onBack={() => setSelectedBatchForDetail(null)}
+				/>
+			) : (
+				<div className="bg-white rounded-xl shadow-xl p-6">
+					<div className="flex justify-between items-center mb-6">
+						<div className="ml-auto flex gap-3">
+							<button
+								onClick={() => {
+									if (showForm) {
+										resetForm();
+									} else {
+										setShowForm(true);
+									}
+								}}
+								className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+							>
+								{showForm ? (editingBatch ? 'Cancel Edit' : 'Cancel') : 'Create New Batch'}
+							</button>
+						</div>
+					</div>
 
 			{(showForm || editingBatch) && (
 				<div className="bg-purple-50 p-6 rounded-lg mb-6">
@@ -309,49 +323,75 @@ export default function BatchManagement() {
 					No batches found. Create one.
 				</div>
 			) : (
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-					{batches.map(batch => (
-						<div key={batch._id} className="bg-white rounded-xl border border-purple-200 shadow hover:shadow-lg transition p-5 flex flex-col">
-							<div className="flex items-start justify-between mb-4">
-								<div>
-									<p className="text-purple-950 font-semibold leading-tight">{batch.batchName}</p>
-									<p className="text-sm text-purple-700">Year: {batch.batchYear}</p>
-									<p className="text-xs text-purple-600">Batch ID: {batch.batchId}</p>
-									{batch.deptId && <p className="text-xs text-purple-600">Dept: {batch.deptId}</p>}
+				<div>
+					<p className="mb-4 text-purple-800">Click on any batch card to view student details</p>
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+						{batches.map(batch => (
+							<button
+								key={batch._id}
+								type="button"
+								onClick={() => setSelectedBatchForDetail(batch)}
+								aria-label={`View students in ${batch.batchName}`}
+								className="w-full text-left bg-white rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-2xl hover:scale-[1.02] hover:border-purple-400 transition-all duration-300 p-5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-300"
+							>
+								<div className="flex items-start justify-between mb-3">
+									<div className="flex-1 min-w-0">
+										<h3 className="text-base md:text-lg font-bold text-purple-950 truncate mb-1">
+											{batch.batchName}
+										</h3>
+										<div className="flex flex-wrap gap-2">
+											<span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium">Year: {batch.batchYear}</span>
+											<span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium">Batch ID: {batch.batchId}</span>
+											{batch.deptId && (
+												<span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium">Dept: {batch.deptId}</span>
+											)}
+										</div>
+									</div>
+									<svg className="w-4 h-4 md:w-5 md:h-5 text-purple-600 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+									</svg>
+								</div>
+
+								<div className="flex flex-wrap gap-2 mb-3">
 									{batch.adminId ? (
-										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">Admin: {batch.adminId}</span>
+										<span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
+											Admin: {batch.adminId}
+										</span>
 									) : (
-										<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">No Admin</span>
+										<span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+											No Admin
+										</span>
 									)}
-									<span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+									<span className="px-2 py-1 text-xs rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white font-bold">
 										{batch.students.length} students
 									</span>
 								</div>
-							</div>
-							{batch.students.length > 0 && (
-								<details className="mb-3">
-									<summary className="cursor-pointer text-sm text-purple-600">View students</summary>
-									<ul className="mt-2 text-xs max-h-40 overflow-auto divide-y">
-										{batch.students.map((s, idx) => (
-											<li key={idx} className="py-1">
-												<span className="font-medium">{s.name}</span> - {s.regno} - {s.dept}
-											</li>
-										))}
-									</ul>
-								</details>
-							)}
-							<div className="mt-auto flex gap-2 pt-2">
-								<button
-									onClick={() => startEdit(batch)}
-									className="flex-1 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-								>Edit</button>
-								<button
-									onClick={() => deleteBatch(batch._id!)}
-									className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-								>Delete</button>
-							</div>
-						</div>
-					))}
+
+								<div className="mt-4 pt-3 border-t border-purple-100 flex gap-2">
+									<button
+										onClick={(e) => {
+											e.stopPropagation();
+											startEdit(batch);
+										}}
+										className="flex-1 px-3 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 	hover:to-yellow-700 transition-colors text-sm font-medium"
+									>
+										Edit
+									</button>
+									<button
+										onClick={(e) => {
+											e.stopPropagation();
+											deleteBatch(batch._id!);
+										}}
+										className="flex-1 px-3 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-900 transition-colors text-sm font-medium"
+									>
+										Delete
+									</button>
+								</div>
+							</button>
+						))}
+					</div>
+				</div>
+			)}
 				</div>
 			)}
 		</div>

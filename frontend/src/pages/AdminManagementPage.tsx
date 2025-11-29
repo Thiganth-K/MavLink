@@ -101,29 +101,29 @@ export default function AdminManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-supercream to-violet-200 p-6">
+    <div className="min-h-screen bg-white p-6">
       <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-supergreenDark">Admin Management</h1>
+          <h1 className="text-3xl font-bold text-purple-950">Admin Management</h1>
           <button
             onClick={() => {
               if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
             }}
-            className="px-4 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors"
+            className="px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-purple-800 transition-colors"
           >
             {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
           </button>
           <button
             onClick={() => { window.location.href = '/super-admin'; }}
-            className="px-4 py-2 bg-white border border-supergreenDark/30 text-supergreenDark rounded-lg shadow hover:border-supergreenAccent hover:shadow-md transition-colors"
+            className="px-4 py-2 bg-white border border-purple-950 text-purple-950 rounded-lg shadow hover:border-purple-700 hover:shadow-md transition-colors"
           >Back to Dashboard</button>
         </div>
           
         
 
         {showCreateForm && (
-          <div className="bg-white rounded-xl shadow p-6 mb-8 border border-supergreenDark/30">
+          <div className="bg-white rounded-xl shadow p-6 mb-8 border border-purple-700">
             <h2 className="text-xl font-semibold text-supergreenDark mb-4">{editingAdmin ? 'Edit Admin' : 'Create Admin'}</h2>
             <form onSubmit={editingAdmin ? handleUpdateAdmin : handleCreateAdmin} className="space-y-4">
               <div>
@@ -161,7 +161,7 @@ export default function AdminManagementPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-fuchsia-800 hover:to-purple-700 transition-colors disabled:opacity-50"
                 >
                   {isLoading ? 'Saving...' : editingAdmin ? 'Update Admin' : 'Create Admin'}
                 </button>
@@ -176,7 +176,7 @@ export default function AdminManagementPage() {
                 )}
               </div>
             </form>
-            <div className="bg-supercream p-6 rounded-lg mt-8 border border-supergreenDark/20">
+            <div className="bg-purple-100 p-6 rounded-lg mt-8 border border-supergreenDark/20">
               <h3 className="text-lg font-semibold text-supergreenDark mb-4">Assign Admin To Batch</h3>
               <form
                 onSubmit={async (e) => {
@@ -223,7 +223,7 @@ export default function AdminManagementPage() {
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-supergreenAccent text-white rounded-lg hover:bg-supergreen transition-colors"
+                    className="px-6 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-fuchsia-800 hover:to-purple-700 transition-colors"
                   >Assign</button>
                 </div>
               </form>
@@ -236,11 +236,11 @@ export default function AdminManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="bg-white rounded-xl border border-supergreenDark/20 shadow animate-pulse p-5">
-                  <div className="h-6 w-32 bg-violet-100 rounded mb-3" />
-                  <div className="h-4 w-24 bg-violet-100 rounded mb-5" />
+                  <div className="h-6 w-32 bg-purple-100 rounded mb-3" />
+                  <div className="h-4 w-24 bg-purple-100 rounded mb-5" />
                   <div className="flex gap-3">
-                    <div className="h-9 w-20 bg-violet-100 rounded" />
-                    <div className="h-9 w-20 bg-violet-100 rounded" />
+                    <div className="h-9 w-20 bg-purple-100 rounded" />
+                    <div className="h-9 w-20 bg-purple-100 rounded" />
                   </div>
                 </div>
               ))}
@@ -258,16 +258,16 @@ export default function AdminManagementPage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-supercream text-supergreen flex items-center justify-center font-bold">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
                         {admin.username?.charAt(0)?.toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-supergreenDark font-semibold leading-tight">{admin.username}</p>
+                        <p className="text-purple-950 font-semibold leading-tight">{admin.username}</p>
                         <span
                           className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
                             admin.role === 'SUPER_ADMIN'
                               ? 'bg-purple-100 text-purple-700'
-                              : 'bg-supercream text-supergreen'
+                              : 'bg-purple-200 text-purple-800'
                           }`}
                         >
                           {admin.role}
@@ -278,11 +278,11 @@ export default function AdminManagementPage() {
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
                       onClick={() => startEdit(admin)}
-                      className="flex-1 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                      className="flex-1 px-3 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-800 transition-colors"
                     >Edit</button>
                     <button
                       onClick={() => handleDeleteAdmin(admin._id!)}
-                      className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      className="flex-1 px-3 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-600 hover:to-red-800 transition-colors"
                     >Delete</button>
                   </div>
                 </div>

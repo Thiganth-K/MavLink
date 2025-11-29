@@ -153,7 +153,7 @@ export default function AdminBatchMappingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SuperAdminNavbar onLogout={() => {}} />
+      <SuperAdminNavbar/>
       <main className="flex-grow px-4 py-8 max-w-7xl mx-auto w-full">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
