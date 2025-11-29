@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 import { superAdminAPI, batchAPI, type Admin } from '../services/api';
 
@@ -8,6 +9,7 @@ export default function AdminManagementPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const [formData, setFormData] = useState({ adminId: '', username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [assignBatchId, setAssignBatchId] = useState('');
   const [assignAdminId, setAssignAdminId] = useState('');
 
@@ -155,13 +157,23 @@ export default function AdminManagementPage() {
               </div>
               <div>
                 <label className="block text-supergreenDark mb-1 font-medium">Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-supergreenDark/30 rounded-lg focus:ring-2 focus:ring-supergreenAccent focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(s => !s)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-4">
                 <button

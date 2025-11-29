@@ -77,9 +77,8 @@ export default function Login() {
         .animate-draw-check { animation: drawCheck 0.6s ease-out 0.3s forwards; stroke-dasharray: 30; stroke-dashoffset: 30; }
         .animate-ripple { animation: ripple 1s ease-out infinite; }
 
-        
-
-        
+        /* Use standard ::placeholder only (gray) and avoid vendor-prefixed selectors */
+        .login-input::placeholder { color: #6B7280 !important; opacity: 1 !important; }
       `}</style>
 
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
@@ -155,8 +154,8 @@ export default function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
                   required
-                  className="login-input w-full px-4 py-3 rounded-md text-black placeholder:text-black caret-black outline-none border-none"
-                  style={{ color: '#000', WebkitTextFillColor: '#000', backgroundColor: '#fff', WebkitBoxShadow: '0 0 0px 1000px #fff inset' }}
+                  className="login-input w-full px-4 py-3 rounded-md text-black placeholder:text-gray-500 caret-black outline-none border-none"
+                  style={{ color: '#000', backgroundColor: '#fff' }}
                   autoComplete="off"
                   spellCheck={false}
                 />
@@ -172,8 +171,8 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="login-input w-full px-4 py-3 rounded-md bg-white text-black placeholder:text-black caret-black outline-none border-none"
-                  style={{ color: '#000', WebkitTextFillColor: '#000', backgroundColor: '#fff', WebkitBoxShadow: '0 0 0px 1000px #fff inset' }}
+                  className="login-input w-full px-4 py-3 rounded-md bg-white text-black placeholder:text-gray-100 caret-black outline-none border-none"
+                  style={{ color: '#000', backgroundColor: '#fff' }}
                   autoComplete="off"
                   spellCheck={false}
                 />

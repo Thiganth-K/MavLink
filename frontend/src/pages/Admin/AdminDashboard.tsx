@@ -9,6 +9,31 @@ type Student = {
   phone?: string
 }
 
+// Escape user input for use in RegExp
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')
+}
+
+// Return a React node where substrings matching `query` are wrapped in a styled span
+function highlightMatch(text: string | undefined, query?: string) {
+  if (!text) return text || ''
+  if (!query) return text
+  const q = query.trim()
+  if (!q) return text
+  try {
+    const parts = text.split(new RegExp(`(${escapeRegExp(q)})`, 'i'))
+    return parts.map((part, i) =>
+      part.toLowerCase() === q.toLowerCase() ? (
+        <span key={i} className="bg-yellow-100 text-yellow-900 px-1 rounded-sm font-medium">{part}</span>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    )
+  } catch {
+    return text
+  }
+}
+
 
 const AdminDashboard: React.FC = () => {
   const safeNavigate = (path: string) => {
@@ -205,11 +230,11 @@ const AdminDashboard: React.FC = () => {
                       ) : (
                         results && results.length > 0 && results.map((s) => (
                           <tr key={s.regNumber || s.name} className="hover:bg-violet-50 cursor-pointer" onClick={() => { localStorage.setItem('adminSearchQuery', s.regNumber || s.name || ''); window.location.href = '/admin-dashboard/view-students'; }}>
-                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.regNumber}</td>
-                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.name}</td>
-                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.email}</td>
-                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.department}</td>
-                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{s.phone}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{highlightMatch(s.regNumber, query)}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{highlightMatch(s.name, query)}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{highlightMatch(s.email || '', query)}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{highlightMatch(s.department || '', query)}</td>
+                            <td className="border border-violet-200 px-4 py-3 text-violet-900">{highlightMatch(s.phone || '', query)}</td>
                           </tr>
                         ))
                       )}
