@@ -190,13 +190,13 @@ export const superAdminAPI = {
     return response.json();
   },
 
-  updateAdmin: async (id: string, adminId: string, username: string, password: string): Promise<{ message: string; admin: Admin }> => {
+  updateAdmin: async (id: string, adminId: string, username: string, password: string, assignedBatchIds: string[]): Promise<{ message: string; admin: Admin }> => {
     const response = await fetch(`${API_BASE_URL}/superadmin/admin/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ adminId, username, password }),
+      body: JSON.stringify({ adminId, username, password, assignedBatchIds }),
     });
 
     if (!response.ok) {

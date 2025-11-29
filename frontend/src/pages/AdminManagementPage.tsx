@@ -64,7 +64,14 @@ export default function AdminManagementPage() {
     }
     try {
       setIsLoading(true);
-      await superAdminAPI.updateAdmin(editingAdmin._id!, formData.adminId, formData.username, formData.password);
+      // Send assignedBatchIds from the current editingAdmin (or empty array if not present)
+      await superAdminAPI.updateAdmin(
+        editingAdmin._id!,
+        formData.adminId,
+        formData.username,
+        formData.password,
+        editingAdmin.assignedBatchIds || []
+      );
       toast.success('Admin updated successfully');
       setFormData({ adminId: '', username: '', password: '' });
       setEditingAdmin(null);

@@ -35,7 +35,20 @@ function highlightMatch(text: string | undefined, query?: string) {
 }
 
 
+import { adminAPI } from '../../services/api';
+
 const AdminDashboard: React.FC = () => {
+    // Strictly filter batches for dashboard (if used)
+    const [assignedBatches, setAssignedBatches] = useState<any[]>([]);
+    useEffect(() => {
+      const fetchAssignedBatches = async () => {
+        const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
+        const all = await (await import('../../services/api')).batchAPI.getBatches();
+        const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
+        setAssignedBatches(mine);
+      };
+      fetchAssignedBatches();
+    }, []);
   const safeNavigate = (path: string) => {
     try {
       if (typeof window !== 'undefined') {
@@ -45,6 +58,20 @@ const AdminDashboard: React.FC = () => {
       // ignore
     }
   }
+
+  // Always refresh admin profile and update localStorage before rendering dashboard
+  useEffect(() => {
+    const refreshProfile = async () => {
+      try {
+        const res = await adminAPI.getProfile();
+        if (res && res.profile) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...user, assignedBatchIds: res.profile.assignedBatchIds, adminId: res.profile.adminId, username: res.profile.username }));
+        }
+      } catch {}
+    };
+    refreshProfile();
+  }, []);
 
   const adminName = useMemo(() => {
     try {

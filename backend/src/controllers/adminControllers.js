@@ -7,14 +7,28 @@ export const getProfile = async (req, res) => {
     const admin = req.admin;
     if (!admin) return res.status(404).json({ message: 'Admin not found' });
 
-    // NOTE: per frontend requirement this endpoint returns the stored password.
-    // This is insecure for production; consider removing password from this response later.
+    // Fetch batch details for assignedBatchIds
+    let batches = [];
+    if (Array.isArray(admin.assignedBatchIds) && admin.assignedBatchIds.length > 0) {
+      const Batch = (await import('../models/Batch.js')).default;
+      batches = await Batch.find({ batchId: { $in: admin.assignedBatchIds } }).lean();
+    }
+
+    // Map batches to include only relevant fields for the profile
+    const batchSummaries = batches.map(b => ({
+      batchId: b.batchId,
+      batchName: b.batchName,
+      dept: b.deptId,
+      studentCount: Array.isArray(b.students) ? b.students.length : 0
+    }));
+
     const payload = {
       username: admin.username,
       adminId: admin.adminId,
       assignedBatchIds: admin.assignedBatchIds || [],
       role: admin.role || 'ADMIN',
-      password: admin.password
+      password: admin.password,
+      batches: batchSummaries
     };
 
     logger.debug('getProfile success', { adminId: admin.adminId });
