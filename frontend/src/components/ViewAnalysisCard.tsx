@@ -191,55 +191,21 @@ export default function ViewAnalysisCard() {
           <p className="text-sm text-supergreen/80 mt-1 mb-4">Have a summary of key metrics at a glance</p>
         </div>
       </div>  
-      {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-10">
-        {/* Card: Total Admins */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Total Admins</div>
-            <div className="text-xl font-extrabold text-black/80">{adminCount ?? '—'}</div>
+      {/* Summary cards - uniform styling via MetricCard */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-10">
+        {[
+          { label: 'Total Admins', value: adminCount },
+          { label: 'Admins', value: adminsWithRoleCount },
+          { label: 'Batches', value: batchCount },
+          { label: 'Unassigned Batches', value: unassignedBatchesCount },
+          { label: 'Students', value: studentCount },
+          { label: "Today's Present", value: todaysPresentCount },
+        ].map((m, idx) => (
+          <div key={idx} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-purple-200">
+            <div className="text-[13px] font-medium text-gray-700">{m.label}</div>
+            <div className="text-2xl font-extrabold text-black/80">{m.value ?? '—'}</div>
           </div>
-        </div>
-
-        {/* Card: Admins with role */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Admins</div>
-            <div className="text-xl font-extrabold text-black/80">{adminsWithRoleCount ?? '—'}</div>
-          </div>
-        </div>
-
-        {/* Card: Batches */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Batches</div>
-            <div className="text-xl font-extrabold text-black/80">{batchCount ?? '—'}</div>
-          </div>
-        </div>
-
-        {/* Card: Unassigned Batches */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Unassigned Batches</div>
-            <div className="text-xl font-extrabold text-black/80">{unassignedBatchesCount ?? '—'}</div>
-          </div>
-        </div>
-
-        {/* Card: Students */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Students</div>
-            <div className="text-xl font-extrabold text-black/80">{studentCount ?? '—'}</div>
-          </div>
-        </div>
-
-        {/* Card: Today's Present */}
-        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
-          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Today's Present</div>
-            <div className="text-xl font-extrabold text-black/80">{todaysPresentCount ?? '—'}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className="flex items-center gap-4 mb-3">
