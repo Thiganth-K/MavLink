@@ -2,6 +2,7 @@ import Student from "../models/Student.js";
 import fs from "fs";
 import csv from "csv-parser";
 import logger from "../utils/logger.js";
+import Batch from '../models/Batch.js';
 
 // ---------------- CSV UPLOAD ----------------
 export const uploadCSV = async (req, res) => {
@@ -21,13 +22,30 @@ export const uploadCSV = async (req, res) => {
     })
     .on("end", async () => {
       try {
-        await Student.insertMany(results);
-        fs.unlinkSync(filePath); // delete temp file
-        logger.info('uploadCSV success', { inserted: results.length });
-        res.status(200).json({
-          message: "CSV imported successfully",
-          inserted: results.length
-        });
+          const inserted = await Student.insertMany(results);
+          // Sync batch snapshots for inserted students that include batchId
+          try {
+            for (const s of inserted) {
+              const batchId = s.batchId ? String(s.batchId).toUpperCase() : null;
+              if (!batchId) continue;
+              const batch = await Batch.findOne({ batchId });
+              if (!batch) continue;
+              const exists = Array.isArray(batch.students) && batch.students.some(x => String(x.regno).toUpperCase() === String(s.regno).toUpperCase());
+              if (!exists) {
+                batch.students.push({ name: s.studentname, regno: s.regno, dept: s.dept, email: s.email, mobile: s.phno });
+                await batch.save();
+              }
+            }
+          } catch (syncErr) {
+            logger.warn('uploadCSV: failed to sync batch snapshots', { error: syncErr && syncErr.message ? syncErr.message : syncErr });
+          }
+
+          fs.unlinkSync(filePath); // delete temp file
+          logger.info('uploadCSV success', { inserted: inserted.length });
+          res.status(200).json({
+            message: "CSV imported successfully",
+            inserted: inserted.length
+          });
       } catch (err) {
         logger.error('uploadCSV error', { error: err.message });
         res.status(500).json({ message: "Error inserting CSV data", error: err });
@@ -38,12 +56,53 @@ export const uploadCSV = async (req, res) => {
 // ---------------- CREATE ----------------
 export const createStudent = async (req, res) => {
   try {
-    const student = await Student.create(req.body);
+    // Log incoming headers/body for easier debugging when clients report failures
+    logger.debug('createStudent request', { headers: { 'x-role': req.headers['x-role'], 'x-admin-id': req.headers['x-admin-id'] }, bodyKeys: Object.keys(req.body || {}) });
+
+    // Basic validation to provide clearer errors back to client
+    const { studentname, email, regno, dept, phno } = req.body || {};
+    const missing = [];
+    if (!studentname || !String(studentname).trim()) missing.push('studentname');
+    if (!email || !String(email).trim()) missing.push('email');
+    if (!regno || !String(regno).trim()) missing.push('regno');
+    if (!dept || !String(dept).trim()) missing.push('dept');
+    if (!phno || !String(phno).trim()) missing.push('phno');
+    if (missing.length) return res.status(400).json({ message: `Missing required fields: ${missing.join(', ')}` });
+
+    const payload = Object.assign({}, req.body);
+    // Normalize regno and dept casing here to avoid surprises
+    if (payload.regno) payload.regno = String(payload.regno).trim().toUpperCase();
+    if (payload.dept) payload.dept = String(payload.dept).trim().toUpperCase();
+
+    const student = await Student.create(payload);
     logger.info('createStudent success', { id: student._id });
+
+    // If a batchId was provided, keep the Batch.students snapshot in sync
+    try {
+      const batchId = student.batchId ? String(student.batchId).toUpperCase() : null;
+      if (batchId) {
+        const batch = await Batch.findOne({ batchId });
+        if (batch) {
+          const exists = Array.isArray(batch.students) && batch.students.some(s => String(s.regno).toUpperCase() === String(student.regno).toUpperCase());
+          if (!exists) {
+            batch.students.push({ name: student.studentname, regno: student.regno, dept: student.dept, email: student.email, mobile: student.phno });
+            await batch.save();
+          }
+        }
+      }
+    } catch (syncErr) {
+      logger.warn('createStudent: failed to sync batch snapshot', { error: syncErr && syncErr.message ? syncErr.message : syncErr });
+    }
+
     res.status(201).json({ message: "Student created", student });
   } catch (err) {
-    logger.error('createStudent error', { error: err.message });
-    res.status(500).json({ error: err });
+    logger.error('createStudent error', { error: err && err.message ? err.message : err, stack: err && err.stack ? err.stack : undefined });
+    // Return readable message when mongoose validation fails
+    if (err && err.name === 'ValidationError') {
+      const messages = Object.values(err.errors || {}).map((e) => e.message || String(e));
+      return res.status(400).json({ message: messages.join('; ') });
+    }
+    res.status(500).json({ message: 'Failed to create student', error: err && err.message ? err.message : err });
   }
 };
 
@@ -121,9 +180,55 @@ export const updateStudent = async (req, res) => {
   try {
       const start = Date.now();
       logger.debug('updateStudent start', { id: req.params.id, bodyKeys: Object.keys(req.body || {}) });
+    // Load current student to detect batch changes
+    const current = await Student.findById(req.params.id);
+    if (!current) return res.status(404).json({ message: "Student not found" });
+
     const updated = await Student.findByIdAndUpdate(req.params.id, req.body, {
       new: true
     });
+
+    // If batchId changed, update batch snapshots: remove from old, add to new
+    try {
+      const oldBatchId = current.batchId ? String(current.batchId).toUpperCase() : null;
+      const newBatchId = updated.batchId ? String(updated.batchId).toUpperCase() : null;
+      const regnoKey = String(updated.regno).toUpperCase();
+      if (oldBatchId !== newBatchId) {
+        if (oldBatchId) {
+          const oldBatch = await Batch.findOne({ batchId: oldBatchId });
+          if (oldBatch && Array.isArray(oldBatch.students)) {
+            oldBatch.students = oldBatch.students.filter(s => String(s.regno).toUpperCase() !== regnoKey);
+            await oldBatch.save();
+          }
+        }
+        if (newBatchId) {
+          const newBatch = await Batch.findOne({ batchId: newBatchId });
+          if (newBatch) {
+            const exists = Array.isArray(newBatch.students) && newBatch.students.some(s => String(s.regno).toUpperCase() === regnoKey);
+            if (!exists) {
+              newBatch.students.push({ name: updated.studentname, regno: updated.regno, dept: updated.dept, email: updated.email, mobile: updated.phno });
+              await newBatch.save();
+            }
+          }
+        }
+      } else if (newBatchId) {
+        // If same batch but other details changed (name/email/dept/phno), update snapshot
+        const batch = await Batch.findOne({ batchId: newBatchId });
+        if (batch && Array.isArray(batch.students)) {
+          let changed = false;
+          batch.students = batch.students.map(s => {
+            if (String(s.regno).toUpperCase() === regnoKey) {
+              changed = true;
+              return { name: updated.studentname, regno: updated.regno, dept: updated.dept, email: updated.email, mobile: updated.phno };
+            }
+            return s;
+          });
+          if (changed) await batch.save();
+        }
+      }
+    } catch (syncErr) {
+      logger.warn('updateStudent: failed to sync batch snapshot', { error: syncErr && syncErr.message ? syncErr.message : syncErr });
+    }
 
     if (!updated) return res.status(404).json({ message: "Student not found" });
 
@@ -143,7 +248,22 @@ export const deleteStudent = async (req, res) => {
     const deleted = await Student.findByIdAndDelete(req.params.id);
 
     if (!deleted) return res.status(404).json({ message: "Student not found" });
-        logger.info('deleteStudent success', { durationMs: Date.now() - start, id: req.params.id });
+
+    // Remove from batch snapshot if present
+    try {
+      const batchId = deleted.batchId ? String(deleted.batchId).toUpperCase() : null;
+      if (batchId) {
+        const batch = await Batch.findOne({ batchId });
+        if (batch && Array.isArray(batch.students)) {
+          batch.students = batch.students.filter(s => String(s.regno).toUpperCase() !== String(deleted.regno).toUpperCase());
+          await batch.save();
+        }
+      }
+    } catch (syncErr) {
+      logger.warn('deleteStudent: failed to sync batch snapshot', { error: syncErr && syncErr.message ? syncErr.message : syncErr });
+    }
+
+    logger.info('deleteStudent success', { durationMs: Date.now() - start, id: req.params.id });
 
     res.status(200).json({ message: "Student deleted" });
         logger.error('deleteStudent error', { error: err.message });

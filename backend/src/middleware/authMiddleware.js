@@ -11,6 +11,17 @@ export const verifySuperAdmin = (req, res, next) => {
   next();
 };
 
+// Accept either SUPER_ADMIN or ADMIN (for ADMIN we delegate to verifyAdmin checks)
+export const verifyAdminOrSuperAdmin = async (req, res, next) => {
+  const role = req.headers['x-role'];
+  if (role === 'SUPER_ADMIN') return next();
+  if (role === 'ADMIN') {
+    // delegate to verifyAdmin which performs additional admin checks
+    return verifyAdmin(req, res, next);
+  }
+  return res.status(403).json({ message: 'ADMIN or SUPER_ADMIN role required' });
+};
+
 // verifyAdmin ensures admin role and optionally restricts to batchId parameter/body
 export const verifyAdmin = async (req, res, next) => {
   const role = req.headers['x-role'];

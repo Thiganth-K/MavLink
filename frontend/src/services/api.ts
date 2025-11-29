@@ -265,8 +265,16 @@ export const studentAPI = {
     const formData = new FormData();
     formData.append('csv', file);
 
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = localStorage.getItem('role') || '';
+
     const response = await fetch(`${API_BASE_URL}/students/upload`, {
       method: 'POST',
+      headers,
       body: formData,
     });
 
@@ -279,11 +287,17 @@ export const studentAPI = {
   },
 
   createStudent: async (studentData: Student): Promise<{ message: string; student: Student }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = localStorage.getItem('role') || '';
+
     const response = await fetch(`${API_BASE_URL}/students`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(studentData),
     });
 
@@ -372,11 +386,17 @@ export const studentAPI = {
   },
 
   updateStudent: async (id: string, studentData: Student): Promise<{ message: string; student: Student }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = localStorage.getItem('role') || '';
+
     const response = await fetch(`${API_BASE_URL}/students/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(studentData),
     });
 
@@ -389,8 +409,16 @@ export const studentAPI = {
   },
 
   deleteStudent: async (id: string): Promise<{ message: string }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = localStorage.getItem('role') || '';
+
     const response = await fetch(`${API_BASE_URL}/students/${id}`, {
       method: 'DELETE',
+      headers
     });
 
     if (!response.ok) {
@@ -402,8 +430,16 @@ export const studentAPI = {
   },
 
   deleteAllStudents: async (): Promise<{ success: boolean; message: string; deletedCount: number }> => {
+    const storedUser = localStorage.getItem('user');
+    let adminId: string | undefined;
+    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = localStorage.getItem('role') || '';
+
     const response = await fetch(`${API_BASE_URL}/students/delete-all`, {
       method: 'DELETE',
+      headers
     });
 
     if (!response.ok) {
