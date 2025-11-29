@@ -236,7 +236,7 @@ function App() {
   if (path === '/super-admin/student-management') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar/>
         <StudentManagement />
         <SuperAdminFooter />
       </div>
