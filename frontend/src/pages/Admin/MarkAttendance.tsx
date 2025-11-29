@@ -5,6 +5,8 @@ import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } fr
 import { getTodayIST, formatDateForDisplay } from '../../utils/dateUtils';
 import ResponsiveTable from '../../components/Admin/ResponsiveTable';
 
+import { adminAPI } from '../../services/api';
+
 export default function MarkAttendance() {
   const [students, setStudents] = useState<Student[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
@@ -22,7 +24,18 @@ export default function MarkAttendance() {
   const dateInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    fetchAssignedBatches();
+    // Always refresh admin profile and update localStorage before loading batches
+    const refreshProfileAndBatches = async () => {
+      try {
+        const res = await adminAPI.getProfile();
+        if (res && res.profile) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...user, assignedBatchIds: res.profile.assignedBatchIds, adminId: res.profile.adminId, username: res.profile.username }));
+        }
+      } catch {}
+      await fetchAssignedBatches();
+    };
+    refreshProfileAndBatches();
   }, []);
 
   useEffect(() => {
@@ -36,7 +49,8 @@ export default function MarkAttendance() {
       (window as any).showGlobalLoader?.('markattendance-data');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
-      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
+      // Only show batches where batch.adminId matches current admin and batchId is in assignedBatchIds
+      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
       setAssignedBatches(mine);
       if (mine.length > 0) {
         setActiveBatchId(mine[0].batchId || '');

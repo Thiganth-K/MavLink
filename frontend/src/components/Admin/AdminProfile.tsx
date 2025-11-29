@@ -1,79 +1,131 @@
 //import React from 'react';
 import { FaEye, FaEyeSlash, FaSignOutAlt, FaComments } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
-import { studentAPI } from '../../services/api';
+import { adminAPI } from '../../services/api';
+import { batchAPI, studentAPI } from '../../services/api';
 import AdminChatModal from './AdminChat';
 
+type BatchSummary = {
+  batchId?: string;
+  batchName?: string;
+  dept?: string;
+  studentCount?: number;
+  adminId?: string;
+};
+type ProfileType = {
+  username: string;
+  password?: string | null;
+  batches: BatchSummary[];
+  adminId?: string;
+  assignedBatchIds?: string[];
+  role?: string;
+};
 type Props = {
   profileLoading: boolean;
-  profileData: { username: string; password?: string | null; batches: Array<{ batchId?: string; batchName?: string; dept?: string; studentCount?: number }>; } | null;
+  profileData: ProfileType | null;
   showPassword: boolean;
   setShowPassword: (v: boolean | ((prev: boolean) => boolean)) => void;
   onLogout: () => void;
-  // Overlay control: when provided, the component renders as a drawer overlay.
   open?: boolean;
   onClose?: () => void;
 };
 
-export default function AdminProfile({ profileLoading, profileData, showPassword, setShowPassword, onLogout, open = true, onClose }: Props) {
+export default function AdminProfile(props: Props) {
+  const { profileLoading, profileData, showPassword, setShowPassword, onLogout, open = true, onClose } = props;
   const [openChat, setOpenChat] = useState(false);
+  const [localBatches, setLocalBatches] = useState<BatchSummary[]>(profileData?.batches || []);
+  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<ProfileType | null>(profileData);
 
-  const [localBatches, setLocalBatches] = useState(profileData?.batches || []);
 
-  // Keep batch student counts updated live while the profile is open
-  useEffect(() => {
-    setLocalBatches(profileData?.batches || []);
-  }, [profileData]);
-
+  // Auto-refresh profile from backend on mount, every 10s, and whenever panel is opened
   useEffect(() => {
     if (!open) return;
     let mounted = true;
     let timer: number | null = null;
 
-    const refreshCounts = async () => {
+    // Fetch all batches and filter like Mark/View Attendance
+
+    const fetchAndFilterBatches = async () => {
+      setLoading(true);
       try {
-        const source = profileData?.batches || [];
-        const updated = await Promise.all(
-          source.map(async (b: any) => {
-            if (!b.batchId) return { ...b, studentCount: b.studentCount ?? 0 };
+        // Always refresh admin profile and update localStorage
+        const res = await adminAPI.getProfile();
+        if (res && res.profile) {
+          const adminId = res.profile.adminId;
+          const assignedBatchIds = res.profile.assignedBatchIds || [];
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...user, assignedBatchIds, adminId, username: res.profile.username }));
+
+          // Now fetch all batches and filter
+          const allBatches = await batchAPI.getBatches();
+          let filteredBatches = allBatches.filter(
+            (b: any) => assignedBatchIds.includes(b.batchId || '') && b.adminId === adminId
+          );
+
+          // For each batch, ensure studentCount is present
+          filteredBatches = await Promise.all(filteredBatches.map(async (b: any) => {
+            if (typeof b.studentCount === 'number') return b;
             try {
               const students = await studentAPI.getStudents(b.batchId);
-              return { ...b, studentCount: Array.isArray(students) ? students.length : (b.studentCount ?? 0) };
-            } catch (e) {
-              return { ...b };
+              return { ...b, studentCount: Array.isArray(students) ? students.length : 0 };
+            } catch {
+              return { ...b, studentCount: 0 };
             }
-          })
-        );
-        if (mounted) setLocalBatches(updated as any);
-      } catch (e) {
-        // ignore
-      } finally {
-        if (!mounted) return;
-        timer = window.setTimeout(refreshCounts, 10000) as unknown as number;
-      }
+          }));
+
+          setProfile({ ...res.profile, batches: filteredBatches });
+          setLocalBatches(filteredBatches);
+        }
+      } catch {}
+      setLoading(false);
     };
 
-    // start immediately
-    refreshCounts();
+    // Fetch immediately when panel is opened
+    fetchAndFilterBatches();
+
+    // Start auto-refresh loop
+    const refreshLoop = async () => {
+      await fetchAndFilterBatches();
+      if (!mounted) return;
+      timer = window.setTimeout(refreshLoop, 10000) as unknown as number;
+    };
+    timer = window.setTimeout(refreshLoop, 10000) as unknown as number;
 
     return () => {
       mounted = false;
       if (timer) window.clearTimeout(timer);
     };
-  }, [open, profileData]);
+  }, [open]);
+
+  // If parent updates profileData prop, sync it
+  useEffect(() => {
+    setProfile(profileData);
+    if (profileData) {
+      const adminId = profileData.adminId;
+      const assignedBatchIds = profileData.assignedBatchIds || [];
+      const batches: BatchSummary[] = Array.isArray(profileData.batches) ? profileData.batches : [];
+      const filteredBatches = batches.filter(
+        (b) => assignedBatchIds.includes(b.batchId || '') && b.adminId === adminId
+      );
+      setLocalBatches(filteredBatches);
+    } else {
+      setLocalBatches([]);
+    }
+  }, [profileData]);
 
   if (!open) return null;
 
   // The inner content of the profile panel (used both inline and overlay)
   const profileContent = (
     <>
-      {profileLoading ? (
+      {profileLoading || loading ? (
         <div className="py-8 text-center">Loading…</div>
       ) : (
         <div id="profile-data" className="space-y-4">
           <div>
             <div className="text-sm text-gray-600">Username</div>
-            <div className="text-purple-900 font-medium">{profileData?.username || 'Admin'}</div>
+            <div className="text-purple-900 font-medium">{profile?.username || 'Admin'}</div>
           </div>
 
           <div>
@@ -83,7 +135,7 @@ export default function AdminProfile({ profileLoading, profileData, showPassword
             <div className="flex items-center gap-2 mt-2">
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={profileData?.password ?? ''}
+                value={profile?.password ?? ''}
                 readOnly
                 className="px-3 py-2 border border-purple-200 rounded-lg w-full bg-white"
               />

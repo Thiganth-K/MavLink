@@ -88,14 +88,15 @@ export const getAdmins = async (req, res) => {
 export const updateAdmin = async (req, res) => {
   const start = Date.now();
   logger.debug('updateAdmin start', { id: req.params.id, bodyKeys: Object.keys(req.body || {}) });
-  const { id } = req.params;
-  const { username, password, adminId } = req.body;
+	const { id } = req.params;
+	const { username, password, adminId, assignedBatchIds } = req.body;
 
   try {
     const updateFields = {};
     if (username) updateFields.username = username;
     if (password) updateFields.password = password;
     if (adminId) updateFields.adminId = adminId;
+    if (Array.isArray(assignedBatchIds)) updateFields.assignedBatchIds = assignedBatchIds;
     const updated = await Admin.findByIdAndUpdate(
       id,
       updateFields,
