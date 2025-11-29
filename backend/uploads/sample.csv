@@ -1,11 +1,11 @@
 regno,studentname,dept,email,phno
-CS001,John Doe,Computer Science,john.doe@example.com,9876543210
-CS002,Priya Sharma,Computer Science,priya.sharma@example.com,9876543211
-CS003,Arun Kumar,Information Technology,arun.kumar@example.com,9876543212
-CS004,Meera Nair,Computer Science,meera.nair@example.com,9876543213
-CS005,Rohit Verma,Electronics,rohit.verma@example.com,9876543214
-CS006,Divya Reddy,Computer Science,divya.reddy@example.com,9876543215
-CS007,Vikram Singh,Mechanical,vikram.singh@example.com,9876543216
-CS008,Swetha Mohan,Computer Science,swetha.mohan@example.com,9876543217
-CS009,Gaurav Mehta,Electrical,gaurav.mehta@example.com,9876543218
-CS010,Pooja Kulkarni,Computer Science,pooja.kulkarni@example.com,9876543219
+CS001,John Doe,CSE,john.doe@example.com,9876543210
+CS002,Priya Sharma,CSE,priya.sharma@example.com,9876543211
+CS003,Arun Kumar,CSE,arun.kumar@example.com,9876543212
+CS004,Meera Nair,CSE,meera.nair@example.com,9876543213
+CS005,Rohit Verma,CSE,rohit.verma@example.com,9876543214
+CS006,Divya Reddy,CSE,divya.reddy@example.com,9876543215
+CS007,Vikram Singh,CSE,vikram.singh@example.com,9876543216
+CS008,Swetha Mohan,CSE,swetha.mohan@example.com,9876543217
+CS009,Gaurav Mehta,CSE,gaurav.mehta@example.com,9876543218
+CS010,Pooja Kulkarni,CSE,pooja.kulkarni@example.com,9876543219

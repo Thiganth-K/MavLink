@@ -186,13 +186,15 @@ export default function SuperAdminNavbar() {
                 {notifications.map(n => (
                   <button
                     key={n._id || n.id}
-                    onClick={async () => {
+                    onClick={() => {
                       try {
-                        await markRead(n._id || n.id).catch(() => {});
                         const adminId = (n.sender && n.sender.adminId) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
                         if (adminId) {
                           window.location.href = `/super-admin/messages?adminId=${encodeURIComponent(adminId)}`;
+                        } else {
+                          window.location.href = '/super-admin/messages';
                         }
+                        setOpen(false);
                       } catch (e) { console.error(e); }
                     }}
                     className={`w-full text-left p-3 border-b hover:bg-gray-50 flex justify-between items-start gap-2 ${n.read ? '' : 'bg-white'}`}

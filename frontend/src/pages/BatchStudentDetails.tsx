@@ -96,7 +96,7 @@ export default function BatchStudentDetails({ batch, onBack }: BatchStudentDetai
       </div>
 
       <ResponsiveTable>
-        <table className="min-w-[320px] w-full table-fixed border-collapse border border-purple-200">
+        <table className="min-w-[320px] w-auto table-auto border-collapse border border-purple-200">
           <thead>
             <tr className="bg-purple-100">
               <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-20 md:w-32">
@@ -108,10 +108,10 @@ export default function BatchStudentDetails({ batch, onBack }: BatchStudentDetai
               <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-16 md:w-20">
                 Dept
               </th>
-              <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base min-w-0 hidden sm:table-cell">
+              <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base min-w-0">
                 Email
               </th>
-              <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-24 md:w-32 hidden md:table-cell">
+              <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-24 md:w-32">
                 Mobile
               </th>
             </tr>
@@ -132,16 +132,16 @@ export default function BatchStudentDetails({ batch, onBack }: BatchStudentDetai
                   <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base">
                     {student.regno}
                   </td>
-                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base min-w-0 truncate">
+                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base min-w-0">
                     {student.name}
                   </td>
                   <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base">
                     {student.dept}
                   </td>
-                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-xs md:text-sm min-w-0 truncate hidden sm:table-cell">
+                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-xs md:text-sm min-w-0 truncate">
                     {student.email}
                   </td>
-                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base hidden md:table-cell">
+                  <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base">
                     {student.mobile}
                   </td>
                 </tr>
