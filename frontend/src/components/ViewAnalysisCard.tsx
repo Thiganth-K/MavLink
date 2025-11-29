@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { FiBarChart2, FiEye } from 'react-icons/fi';
 import { Chart, BarController, PieController, BarElement, CategoryScale, LinearScale, ArcElement, LineElement, PointElement, LineController, Tooltip, Legend } from 'chart.js';
 import { attendanceAPI, superAdminAPI, batchAPI, studentAPI, mappingAPI } from '../services/api';
 import type { AttendanceStats } from '../services/api';
@@ -179,54 +180,81 @@ export default function ViewAnalysisCard() {
   // removed selection/fade effect — always showing all charts
 
   return (
-    <div className="relative  group overflow-hidden text-left bg-white rounded-xl shadow-xl border border-supergreenDark/30 hover:shadow-2xl hover:border-supergreenAccent transition p-6 h-full">
+    <div className="relative  group overflow-hidden text-left bg-white rounded-xl shadow-xl border-2 border-black/20 hover:shadow-2xl hover:border-black/40 transition p-6 h-full">
       
       <div className="flex items-center gap-4 mb-4">
-        <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold">SA</div>
+        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
+          <FiBarChart2 className="w-6 h-6" />
+        </div>
         <div>
-          <h3 className="text-lg font-bold text-supergreenDark">Summary Analysis</h3>
+          <h3 className="text-lg font-bold text-purple-950">Summary Analysis</h3>
           <p className="text-sm text-supergreen/80 mt-1 mb-4">Have a summary of key metrics at a glance</p>
         </div>
       </div>  
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-10">
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Total Admins</div>
-          <div className="text-xl font-bold text-violet-900">{adminCount ?? '—'}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-10">
+        {/* Card: Total Admins */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Total Admins</div>
+            <div className="text-xl font-extrabold text-black/80">{adminCount ?? '—'}</div>
+          </div>
         </div>
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Admins (role: ADMIN)</div>
-          <div className="text-xl font-bold text-violet-900">{adminsWithRoleCount ?? '—'}</div>
+
+        {/* Card: Admins with role */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Admins</div>
+            <div className="text-xl font-extrabold text-black/80">{adminsWithRoleCount ?? '—'}</div>
+          </div>
         </div>
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Batches</div>
-          <div className="text-xl font-bold text-violet-900">{batchCount ?? '—'}</div>
+
+        {/* Card: Batches */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Batches</div>
+            <div className="text-xl font-extrabold text-black/80">{batchCount ?? '—'}</div>
+          </div>
         </div>
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Unassigned Batches</div>
-          <div className="text-xl font-bold text-violet-900">{unassignedBatchesCount ?? '—'}</div>
+
+        {/* Card: Unassigned Batches */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Unassigned Batches</div>
+            <div className="text-xl font-extrabold text-black/80">{unassignedBatchesCount ?? '—'}</div>
+          </div>
         </div>
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Students</div>
-          <div className="text-xl font-bold text-violet-900">{studentCount ?? '—'}</div>
+
+        {/* Card: Students */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Students</div>
+            <div className="text-xl font-extrabold text-black/80">{studentCount ?? '—'}</div>
+          </div>
         </div>
-        <div className="bg-violet-50 p-3 rounded-lg flex flex-col">
-          <div className="text-xs text-violet-700">Today's Present</div>
-          <div className="text-xl font-bold text-violet-900">{todaysPresentCount ?? '—'}</div>
+
+        {/* Card: Today's Present */}
+        <div className="rounded-lg p-[1px] bg-gradient-to-r from-fuchsia-700 to-purple-600">
+          <div className="bg-white rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Today's Present</div>
+            <div className="text-xl font-extrabold text-black/80">{todaysPresentCount ?? '—'}</div>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-4 mb-3">
-        <div className="h-12 w-12 rounded-lg bg-supercream text-supergreen flex items-center justify-center font-bold">AN</div>
+        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
+          <FiEye className="w-6 h-6" />
+        </div>
         <div>
-          <h3 className="text-lg font-bold text-supergreenDark">View Analysis</h3>
+          <h3 className="text-lg font-bold text-purple-950">View Analysis</h3>
           <p className="text-sm text-supergreen/80 mt-1">Compare attendance percentages between branches</p>
         </div>
       </div>
 
       {/* Charts (always show all four) */}
 
-      <div className="mt-4 h-full min-h-0 text-xs text-supergreenDark/60 leading-relaxed">
+      <div className="mt-4 h-full min-h-0 text-xs text-purple-950/60 leading-relaxed">
         {loading && <div>Loading charts…</div>}
         {error && <div className="text-red-600">{error}</div>}
 

@@ -177,7 +177,7 @@ function App() {
     );
   }
 
-  if (path === '/super-admin/batchManagement') {
+  if (path === '/super-admin/batch-management') {
     return (
       <div className="min-h-screen flex flex-col">
         <SuperAdminNavbar />
@@ -223,7 +223,7 @@ function App() {
     );
   }
 
-  if (path === '/student-management') {
+  if (path === '/super-admin/student-management') {
     return (
       <div className="min-h-screen flex flex-col">
         <SuperAdminNavbar />
@@ -236,7 +236,7 @@ function App() {
   if (path === '/super-admin/student-management') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar />
+        <SuperAdminNavbar/>
         <StudentManagement />
         <SuperAdminFooter />
       </div>

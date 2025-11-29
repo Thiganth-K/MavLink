@@ -145,83 +145,158 @@ const SuperAdminMessages: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <div className="w-full mb-4 flex items-center">
-        <button onClick={() => { window.location.href = '/super-admin'; }} className="px-2 py-1 mr-4 bg-white border rounded text-supergreenDark hover:bg-gray-50">Back</button>
-        <h2 className="text-xl font-semibold flex-1 text-center">Messages</h2>
-        <div className="w-16" />
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="hidden md:block md:w-1/6" />
-
-        <div className="md:w-1/4 flex flex-col items-center">
-          <h4 className="font-semibold mb-3">Admins</h4>
-          <div className="w-full">
-            {admins.length === 0 ? (
-              <div className="text-sm text-gray-500 text-center">No admins yet</div>
-            ) : (
-              <ul className="space-y-3 w-full">
-                {admins.map((a: any) => {
-                  const aid = (a.adminId || a._id).toString();
-                  const unread = unreadCounts[aid] || 0;
-                  const displayName = a.username || a.name || a.email || 'Admin';
-                  return (
-                    <li key={aid} className="flex justify-center">
-                      <button
-                        onClick={() => setSelectedAdmin(aid)}
-                        className={`w-full max-w-xs flex items-center justify-between gap-3 px-4 py-2 rounded ${selectedAdmin === aid ? 'bg-purple-50 border border-purple-200' : 'bg-white border border-gray-200'} shadow-sm`}
-                      >
-                        <span className="truncate">{displayName}</span>
-                        {unread > 0 && <span className="ml-2 inline-flex items-center justify-center bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">{unread}</span>}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-supercream to-violet-200 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-purple-950">Messages</h1>
+          <button 
+            onClick={() => { window.location.href = '/super-admin'; }} 
+            className="px-4 py-2 bg-white border border-purple-300 text-purple-900 rounded-lg shadow-sm hover:shadow-md hover:border-purple-500 transition-all font-medium"
+          >
+            Back to Dashboard
+          </button>
         </div>
 
-        <div className="flex-1 flex flex-col">
-          <h4 className="font-semibold">Conversation</h4>
-
-          {/* Card container for messages + input */}
-          <div className="mt-4 bg-white shadow rounded-lg p-4 flex-1 flex flex-col min-h-[300px] mx-auto w-full max-w-5xl">
-            {!selectedAdmin ? (
-              <div className="p-8 border border-dashed border-gray-300 rounded text-center text-gray-600">Select an admin from the list to open the conversation</div>
-            ) : (
-              <>
-                <div className="flex-1 overflow-auto space-y-3 px-2 py-1 relative">
-                  {/* provide bottom padding so last message isn't hidden behind the sticky input */}
-                  <div className="pb-28">
-                    {messages
-                      .filter(m => {
-                        const aid = (m.from?.adminId || m.from?._id || '').toString();
-                        const toAid = (m.to?.adminId || m.to?._id || '').toString();
-                        return aid === selectedAdmin || toAid === selectedAdmin;
-                      })
-                      .map(m => {
-                        const fromSuper = m.from?.role === 'SUPER_ADMIN';
-                        return (
-                          <div key={m._id} className={`max-w-[75%] ${fromSuper ? 'ml-auto text-right' : 'mr-auto text-left'}`}>
-                            <div className={`inline-block px-4 py-2 rounded-lg break-words ${fromSuper ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
-                              <div className="text-xs opacity-70">{m.from?.username || m.from?.role || 'User'} • {new Date(m.createdAt).toLocaleString()}</div>
-                              <div className="mt-1 text-sm whitespace-pre-wrap">{m.content}</div>
-                            </div>
+        {/* Main Card Container */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ minHeight: '75vh' }}>
+          <div className="grid grid-cols-1 md:grid-cols-12 h-full" style={{ minHeight: '75vh' }}>
+            
+            {/* Left Sidebar - Admin List */}
+            <div className="md:col-span-4 border-r border-gray-200 bg-gradient-to-b from-purple-50 to-white p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-purple-950">Admins</h2>
+                <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                  {admins.length} {admins.length === 1 ? 'Admin' : 'Admins'}
+                </span>
+              </div>
+              
+              <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(75vh - 120px)' }}>
+                {admins.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-gray-500">No admins available</p>
+                  </div>
+                ) : (
+                  admins.map((a: any) => {
+                    const aid = (a.adminId || a._id).toString();
+                    const unread = unreadCounts[aid] || 0;
+                    const displayName = a.username || a.name || a.email || 'Admin';
+                    const isSelected = selectedAdmin === aid;
+                    
+                    return (
+                      <button
+                        key={aid}
+                        onClick={() => setSelectedAdmin(aid)}
+                        className={`w-full flex items-center gap-3 p-4 transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg transform scale-105 rounded-xl'
+                            : 'bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-gray-800 rounded-xl'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                          isSelected ? 'bg-white/20' : 'bg-gradient-to-br from-purple-400 to-purple-600 text-white'
+                        }`}>
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="mb-1">
+                            <span className={`inline-block px-3 py-1 rounded-full truncate text-sm font-semibold ${
+                              isSelected ? 'bg-transparent text-white' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {displayName}
+                            </span>
                           </div>
-                        );
-                      })}
+                          <p className={`text-xs ${isSelected ? 'text-purple-100' : 'text-gray-500'}`}>
+                            {aid}
+                          </p>
+                        </div>
+                        {unread > 0 && (
+                          <span className="inline-flex items-center justify-center bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full min-w-[24px] shadow-lg">
+                            {unread}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Right Panel - Conversation */}
+            <div className="md:col-span-8 flex flex-col bg-white">
+              {!selectedAdmin ? (
+                <div className="flex-1 flex items-center justify-center p-12">
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center">
+                      <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Conversation</h3>
+                    <p className="text-gray-500">Choose an admin from the list to start messaging</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Conversation Header */}
+                  <div className="border-b border-gray-200 p-4 bg-gradient-to-r from-purple-50 to-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 text-white flex items-center justify-center font-bold">
+                        {(admins.find(a => (a.adminId || a._id).toString() === selectedAdmin)?.username || 'A').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {admins.find(a => (a.adminId || a._id).toString() === selectedAdmin)?.username || selectedAdmin}
+                        </h3>
+                        <p className="text-xs text-gray-500">Admin ID: {selectedAdmin}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* input area: sticky at bottom of the scrollable messages area */}
-                  <div className="sticky bottom-0 bg-white pt-3 border-t border-gray-100">
-                    <div className="flex items-end gap-2 px-2">
+                  {/* Messages Area */}
+                  <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white" style={{ maxHeight: 'calc(75vh - 200px)' }}>
+                    <div className="space-y-4">
+                      {messages
+                        .filter(m => {
+                          const aid = (m.from?.adminId || m.from?._id || '').toString();
+                          const toAid = (m.to?.adminId || m.to?._id || '').toString();
+                          return aid === selectedAdmin || toAid === selectedAdmin;
+                        })
+                        .map(m => {
+                          const fromSuper = m.from?.role === 'SUPER_ADMIN';
+                          return (
+                            <div key={m._id} className={`flex ${fromSuper ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[70%] ${fromSuper ? 'text-right' : 'text-left'}`}>
+                                <div className={`inline-block px-4 py-3 rounded-2xl shadow-md ${
+                                  fromSuper 
+                                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-br-sm' 
+                                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                                }`}>
+                                  <div className={`text-xs mb-1 ${fromSuper ? 'text-purple-100' : 'text-gray-500'}`}>
+                                    {m.from?.username || m.from?.role || 'User'} • {new Date(m.createdAt).toLocaleTimeString()}
+                                  </div>
+                                  <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Input Area */}
+                  <div className="border-t border-gray-200 p-4 bg-white">
+                    <div className="flex items-end gap-3">
                       <textarea
                         ref={(el) => {
                           if (el) {
                             el.style.height = 'auto';
-                            const maxH = 160;
+                            const maxH = 120;
                             el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
                             el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
                           }
@@ -231,7 +306,7 @@ const SuperAdminMessages: React.FC = () => {
                           setReply(e.target.value);
                           const ta = e.currentTarget as HTMLTextAreaElement;
                           ta.style.height = 'auto';
-                          const maxH = 160;
+                          const maxH = 120;
                           const newH = Math.min(ta.scrollHeight, maxH);
                           ta.style.height = newH + 'px';
                           ta.style.overflowY = ta.scrollHeight > maxH ? 'auto' : 'hidden';
@@ -242,23 +317,25 @@ const SuperAdminMessages: React.FC = () => {
                             sendReply();
                           }
                         }}
-                        className="flex-1 border rounded-full p-3 resize-none min-h-[42px] max-h-[160px]"
-                        placeholder={selectedAdmin ? `Reply to ${selectedAdmin}` : 'Select an admin to reply'}
+                        className="flex-1 border-2 border-gray-200 rounded-2xl px-4 py-3 resize-none focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                        placeholder="Type your message..."
+                        rows={1}
+                        style={{ minHeight: '48px', maxHeight: '120px' }}
                       />
                       <button
                         onClick={sendReply}
                         disabled={!selectedAdmin || !reply.trim()}
-                        className="p-3 rounded bg-supergreenDark text-white disabled:opacity-50 hover:bg-green-700 flex items-center justify-center"
-                        aria-label="Send"
+                        className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none"
+                        aria-label="Send message"
                       >
-                        <FiSend size={18} />
+                        <FiSend size={20} />
                       </button>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 px-2">Press Enter to send, Shift+Enter for newline</div>
+                    <p className="text-xs text-gray-400 mt-2 ml-1">Press Enter to send • Shift+Enter for new line</p>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
- 
+//import React from 'react';
 import BatchViewer from './BatchViewer';
 
 export default function ViewBatchesPage() {
@@ -9,9 +9,9 @@ export default function ViewBatchesPage() {
           <h1 className="text-2xl font-bold text-supergreenDark">View Batches</h1>
           <button
             onClick={() => { window.location.pathname = '/super-admin'; }}
-            className="ml-4 px-3 py-2 bg-white border border-supergreenDark/30 rounded-lg text-supergreenDark hover:bg-supergreen/5 transition"
+            className="ml-4 px-3 py-2 bg-white border border-supergreenDark/30 rounded-lg text-purple-950 transition"
           >
-            ◂ Back to Dashboard
+            Back to Dashboard
           </button>
         </div>
 

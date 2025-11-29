@@ -165,7 +165,7 @@ export default function StudentManagement() {
   const role = localStorage.getItem('role');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-200 p-6">
+    <div className="min-h-screen bg-white p-6">
       <Toaster position="top-center" />
       
       <div className="max-w-7xl mx-auto">
