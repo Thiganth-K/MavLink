@@ -155,54 +155,60 @@ export default function AdminBatchMappingPage() {
     <div className="min-h-screen flex flex-col">
       <SuperAdminNavbar/>
       <main className="flex-grow px-4 py-8 max-w-7xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-supergreenDark">Admin ↔ Batch Mapping</h1>
-            <p className="text-sm opacity-70 mt-1">Generated {data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : '...'} | {data?.totalAdmins ?? 0} admins · {data?.totalBatches ?? 0} batches</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'cards' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >Cards</button>
-            
-            <button
-              onClick={() => setViewMode('heatmap')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'heatmap' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >Heatmap</button>
-            
-            <button
-              onClick={() => setViewMode('summary')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >Summary</button>
-            
-            <button
-              onClick={async () => {
-                setLoading(true);
-                try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
-              }}
-              className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white"
-            >Refresh</button>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-supergreenDark">Admin ↔ Batch Mapping</h1>
+              <p className="text-sm opacity-70 mt-1">Generated {data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : '...'} | {data?.totalAdmins ?? 0} admins · {data?.totalBatches ?? 0} batches</p>
+            </div>
             <button
               onClick={() => { window.location.href = '/super-admin'; }}
-              className="px-3 py-1.5 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white"
+              className="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white"
             >
               Back to Dashboard
             </button>
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-4 items-end">
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Admin</label>
-            <input value={adminFilter} onChange={e => setAdminFilter(e.target.value)} placeholder="username contains..." className="px-2 py-1 rounded border text-sm" />
+          
+          <div className="flex flex-wrap gap-4 items-end justify-between">
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Admin</label>
+                <input value={adminFilter} onChange={e => setAdminFilter(e.target.value)} placeholder="username contains..." className="px-2 py-1 rounded border text-sm" />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Department</label>
+                <input value={deptFilter} onChange={e => setDeptFilter(e.target.value)} placeholder="dept id contains..." className="px-2 py-1 rounded border text-sm" />
+              </div>
+              {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'cards' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
+              >Cards</button>
+              
+              <button
+                onClick={() => setViewMode('heatmap')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'heatmap' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
+              >Heatmap</button>
+              
+              <button
+                onClick={() => setViewMode('summary')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
+              >Summary</button>
+              
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
+                }}
+                className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white"
+              >Refresh</button>
+            </div>
           </div>
-            <div className="flex flex-col">
-            <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Department</label>
-            <input value={deptFilter} onChange={e => setDeptFilter(e.target.value)} placeholder="dept id contains..." className="px-2 py-1 rounded border text-sm" />
-          </div>
-          {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
         </div>
-
+        
         {loading && (
           <div className="w-full p-4 text-center text-sm animate-pulse">Loading mapping...</div>
         )}
@@ -211,7 +217,7 @@ export default function AdminBatchMappingPage() {
         )}
 
         {!loading && !error && viewMode === 'cards' && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
             {admins.map((a, idx) => (
               <AdminCard key={a.adminId} admin={a} colorClass={palette[idx % palette.length]} />
             ))}
