@@ -82,22 +82,22 @@ export default function Login() {
         
       `}</style>
 
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
         <Toaster position="top-center" />
         <div className="rounded-3xl p-[2px] bg-gradient-to-r from-fuchsia-700 to-purple-600 w-full max-w-md">
-          <div className="rounded-3xl shadow-2xl p-10 relative bg-white border border-transparent text-black">
+          <div className="rounded-3xl shadow-2xl p-6 sm:p-10 relative bg-white border border-transparent text-black">
           {/* Success Animation Overlay inside the box */}
           {showSuccess && (
-            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70">
-              <div className="p-6">
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 px-4">
+              <div className="p-4 sm:p-6">
                 <div className="relative">
                   {/* Outer Circle with scale animation */}
-                  <div className={`w-24 h-24 rounded-full flex items-center justify-center animate-scale-in ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}>
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center animate-scale-in ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}>
                     {/* Inner colored circle */}
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-white bg-white">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center ring-2 ring-white bg-white">
                       {/* Checkmark with gradient stroke and draw animation */}
                       <svg
-                        className="w-12 h-12"
+                        className="w-10 h-10 sm:w-12 sm:h-12"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden
@@ -125,7 +125,7 @@ export default function Login() {
                     </div>
                   </div>
                   {/* Success ripple effect */}
-                  <div className={`absolute inset-0 w-24 h-24 rounded-full opacity-30 animate-ripple ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}></div>
+                  <div className={`absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full opacity-30 animate-ripple ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}></div>
                 </div>
               </div>
               {/* Success Text */}
@@ -136,12 +136,12 @@ export default function Login() {
           )}
 
             <div className="flex flex-col items-center mb-6">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-md bg-white">
-              <svg className="w-10 h-10 text-black" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-md bg-white">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mt-4 text-black">MavLink</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mt-4 text-black">MavLink</h2>
             <p className="text-black text-sm">Please login to continue</p>
           </div>
 

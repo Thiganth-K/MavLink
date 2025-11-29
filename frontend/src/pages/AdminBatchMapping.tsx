@@ -153,7 +153,7 @@ export default function AdminBatchMappingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SuperAdminNavbar onLogout={() => {}} />
+      <SuperAdminNavbar/>
       <main className="flex-grow px-4 py-8 max-w-7xl mx-auto w-full">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
@@ -165,26 +165,17 @@ export default function AdminBatchMappingPage() {
               onClick={() => setViewMode('cards')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'cards' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
             >Cards</button>
-            <button
-              onClick={() => setViewMode('matrix')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'matrix' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >Matrix</button>
+            
             <button
               onClick={() => setViewMode('heatmap')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'heatmap' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
             >Heatmap</button>
-            <button
-              onClick={() => setViewMode('dept')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'dept' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >By Dept</button>
+            
             <button
               onClick={() => setViewMode('summary')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
             >Summary</button>
-            <button
-              onClick={() => setViewMode('graph')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'graph' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-            >Graph</button>
+            
             <button
               onClick={async () => {
                 setLoading(true);
@@ -192,6 +183,12 @@ export default function AdminBatchMappingPage() {
               }}
               className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white"
             >Refresh</button>
+            <button
+              onClick={() => { window.location.href = '/super-admin'; }}
+              className="px-3 py-1.5 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-4 items-end">
