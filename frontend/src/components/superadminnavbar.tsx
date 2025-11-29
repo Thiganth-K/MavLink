@@ -30,12 +30,7 @@ export default function SuperAdminNavbar() {
     return () => { if (poll.current) window.clearInterval(poll.current); window.removeEventListener('notificationsChanged', onNotifs as EventListener); };
   }, []);
 
-  const markRead = async (id: string) => {
-    try {
-      await notificationAPI.markRead(id);
-      await load();
-    } catch (e) { console.error(e); }
-  };
+    // markRead removed to satisfy TS unused
 
   const logout = () => {
     localStorage.removeItem('user');

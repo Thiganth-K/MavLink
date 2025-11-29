@@ -1,0 +1,23 @@
+{
+  "name": "mavlink",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cd frontend && npm run build",
+    "start": "node backend/src/server.js",
+    "serve": "npm run build; node backend/src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thiganth-K/MavLink.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Thiganth-K/MavLink/issues"
+  },
+  "homepage": "https://github.com/Thiganth-K/MavLink#readme",
+  "description": ""
+}

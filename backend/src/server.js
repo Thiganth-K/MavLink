@@ -1,5 +1,11 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Always load .env from backend folder, even if run from project root
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -26,6 +32,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Resolve frontend dist path
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
 
 // Read from .env
 const PORT = process.env.PORT || 3000;
@@ -82,10 +91,25 @@ app.use('/api/departments', departmentRoutes);
 // Chat and notifications
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
-// Simple test route
-app.get('/', (req, res) => {
+// Health check route (API only)
+app.get('/api/health', (req, res) => {
   logger.debug('Health check route hit');
   res.send('Server is up and running');
+});
+
+// Serve frontend static files
+app.use(express.static(frontendDistPath));
+
+// Fallback to index.html for non-API routes (SPA)
+// Use a middleware instead of wildcard route to avoid path-to-regexp '*' errors
+app.use((req, res, next) => {
+  // Only handle GET requests
+  if (req.method !== 'GET') return next();
+  // Skip API routes
+  if (req.path.startsWith('/api')) return next();
+  // If the request matches a file in dist, let express.static serve it
+  // Otherwise, serve index.html (client-side routing)
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 // Start server
