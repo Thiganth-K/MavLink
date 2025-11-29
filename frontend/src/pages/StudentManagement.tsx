@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { studentAPI, type Student } from '../services/api';
-import Footer from '../components/Admin/AdminFooter';
+
 
 export default function StudentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -173,7 +173,7 @@ export default function StudentManagement() {
         <div className="bg-purple-950 rounded-xl shadow-xl p-6 mb-6">
             <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-purple-50">Student Management (Legacy)</h1>
+              <h1 className="text-3xl font-bold text-purple-50">Student Management</h1>
               <p className="text-purple-200 mt-2">Welcome back, {user.username} ({role})</p>
             </div>
             <button
@@ -379,7 +379,6 @@ export default function StudentManagement() {
         </div>
       </div>
       
-      <Footer />
     </div>
   );
 }

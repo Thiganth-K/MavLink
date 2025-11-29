@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import ViewAnalysisCard from '../components/ViewAnalysisCard';
 import BatchViewer from './BatchViewer';
 import { FiUserPlus, FiLayers, FiList, FiUsers, FiMap, FiDownload, FiBarChart2, FiMessageSquare } from 'react-icons/fi';
+import { notificationAPI } from '../services/api';
 
 export default function SuperAdminDashboard() {
   const [showBatchViewerPanel] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     const role = localStorage.getItem('role');
@@ -20,12 +24,72 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
+  // Load unread notifications for overlay cards
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await notificationAPI.list();
+        const arr = Array.isArray(res) ? res : [];
+        const unread = arr.filter((n: any) => !n.read);
+        setNotifications(unread.slice(0, 5));
+        setUnreadCount(unread.length);
+      } catch (e) {
+        // silent fail
+      }
+    };
+    load();
+    pollRef.current = window.setInterval(load, 10000) as unknown as number;
+    const onNotifs = () => { load().catch(() => {}); };
+    window.addEventListener('notificationsChanged', onNotifs as EventListener);
+    return () => {
+      if (pollRef.current) window.clearInterval(pollRef.current);
+      window.removeEventListener('notificationsChanged', onNotifs as EventListener);
+    };
+  }, []);
+
   // user info is not required here; remove unused variable to avoid linter warnings
 
   return (
     
     <div className="min-h-screen  flex flex-col bg-white pt-8 px-6 pb-4 ">
       <Toaster position="top-right" />
+      {/* Unread messages overlay cards */}
+      {unreadCount > 0 && (
+        <div className="fixed right-6 top-6 z-50 w-80 sm:w-96">
+          <div className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-violet-200 overflow-hidden">
+            <div className="px-4 py-3 border-b bg-gradient-to-r from-violet-600 to-purple-700 text-white flex items-center justify-between">
+              <div className="font-semibold">You have {unreadCount} unread message{unreadCount === 1 ? '' : 's'}</div>
+              <button
+                onClick={() => { window.location.href = '/super-admin/messages'; }}
+                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full"
+              >
+                Open Chat
+              </button>
+            </div>
+            <div className="max-h-64 overflow-auto p-3 space-y-3">
+              {notifications.map((n: any) => (
+                <div
+                  key={n._id || n.id}
+                  onClick={async () => {
+                    try {
+                      await notificationAPI.markRead(n._id || n.id).catch(() => {});
+                      const adminId = (n.sender && (n.sender.adminId || n.sender._id)) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
+                      window.location.href = adminId
+                        ? `/super-admin/messages?adminId=${encodeURIComponent(String(adminId))}`
+                        : '/super-admin/messages';
+                    } catch {}
+                  }}
+                  className="cursor-pointer bg-white rounded-xl shadow-md border border-gray-100 px-3 py-2 hover:shadow-lg transition-all"
+                >
+                  <div className="text-sm font-semibold text-purple-900">{n.sender?.username || n.sender?.adminId || 'Message'}</div>
+                  <div className="text-xs text-gray-600 mt-0.5">{n.message || (n.meta && n.meta.preview) || 'New message'}</div>
+                  <div className="text-[10px] text-gray-400 mt-1">{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       
 
       {!showBatchViewerPanel && (

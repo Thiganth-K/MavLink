@@ -104,20 +104,26 @@ export default function AdminManagementPage() {
     <div className="min-h-screen bg-white p-6">
       <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-3">
           <h1 className="text-3xl font-bold text-purple-950">Admin Management</h1>
-          <button
-            onClick={() => {
-              if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-purple-800 transition-colors"
-          >
-            {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
-          </button>
-          <button
-            onClick={() => { window.location.href = '/super-admin'; }}
-            className="px-4 py-2 bg-white border border-purple-950 text-purple-950 rounded-lg shadow hover:border-purple-700 hover:shadow-md transition-colors"
-          >Back to Dashboard</button>
+
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 sm:gap-3">
+            <button
+              onClick={() => {
+                if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
+              }}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:from-fuchsia-800 hover:to-purple-700 transition-colors"
+            >
+              {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
+            </button>
+
+            <button
+              onClick={() => { window.location.href = '/super-admin'; }}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-white border border-purple-950 text-purple-950 rounded-lg shadow hover:border-purple-700 hover:shadow-md transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
           
         

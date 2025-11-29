@@ -164,18 +164,18 @@ export default function StudentAnalysisDashboard() {
             </div>
             <button onClick={fetchStats} disabled={!selectedDept || loading} className="px-5 py-2 bg-supergreenDark text-white rounded-lg shadow hover:bg-supergreenAccent transition-colors disabled:opacity-50">{loading ? 'Loading...' : 'Refresh'}</button>
           </div>
-          <div className="mt-4 flex flex-wrap gap-6">
-            <div className="flex flex-col bg-supercream/60 rounded-lg p-4 w-48 shadow">
-              <span className="text-xs text-supergreenDark/70 font-medium">Avg Attendance %</span>
-              <span className="text-2xl font-bold text-supergreenDark mt-1">{averagePct.toFixed(2)}%</span>
+          <div className="mt-4 flex gap-2 sm:gap-4 md:gap-6 justify-between items-stretch">
+            <div className="flex flex-col bg-supercream/60 rounded-lg px-2 py-3 sm:px-3 sm:py-4 md:p-4 w-1/3 min-w-0 shadow">
+              <span className="text-[11px] sm:text-xs text-supergreenDark/70 font-medium">Avg Attendance %</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-supergreenDark mt-1">{averagePct.toFixed(2)}%</span>
             </div>
-            <div className="flex flex-col bg-supercream/60 rounded-lg p-4 w-48 shadow">
-              <span className="text-xs text-supergreenDark/70 font-medium">Students &lt; 75%</span>
-              <span className="text-2xl font-bold text-red-600 mt-1">{belowThreshold}</span>
+            <div className="flex flex-col bg-supercream/60 rounded-lg px-2 py-3 sm:px-3 sm:py-4 md:p-4 w-1/3 min-w-0 shadow">
+              <span className="text-[11px] sm:text-xs text-supergreenDark/70 font-medium">Students &lt; 75%</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 mt-1">{belowThreshold}</span>
             </div>
-            <div className="flex flex-col bg-supercream/60 rounded-lg p-4 w-48 shadow">
-              <span className="text-xs text-supergreenDark/70 font-medium">Total Students</span>
-              <span className="text-2xl font-bold text-supergreenDark mt-1">{stats.length}</span>
+            <div className="flex flex-col bg-supercream/60 rounded-lg px-2 py-3 sm:px-3 sm:py-4 md:p-4 w-1/3 min-w-0 shadow">
+              <span className="text-[11px] sm:text-xs text-supergreenDark/70 font-medium">Total Students</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-supergreenDark mt-1">{stats.length}</span>
             </div>
           </div>
         </div>

@@ -178,11 +178,6 @@ export default function BatchManagement() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex justify-between items-center">
-				<h1 className="text-2xl font-bold text-purple-950">
-					{selectedBatchForDetail ? 'Student Details' : 'Batch Management'}
-				</h1>
-			</div>
 
 			{selectedBatchForDetail ? (
 				<BatchStudentDetails
@@ -192,19 +187,20 @@ export default function BatchManagement() {
 			) : (
 				<div className="bg-white rounded-xl shadow-xl p-6">
 					<div className="flex justify-between items-center mb-6">
+						<p className="mb-4 text-purple-800">Click on any batch card to view student details</p>
 						<div className="ml-auto flex gap-3">
-							<button
-								onClick={() => {
-									if (showForm) {
-										resetForm();
-									} else {
-										setShowForm(true);
-									}
-								}}
-								className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-							>
-								{showForm ? (editingBatch ? 'Cancel Edit' : 'Cancel') : 'Create New Batch'}
-							</button>
+								<button
+									onClick={() => {
+										if (showForm) {
+											resetForm();
+										} else {
+											setShowForm(true);
+										}
+									}}
+									className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+								>
+									{showForm ? (editingBatch ? 'Cancel Edit' : 'Cancel') : 'Create New Batch'}
+								</button>
 						</div>
 					</div>
 
@@ -324,16 +320,17 @@ export default function BatchManagement() {
 				</div>
 			) : (
 				<div>
-					<p className="mb-4 text-purple-800">Click on any batch card to view student details</p>
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 						{batches.map(batch => (
-							<button
-								key={batch._id}
-								type="button"
-								onClick={() => setSelectedBatchForDetail(batch)}
-								aria-label={`View students in ${batch.batchName}`}
-								className="w-full text-left bg-white rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-2xl hover:scale-[1.02] hover:border-purple-400 transition-all duration-300 p-5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-300"
-							>
+							<div
+									key={batch._id}
+									role="button"
+									tabIndex={0}
+									onClick={() => setSelectedBatchForDetail(batch)}
+									onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedBatchForDetail(batch); } }}
+									aria-label={`View students in ${batch.batchName}`}
+									className="w-full text-left bg-white rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-2xl hover:scale-[1.02] hover:border-purple-400 transition-all duration-300 p-5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-300"
+								>
 								<div className="flex items-start justify-between mb-3">
 									<div className="flex-1 min-w-0">
 										<h3 className="text-base md:text-lg font-bold text-purple-950 truncate mb-1">
@@ -387,7 +384,8 @@ export default function BatchManagement() {
 										Delete
 									</button>
 								</div>
-							</button>
+							</div>
+							
 						))}
 					</div>
 				</div>
