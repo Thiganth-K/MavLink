@@ -187,7 +187,7 @@ export default function StudentManagement() {
                   window.location.href = '/';
                 }
               }}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
             >
               Back to Dashboard
             </button>
@@ -210,7 +210,7 @@ export default function StudentManagement() {
             <button
               type="submit"
               disabled={isLoading || !csvFile}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="px-6 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50"
             >
               Upload CSV
             </button>
@@ -228,13 +228,13 @@ export default function StudentManagement() {
                   setEditingStudent(null);
                   setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
                 }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
               >
                 {showCreateForm ? 'Cancel' : 'Add Student'}
               </button>
               <button
                 onClick={handleDeleteAllStudents}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-red-50 text-red-700 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
               >
                 Delete All
               </button>
@@ -302,7 +302,7 @@ export default function StudentManagement() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                    className="px-6 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50"
                   >
                     {isLoading ? 'Saving...' : (editingStudent ? 'Update Student' : 'Add Student')}
                   </button>
@@ -310,7 +310,7 @@ export default function StudentManagement() {
                     <button
                       type="button"
                       onClick={cancelEdit}
-                      className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      className="px-6 py-2 bg-gray-50 text-gray-700 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
@@ -358,13 +358,13 @@ export default function StudentManagement() {
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => startEdit(student)}
-                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                            className="px-3 py-1 bg-yellow-50 text-yellow-700 border border-yellow-600 rounded hover:bg-yellow-50 transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteStudent(student._id!)}
-                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                            className="px-3 py-1 bg-red-50 text-red-700 border border-red-600 rounded hover:bg-red-50 transition-colors"
                           >
                             Delete
                           </button>

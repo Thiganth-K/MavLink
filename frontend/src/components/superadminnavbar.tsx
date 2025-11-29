@@ -70,7 +70,7 @@ export default function SuperAdminNavbar() {
                   <ul className="space-y-3">
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/adminManagement'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center flex-shrink-0">
                           <FiUserPlus className="w-5 h-5" />
                         </div>
                         <div>
@@ -82,7 +82,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/batch-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center flex-shrink-0">
                           <FiLayers className="w-5 h-5" />
                         </div>
                         <div>
@@ -94,7 +94,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/viewbatches'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-violet-50 text-violet-700 border border-violet-600 flex items-center justify-center flex-shrink-0">
                           <FiList className="w-5 h-5" />
                         </div>
                         <div>
@@ -106,7 +106,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/student-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center flex-shrink-0">
                           <FiUsers className="w-5 h-5" />
                         </div>
                         <div>
@@ -118,7 +118,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/admin-batch-mapping'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center flex-shrink-0">
                           <FiMap className="w-5 h-5" />
                         </div>
                         <div>
@@ -130,7 +130,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/export'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-violet-50 text-violet-700 border border-violet-600 flex items-center justify-center flex-shrink-0">
                           <FiDownload className="w-5 h-5" />
                         </div>
                         <div>
@@ -142,7 +142,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/student-analysis'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center flex-shrink-0">
                           <FiBarChart2 className="w-5 h-5" />
                         </div>
                         <div>
@@ -154,7 +154,7 @@ export default function SuperAdminNavbar() {
 
                     <li>
                       <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/messages'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center flex-shrink-0">
                           <FiMessageSquare className="w-5 h-5" />
                         </div>
                         <div>
@@ -213,7 +213,7 @@ export default function SuperAdminNavbar() {
           )}
 
           {/* Logout button moved outside the dropdown so it's always visible */}
-          <button onClick={logout} className="ml-2 px-3 py-1 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded flex items-center">
+          <button onClick={logout} className="ml-2 px-3 py-1 bg-red-50 text-red-700 border border-red-600 hover:bg-red-50 rounded flex items-center">
             <FaSignOutAlt className="w-4 h-4 mr-2" />
             <span>Logout</span>
           </button>
