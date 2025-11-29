@@ -181,16 +181,25 @@ export default function StudentManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-purple-950 rounded-xl shadow-xl p-6 mb-6">
-          <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-purple-50">Student Management (Legacy)</h1>
               <p className="text-purple-200 mt-2">Welcome back, {user.username} ({role})</p>
             </div>
             <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-lg transition-colors"
+              onClick={() => {
+                const r = localStorage.getItem('role');
+                if (r === 'SUPER_ADMIN') {
+                  window.location.href = '/super-admin';
+                } else if (r === 'ADMIN') {
+                  window.location.href = '/admin-dashboard';
+                } else {
+                  window.location.href = '/';
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              Logout
+              Back to Dashboard
             </button>
           </div>
         </div>
