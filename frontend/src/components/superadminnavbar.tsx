@@ -100,7 +100,7 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
           )}
 
           {/* Logout button moved outside the dropdown so it's always visible */}
-          <button onClick={logout} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Logout</button>
+          <button onClick={logout} className="ml-2 px-3 py-1 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded">Logout</button>
         </div>
       </div>
     </nav>

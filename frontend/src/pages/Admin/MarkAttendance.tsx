@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { FaRegCalendarAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { FiAlertTriangle } from 'react-icons/fi';
 import { studentAPI, attendanceAPI, batchAPI, type Student, type Attendance } from '../../services/api';
 import { getTodayIST, formatDateForDisplay } from '../../utils/dateUtils';
 import ResponsiveTable from '../../components/Admin/ResponsiveTable';
@@ -220,7 +220,10 @@ export default function MarkAttendance() {
         <div>
           <h2 className="text-2xl font-bold text-purple-950">Mark Attendance - {selectedSession === 'FN' ? 'Forenoon Session' : 'Afternoon Session'}</h2>
           {attendanceRecords.length > 0 ? (
-            <p className="text-sm text-orange-600 mt-1 font-medium">⚠️ {selectedSession} attendance already marked for {formatDateForDisplay(selectedDate)}. You can update it below.</p>
+            <div>
+              <p className="text-sm text-orange-600 mt-1 font-medium flex items-center gap-2"><FiAlertTriangle className="text-orange-600" aria-hidden />{selectedSession} attendance already marked for {formatDateForDisplay(selectedDate)}.</p>
+              <p className="text-sm text-orange-600 mt-1 font-medium">You can update it in below!!</p>
+            </div>
           ) : (
             <p className="text-sm text-purple-600 mt-1 font-medium">✓ No {selectedSession} attendance marked yet for {formatDateForDisplay(selectedDate)}</p>
           )}
@@ -235,7 +238,7 @@ export default function MarkAttendance() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full md:w-auto pr-10 px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                className="w-full md:w-auto pr-2 px-2 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
               />
               <button
                 type="button"
@@ -243,7 +246,6 @@ export default function MarkAttendance() {
                 onClick={() => { const el = dateInputRef.current as any; if (!el) return; if (typeof el.showPicker === 'function') el.showPicker(); else el.focus(); }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-800 p-1"
               >
-                <FaRegCalendarAlt size={18} />
               </button>
             </div>
           </div>

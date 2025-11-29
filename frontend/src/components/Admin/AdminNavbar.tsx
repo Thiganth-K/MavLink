@@ -52,7 +52,7 @@ export default function AdminNavbar() {
   
 
   return (
-    <nav className="bg-purple-950 shadow-lg sticky top-0 z-50">
+    <nav className="bg-purple-950 shadow-lg sticky top-0 z-50 py-0">
       <style>{`
         @keyframes shake {
           0% { transform: translateX(0) rotate(0); }
@@ -69,7 +69,7 @@ export default function AdminNavbar() {
         }
       `}</style>
       <div className="w-full mx-0 px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
           <div className="flex items-center gap-3">
             <svg
               className="w-8 h-8 text-purple-400"

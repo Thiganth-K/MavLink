@@ -92,7 +92,7 @@ export default function Login() {
               <div className="p-6">
                 <div className="relative">
                   {/* Outer Circle with scale animation */}
-                  <div className="w-24 h-24 rounded-full flex items-center justify-center animate-scale-in bg-gradient-to-r from-fuchsia-700 to-purple-600">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center animate-scale-in ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}>
                     {/* Inner colored circle */}
                     <div className="w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-white bg-white">
                       {/* Checkmark with gradient stroke and draw animation */}
@@ -107,11 +107,15 @@ export default function Login() {
                             <stop offset="0%" stopColor="#C026D3" />
                             <stop offset="100%" stopColor="#7C3AED" />
                           </linearGradient>
+                          <linearGradient id="tickGradLogout" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#F43F5E" />
+                            <stop offset="100%" stopColor="#991B1B" />
+                          </linearGradient>
                         </defs>
                         <path
                           d="M5 13l4 4L19 7"
                           className="animate-draw-check"
-                          stroke="url(#tickGrad)"
+                          stroke={animationType === 'logout' ? 'url(#tickGradLogout)' : 'url(#tickGrad)'}
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -121,7 +125,7 @@ export default function Login() {
                     </div>
                   </div>
                   {/* Success ripple effect */}
-                  <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 opacity-30 animate-ripple"></div>
+                  <div className={`absolute inset-0 w-24 h-24 rounded-full opacity-30 animate-ripple ${animationType === 'logout' ? 'bg-gradient-to-r from-red-600 to-red-800' : 'bg-gradient-to-r from-fuchsia-700 to-purple-600'}`}></div>
                 </div>
               </div>
               {/* Success Text */}

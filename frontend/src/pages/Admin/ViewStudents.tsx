@@ -102,7 +102,7 @@ export default function ViewStudents() {
 
           {isLoading ? (
             <div className="overflow-x-auto">
-              <table className="min-w-[720px] w-full border-collapse border border-purple-200">
+              <table className="min-w-[720px] w-full table-auto border-collapse border border-purple-200">
                 <tbody>
                   <tr>
                     <td colSpan={5} className="border border-purple-200 px-4 py-8 text-center text-purple-600">Loading students...</td>
@@ -113,7 +113,7 @@ export default function ViewStudents() {
           ) : students.length === 0 ? (
             <div className="overflow-x-auto">
               <ResponsiveTable>
-                <table className="min-w-[720px] w-full border-collapse border border-purple-200">
+                <table className="min-w-[720px] w-full table-auto border-collapse border border-purple-200">
                 <tbody>
                   <tr>
                     <td colSpan={5} className="border border-purple-200 px-4 py-8 text-center text-purple-600">No students found</td>
@@ -124,32 +124,32 @@ export default function ViewStudents() {
             </div>
           ) : (
             <div id="students-data" className="overflow-x-auto">
-              <table className="w-full border-collapse border border-purple-200">
+              <table className="w-full table-auto border-collapse border border-purple-200">
                 <thead>
                   <tr className="bg-purple-100">
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Reg Number</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Student Name</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Email</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Department</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Phone</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Days Present</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Days Absent</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Days OD</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold">Attendance %</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Reg Number</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top min-w-[180px]">Student Name</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Email</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Department</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Phone</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days Present</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days Absent</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days OD</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Attendance %</th>
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((student) => (
                     <tr key={student._id} className="hover:bg-purple-50">
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.regno}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.studentname}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.email}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.dept}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.phno}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].present : '-'}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].absent : '-'}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].onDuty : '-'}</td>
-                      <td className="border border-purple-200 px-4 py-3 text-purple-900">{attendanceStats[student.regno || student._id || ''] ? `${attendanceStats[student.regno || student._id || ''].attendancePercentage}%` : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{student.regno}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top whitespace-nowrap truncate max-w-[220px]">{student.studentname}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{student.email}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{student.dept}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{student.phno}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].present : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].absent : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].onDuty : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? `${attendanceStats[student.regno || student._id || ''].attendancePercentage}%` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>
