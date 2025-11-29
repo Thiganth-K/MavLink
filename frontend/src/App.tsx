@@ -233,6 +233,16 @@ function App() {
     );
   }
 
+  if (path === '/super-admin/student-management') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar onLogout={() => {}} />
+        <StudentManagement />
+        <SuperAdminFooter />
+      </div>
+    );
+  }
+
   // Standalone ViewAnalysisPage route removed — View Analysis is now in-dashboard.
 
   if (path === '/super-admin/student-analysis') {

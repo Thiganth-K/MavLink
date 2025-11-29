@@ -65,7 +65,7 @@ export default function SuperAdminDashboard() {
                   </li>
 
                   <li>
-                    <button onClick={() => { window.location.pathname = '/student-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
+                    <button onClick={() => { window.location.pathname = '/super-admin/student-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
                       <div className="h-10 w-10 rounded-md bg-violet-100 text-violet-800 flex items-center justify-center font-bold">SM</div>
                       <div>
                         <div className="font-semibold text-violet-900">Student Management</div>

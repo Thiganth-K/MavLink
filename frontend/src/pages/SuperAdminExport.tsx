@@ -69,8 +69,20 @@ export default function SuperAdminExport() {
     <div className="min-h-screen bg-gradient-to-br from-violet-100 to-violet-300 p-6">
       <Toaster position="top-center" />
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl p-6 border border-violet-200">
-        <h1 className="text-3xl font-extrabold text-violet-950 mb-2">Super Admin Export</h1>
-        <p className="text-violet-700 mb-6">Select departments and date range or use quick presets to export filtered data. Use Super Export to include all departments and data.</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold text-violet-950 mb-2">Super Admin Export</h1>
+            <p className="text-violet-700 mb-6">Select departments and date range or use quick presets to export filtered data. Use Super Export to include all departments and data.</p>
+          </div>
+          <div>
+            <button
+              onClick={() => { window.location.href = '/super-admin'; }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
