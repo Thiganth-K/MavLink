@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI, type Student } from '../services/api';
+import { studentAPI, departmentAPI, type Student } from '../services/api';
 
 
 export default function StudentManagement() {
@@ -13,9 +13,13 @@ export default function StudentManagement() {
     email: '',
     regno: '',
     dept: '',
+    batchId: '',
     phno: ''
   });
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [departments, setDepartments] = useState<{ deptId: string; deptName: string }[]>([]);
+  const [batches, setBatches] = useState<{ batchId: string; batchName: string; deptId?: string }[]>([]);
+  const [filterDept, setFilterDept] = useState<string>('');
 
   // Check if user is authenticated (Legacy page - use AdminDashboard instead)
   useEffect(() => {
@@ -29,7 +33,30 @@ export default function StudentManagement() {
     }
     
     fetchStudents();
+    fetchDepartments();
+    fetchBatches();
   }, []);
+
+  const fetchBatches = async () => {
+    try {
+      const all = await (await import('../services/api')).batchAPI.getBatches();
+      setBatches(Array.isArray(all) ? all.map((b: any) => ({ batchId: b.batchId, batchName: b.batchName, deptId: b.deptId })) : []);
+    } catch (err) {
+      console.debug('Failed to load batches', err);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const depts = await departmentAPI.listDepartments();
+      // normalize to expected shape
+      const arr = Array.isArray(depts) ? depts : [];
+      setDepartments(arr.map((d: any) => ({ deptId: String(d.deptId || d.dept || '').toUpperCase(), deptName: d.deptName || d.dept || d.deptId || '' })));
+    } catch (err) {
+      // non-fatal: keep departments empty and allow free-text input
+      console.debug('Failed to load departments', err);
+    }
+  };
 
   const fetchStudents = async () => {
     try {
@@ -55,7 +82,7 @@ export default function StudentManagement() {
       setIsLoading(true);
       await studentAPI.createStudent(formData);
       toast.success('Student created successfully');
-      setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
+      setFormData({ studentname: '', email: '', regno: '', dept: '', batchId: '', phno: '' });
       setShowCreateForm(false);
       fetchStudents();
     } catch (error: any) {
@@ -77,7 +104,7 @@ export default function StudentManagement() {
       setIsLoading(true);
       await studentAPI.updateStudent(editingStudent._id!, formData);
       toast.success('Student updated successfully');
-      setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
+      setFormData({ studentname: '', email: '', regno: '', dept: '', batchId: '', phno: '' });
       setEditingStudent(null);
       fetchStudents();
     } catch (error: any) {
@@ -151,6 +178,7 @@ export default function StudentManagement() {
       email: student.email || '',
       regno: student.regno || '',
       dept: student.dept || '',
+      batchId: (student.batchId as string) || '',
       phno: student.phno || ''
     });
     setShowCreateForm(false);
@@ -158,7 +186,7 @@ export default function StudentManagement() {
 
   const cancelEdit = () => {
     setEditingStudent(null);
-    setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
+    setFormData({ studentname: '', email: '', regno: '', dept: '', batchId: '', phno: '' });
   };
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -226,7 +254,7 @@ export default function StudentManagement() {
                 onClick={() => {
                   setShowCreateForm(!showCreateForm);
                   setEditingStudent(null);
-                  setFormData({ studentname: '', email: '', regno: '', dept: '', phno: '' });
+                  setFormData({ studentname: '', email: '', regno: '', dept: '', batchId: '', phno: '' });
                 }}
                 className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
               >
@@ -239,6 +267,31 @@ export default function StudentManagement() {
                 Delete All
               </button>
             </div>
+          </div>
+
+          {/* Department filter */}
+          <div className="flex items-center gap-4 mb-4">
+            <label className="block text-purple-900 font-medium">Filter by Department</label>
+            <select
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+              className="px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            >
+              <option value="">All departments</option>
+              { (departments && departments.length > 0 ? departments : Array.from(new Set(students.map(s => String(s.dept || '').toUpperCase()))).map(d => ({ deptId: d, deptName: d })) )
+                .filter(d => d.deptId)
+                .map(d => (
+                <option key={d.deptId} value={String(d.deptId).toUpperCase()}>{`${d.deptId} - ${d.deptName}`}</option>
+              ))}
+            </select>
+            {filterDept && (
+              <button
+                onClick={() => setFilterDept('')}
+                className="px-3 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {/* Create/Edit Form */}
@@ -280,13 +333,46 @@ export default function StudentManagement() {
                 </div>
                 <div>
                   <label className="block text-purple-900 mb-1 font-medium">Department *</label>
-                  <input
-                    type="text"
-                    value={formData.dept}
-                    onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
-                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                    required
-                  />
+                  {departments && departments.length > 0 ? (
+                    <select
+                      value={formData.dept}
+                      onChange={(e) => setFormData({ ...formData, dept: e.target.value, batchId: '' })}
+                      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      required
+                    >
+                      <option value="">Select department</option>
+                      {departments.map((d) => (
+                        <option key={d.deptId} value={d.deptId}>{`${d.deptId} - ${d.deptName}`}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.dept}
+                      onChange={(e) => setFormData({ ...formData, dept: e.target.value })}
+                      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                      required
+                    />
+                  )}
+                </div>
+
+                {/* Batch selector filtered by selected department (optional) */}
+                <div>
+                  <label className="block text-purple-900 mb-1 font-medium">Batch (optional)</label>
+                  {batches && batches.length > 0 ? (
+                    <select
+                      value={formData.batchId}
+                      onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
+                      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    >
+                      <option value="">(None) - leave unassigned</option>
+                      {batches.filter(b => !formData.dept || String(b.deptId || '').toUpperCase() === String(formData.dept || '').toUpperCase()).map(b => (
+                        <option key={b.batchId} value={b.batchId}>{`${b.batchId} - ${b.batchName}`}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-sm text-purple-600">No batches available</div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-purple-900 mb-1 font-medium">Phone Number *</label>
@@ -347,7 +433,9 @@ export default function StudentManagement() {
                     </td>
                   </tr>
                 ) : (
-                  students.map((student) => (
+                  // apply department filter client-side
+                  (filterDept ? students.filter(s => String(s.dept || '').toUpperCase() === String(filterDept).toUpperCase()) : students)
+                  .map((student) => (
                     <tr key={student._id} className="hover:bg-purple-50">
                       <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.studentname}</td>
                       <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.email}</td>
