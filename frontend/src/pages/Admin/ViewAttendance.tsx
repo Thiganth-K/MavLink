@@ -134,6 +134,8 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
 
 // component is self-contained; props interface removed
 // Make ViewAttendance self-contained: fetch summary and details
+import { adminAPI } from '../../services/api';
+
 export default function ViewAttendance() {
   const [isLoading, setIsLoading] = useState(false);
   const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary[]>([]);
@@ -145,9 +147,20 @@ export default function ViewAttendance() {
   const [endDate, setEndDate] = useState<string>('');
 
   useEffect(() => {
-    fetchAssignedBatches();
+    // Always refresh admin profile and update localStorage before loading batches
+    const refreshProfileAndBatches = async () => {
+      try {
+        const res = await adminAPI.getProfile();
+        if (res && res.profile) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...user, assignedBatchIds: res.profile.assignedBatchIds, adminId: res.profile.adminId, username: res.profile.username }));
+        }
+      } catch {}
+      await fetchAssignedBatches();
+    };
+    refreshProfileAndBatches();
     // initial fetch will happen after assigned batches are loaded (fetchAssignedBatches triggers it)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAssignedBatches = async () => {
@@ -155,7 +168,8 @@ export default function ViewAttendance() {
       (window as any).showGlobalLoader?.('attendance-summary');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
-      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || ''));
+      // Only show batches where batch.adminId matches current admin and batchId is in assignedBatchIds
+      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
       setAssignedBatches(mine);
       if (mine.length > 0) {
         const bid = mine[0].batchId || '';

@@ -49,6 +49,7 @@ export const createStudent = async (req, res) => {
 
 // ---------------- READ ALL ----------------
 export const getStudents = async (req, res) => {
+  const start = Date.now();
   try {
     const { batchId } = req.query;
     const filter = {};
@@ -56,14 +57,13 @@ export const getStudents = async (req, res) => {
       filter.batchId = String(batchId).toUpperCase();
     }
     const students = await Student.find(filter);
-    res.status(200).json(students);
-        const start = Date.now();
-        logger.debug('getStudents start', { query: req.query });
+    logger.debug('getStudents start', { query: req.query });
+    logger.info('getStudents success', { durationMs: Date.now() - start, count: students.length });
+    return res.status(200).json(students);
   } catch (err) {
-        logger.info('getStudents success', { durationMs: Date.now() - start, count: students.length });
-    res.status(500).json({ error: err });
+    logger.error('getStudents error', { error: err && err.message ? err.message : err });
+    return res.status(500).json({ error: err && err.message ? err.message : err });
   }
-        logger.error('getStudents error', { error: err.message });
 };
 
 // ---------------- GET ASSIGNED STUDENTS ----------------

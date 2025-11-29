@@ -51,12 +51,7 @@ select,
 .select {
   background-color: #ffffff !important;
   color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
   box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
 /* Also ensure placeholder text is readable */
-input::placeholder,
-textarea::placeholder {
-  color: #71717a !important;
-}

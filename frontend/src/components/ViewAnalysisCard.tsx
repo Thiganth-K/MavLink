@@ -100,16 +100,54 @@ export default function ViewAnalysisCard() {
   useEffect(() => {
     if (!stats || !stats.length) return;
 
-    // prepare grouped data
+    // prepare grouped data with normalization
     const grouped: Record<string, { total: number; count: number }> = {};
     for (const s of stats) {
-      const dept = (s as any).deptName || (s as any).dept || (s as any).department || 'Unknown';
+      // prefer explicit deptName, then dept, then department
+      const raw = (s as any).deptName ?? (s as any).dept ?? (s as any).department ?? '';
+      let dept = String(raw).trim();
+
+      // If the source contains placeholder values like 'DEPT' or 'DEPARTMENT' or is empty,
+      // try some common alternate fields, otherwise mark as 'Unknown'. This avoids creating
+      // a spurious group named exactly "DEPT" coming from bad/placeholder data.
+      if (!dept || /^dept(?:artment)?$/i.test(dept)) {
+        const alt = (s as any).departmentName ?? (s as any).branch ?? (s as any).deptName ?? '';
+        dept = String(alt || '').trim();
+        if (!dept || /^dept(?:artment)?$/i.test(dept)) {
+          dept = 'Unknown';
+        }
+      }
+
+      // Normalize whitespace and collapse multiple spaces
+      dept = dept.replace(/\s+/g, ' ');
+
       if (!grouped[dept]) grouped[dept] = { total: 0, count: 0 };
-      grouped[dept].total += (s.attendancePercentage || 0);
+      grouped[dept].total += Number(s.attendancePercentage || 0);
       grouped[dept].count += 1;
     }
-    const labels = Object.keys(grouped);
-    const dataValues = labels.map(l => Math.round((grouped[l].total / grouped[l].count) * 100) / 100);
+    // Convert groups to a sortable array and compute averages
+    const entries = Object.keys(grouped).map((k) => ({
+      dept: k,
+      total: grouped[k].total,
+      count: grouped[k].count,
+      avg: grouped[k].count ? grouped[k].total / grouped[k].count : 0,
+    }));
+
+    // Sort by count (most records first), then by average attendance
+    entries.sort((a, b) => (b.count - a.count) || (b.avg - a.avg));
+
+    let labels: string[] = [];
+    let dataValues: number[] = [];
+
+    // Only include entries with a positive count and meaningful department names.
+    // Exclude placeholder values like 'Unknown' or generic 'DEPT'/'DEPARTMENT'.
+    const validEntries = entries.filter(
+      (e) => e.count > 0 && !/^unknown$/i.test(e.dept) && !/^dept(?:artment)?$/i.test(e.dept)
+    );
+
+    // Use only the valid entries (show all counted departments). If none remain, leave labels empty.
+    labels = validEntries.map(e => e.dept);
+    dataValues = validEntries.map(e => Math.round((e.total / Math.max(1, e.count)) * 100) / 100);
 
     const commonOptions = {
       responsive: true,

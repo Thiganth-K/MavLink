@@ -18,7 +18,8 @@ function parseStudents(csvText) {
 		if (!name || !regno || !dept || !email || !mobile) {
 			throw new Error(`Missing field in line: "${line}"`);
 		}
-		students.push({ name, regno, dept, email, mobile });
+		// Map to match Student model: studentname, regno, dept, email, phno
+		students.push({ studentname: name, regno, dept, email, phno: mobile });
 	}
 	return students;
 }
@@ -64,7 +65,15 @@ export const createBatch = async (req, res) => {
 			return res.status(400).json({ message: e.message });
 		}
 		const createdBy = req.headers['x-user'] || 'SUPER_ADMIN';
-		const batch = await Batch.create({ batchId, batchName, batchYear, deptId, adminId: adminId || null, createdBy, students });
+		// Map students to match Batch model schema (name, regno, dept, email, mobile)
+		const batchStudents = students.map(s => ({
+			name: s.studentname,
+			regno: s.regno,
+			dept: s.dept,
+			email: s.email,
+			mobile: s.phno
+		}));
+		const batch = await Batch.create({ batchId, batchName, batchYear, deptId, adminId: adminId || null, createdBy, students: batchStudents });
 
 		// Upsert Student docs with batchId linkage
 		for (const s of students) {
@@ -72,19 +81,19 @@ export const createBatch = async (req, res) => {
 			if (existingStudent) {
 				existingStudent.batchId = batchId;
 				// keep other fields updated optionally
-				existingStudent.studentname = s.name;
+				existingStudent.studentname = s.studentname;
 				existingStudent.dept = s.dept;
 				existingStudent.email = s.email;
-				existingStudent.phno = s.mobile;
+				existingStudent.phno = s.phno;
 				await existingStudent.save();
 			} else {
 				await Student.create({
 					regno: s.regno,
-					studentname: s.name,
+					studentname: s.studentname,
 					dept: s.dept,
 					batchId: batchId,
 					email: s.email,
-					phno: s.mobile
+					phno: s.phno
 				});
 			}
 		}
