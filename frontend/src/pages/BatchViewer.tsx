@@ -1,12 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { batchAPI, type Batch } from '../services/api';
 
-interface Props {
-  onClose: () => void;
-}
-
-export default function BatchViewer({ onClose }: Props) {
+export default function BatchViewer() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null);

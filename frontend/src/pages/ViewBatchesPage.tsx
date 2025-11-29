@@ -1,4 +1,4 @@
-import React from 'react';
+ 
 import BatchViewer from './BatchViewer';
 
 export default function ViewBatchesPage() {
@@ -16,7 +16,7 @@ export default function ViewBatchesPage() {
         </div>
 
         <div className="bg-transparent">
-          <BatchViewer onClose={() => { window.location.pathname = '/super-admin'; }} />
+          <BatchViewer />
         </div>
       </div>
     </div>

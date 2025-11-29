@@ -1,4 +1,4 @@
-import React from 'react';
+ 
 import StudentManagement from './StudentManagement';
 
 export default function SuperAdminStudentManagement() {

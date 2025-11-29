@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI, authAPI, type Student } from '../services/api';
+import { studentAPI, type Student } from '../services/api';
 import Footer from '../components/Admin/AdminFooter';
 
 export default function StudentManagement() {
@@ -142,17 +142,7 @@ export default function StudentManagement() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await authAPI.logout();
-      localStorage.removeItem('user');
-      localStorage.removeItem('role');
-      toast.success('Logged out successfully');
-      window.location.href = '/';
-    } catch (error: any) {
-      toast.error('Logout failed');
-    }
-  };
+  // legacy logout removed; Back to Dashboard now handles navigation
 
   const startEdit = (student: Student) => {
     setEditingStudent(student);

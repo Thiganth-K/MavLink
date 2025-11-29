@@ -4,7 +4,7 @@ import ViewAnalysisCard from '../components/ViewAnalysisCard';
 import BatchViewer from './BatchViewer';
 
 export default function SuperAdminDashboard() {
-  const [showBatchViewerPanel, setShowBatchViewerPanel] = useState(false);
+  const [showBatchViewerPanel] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  // Removed unused 'user' variable to satisfy TypeScript unused rule
 
   return (
     
@@ -129,7 +129,7 @@ export default function SuperAdminDashboard() {
 
       {showBatchViewerPanel && (
         <div className="animate-fadeSlide">
-          <BatchViewer onClose={() => setShowBatchViewerPanel(false)} />
+          <BatchViewer />
         </div>
       )}
     </div>

@@ -5,7 +5,7 @@ import type { AttendanceStats } from '../services/api';
 
 Chart.register(BarController, PieController, BarElement, CategoryScale, LinearScale, ArcElement, LineElement, PointElement, LineController, Tooltip, Legend);
 
-export default function ViewAnalysisCard({ onClose }: { onClose?: () => void }) {
+export default function ViewAnalysisCard() {
   const barRef = useRef<HTMLCanvasElement | null>(null);
   const pieRef = useRef<HTMLCanvasElement | null>(null);
   const lineRef = useRef<HTMLCanvasElement | null>(null);

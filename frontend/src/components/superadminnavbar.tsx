@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { notificationAPI } from '../services/api';
 import { FiBell } from 'react-icons/fi';
 
-interface Props { onLogout?: () => void; }
+interface Props {}
 
-export default function SuperAdminNavbar({ onLogout }: Props) {
+export default function SuperAdminNavbar({}: Props) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unread, setUnread] = useState(0);
@@ -30,12 +30,7 @@ export default function SuperAdminNavbar({ onLogout }: Props) {
     return () => { if (poll.current) window.clearInterval(poll.current); window.removeEventListener('notificationsChanged', onNotifs as EventListener); };
   }, []);
 
-  const markRead = async (id: string) => {
-    try {
-      await notificationAPI.markRead(id);
-      await load();
-    } catch (e) { console.error(e); }
-  };
+    // markRead removed to satisfy TS unused
 
   const logout = () => {
     localStorage.removeItem('user');

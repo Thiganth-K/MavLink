@@ -150,7 +150,7 @@ function App() {
   if (path === '/super-admin') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <SuperAdminDashboard />
         <SuperAdminFooter />
       </div>
@@ -160,7 +160,7 @@ function App() {
   if (path === '/super-admin/messages') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <SuperAdminMessages />
         <SuperAdminFooter />
       </div>
@@ -170,7 +170,7 @@ function App() {
   if (path === '/super-admin/adminManagement') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <AdminManagementPage />
         <SuperAdminFooter />
       </div>
@@ -180,7 +180,7 @@ function App() {
   if (path === '/super-admin/batchManagement') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <BatchManagementPage />
         <SuperAdminFooter />
       </div>
@@ -226,7 +226,7 @@ function App() {
   if (path === '/student-management') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <StudentManagement />
         <SuperAdminFooter />
       </div>
@@ -236,7 +236,7 @@ function App() {
   if (path === '/super-admin/student-management') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <StudentManagement />
         <SuperAdminFooter />
       </div>
@@ -248,7 +248,7 @@ function App() {
   if (path === '/super-admin/student-analysis') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <StudentAnalysisDashboard />
         <SuperAdminFooter />
       </div>
@@ -258,7 +258,7 @@ function App() {
   if (path === '/super-admin/export') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <SuperAdminExport />
         <SuperAdminFooter />
       </div>
@@ -268,7 +268,7 @@ function App() {
   if (path === '/super-admin/viewbatches') {
     return (
       <div className="min-h-screen flex flex-col">
-        <SuperAdminNavbar onLogout={() => {}} />
+        <SuperAdminNavbar />
         <ViewBatchesPage />
         <SuperAdminFooter />
       </div>
