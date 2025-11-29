@@ -194,12 +194,12 @@ const SuperAdminMessages: React.FC = () => {
                         onClick={() => setSelectedAdmin(aid)}
                         className={`w-full flex items-center gap-3 p-4 transition-all duration-200 ${
                           isSelected
-                            ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg transform scale-105 rounded-xl'
+                            ? 'bg-purple-50 text-purple-700 border-2 border-purple-600 shadow-lg transform scale-105 rounded-xl'
                             : 'bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-gray-800 rounded-xl'
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                          isSelected ? 'bg-white/20' : 'bg-gradient-to-br from-purple-400 to-purple-600 text-white'
+                          isSelected ? 'bg-purple-100 text-purple-700 border border-purple-400' : 'bg-purple-50 text-purple-700 border border-purple-600'
                         }`}>
                           {displayName.charAt(0).toUpperCase()}
                         </div>
@@ -244,9 +244,9 @@ const SuperAdminMessages: React.FC = () => {
               ) : (
                 <>
                   {/* Conversation Header */}
-                  <div className="border-b border-gray-200 p-4 bg-gradient-to-r from-purple-50 to-white">
+                  <div className="border-b border-gray-200 p-4 bg-purple-50">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 text-white flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-700 border-2 border-purple-600 flex items-center justify-center font-bold">
                         {(admins.find(a => (a.adminId || a._id).toString() === selectedAdmin)?.username || 'A').charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -272,12 +272,12 @@ const SuperAdminMessages: React.FC = () => {
                           return (
                             <div key={m._id} className={`flex ${fromSuper ? 'justify-end' : 'justify-start'}`}>
                               <div className={`max-w-[70%] ${fromSuper ? 'text-right' : 'text-left'}`}>
-                                <div className={`inline-block px-4 py-3 rounded-2xl shadow-md ${
+                                <div className={`inline-block px-4 py-3 rounded-2xl shadow-md border-2 ${
                                   fromSuper 
-                                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-br-sm' 
-                                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                                    ? 'bg-purple-50 text-purple-900 border-purple-600 rounded-br-sm' 
+                                    : 'bg-white border-gray-200 text-gray-800 rounded-bl-sm'
                                 }`}>
-                                  <div className={`text-xs mb-1 ${fromSuper ? 'text-purple-100' : 'text-gray-500'}`}>
+                                  <div className={`text-xs mb-1 ${fromSuper ? 'text-purple-600' : 'text-gray-500'}`}>
                                     {m.from?.username || m.from?.role || 'User'} • {new Date(m.createdAt).toLocaleTimeString()}
                                   </div>
                                   <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
@@ -325,7 +325,7 @@ const SuperAdminMessages: React.FC = () => {
                       <button
                         onClick={sendReply}
                         disabled={!selectedAdmin || !reply.trim()}
-                        className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none"
+                        className="p-3 rounded-xl bg-white text-purple-700 border-2 border-purple-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-50 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none"
                         aria-label="Send message"
                       >
                         <FiSend size={20} />

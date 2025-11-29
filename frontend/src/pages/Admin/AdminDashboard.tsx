@@ -134,7 +134,7 @@ const AdminDashboard: React.FC = () => {
       <div className="mx-auto max-w-3xl w-full animate-superIn text-black">
         <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-wrap items-center justify-center gap-2">
           <span>Welcome To MavLink,</span>
-          <span className="inline-block bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white px-3 py-0.5 rounded-md font-semibold">
+          <span className="inline-block border-b-2 border-fuchsia-700 text-fuchsia-700 px-1 font-semibold">
             {adminDisplayName}!!
           </span>
         </h2>
@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
         <div className="flex gap-3 flex-wrap mb-6 justify-center items-center">
           <button
             onClick={() => safeNavigate('/admin-dashboard/mark-attendance')}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-full shadow-sm transition"
+            className="inline-flex items-center px-4 py-2 bg-white text-fuchsia-700 rounded-full shadow-sm transition border border-fuchsia-700 hover:bg-fuchsia-50"
           >
             Mark Attendance
           </button>

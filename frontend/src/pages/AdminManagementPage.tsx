@@ -112,7 +112,7 @@ export default function AdminManagementPage() {
               onClick={() => {
                 if (editingAdmin) cancelEdit(); else setShowCreateForm(!showCreateForm);
               }}
-              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:from-fuchsia-800 hover:to-purple-700 transition-colors"
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors"
             >
               {editingAdmin ? 'Cancel Edit' : showCreateForm ? 'Cancel' : 'Create New Admin'}
             </button>
@@ -167,7 +167,7 @@ export default function AdminManagementPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-fuchsia-800 hover:to-purple-700 transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors disabled:opacity-50"
                 >
                   {isLoading ? 'Saving...' : editingAdmin ? 'Update Admin' : 'Create Admin'}
                 </button>
@@ -229,7 +229,7 @@ export default function AdminManagementPage() {
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-fuchsia-800 hover:to-purple-700 transition-colors"
+                    className="px-6 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
                   >Assign</button>
                 </div>
               </form>
@@ -264,7 +264,7 @@ export default function AdminManagementPage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
+                      <div className="h-10 w-10 rounded-full bg-fuchsia-50 text-fuchsia-700 border-2 border-fuchsia-600 flex items-center justify-center font-bold">
                         {admin.username?.charAt(0)?.toUpperCase()}
                       </div>
                       <div>
@@ -284,11 +284,11 @@ export default function AdminManagementPage() {
                   <div className="mt-auto flex gap-2 pt-2">
                     <button
                       onClick={() => startEdit(admin)}
-                      className="flex-1 px-3 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-800 transition-colors"
+                      className="flex-1 px-3 py-2 bg-white text-yellow-600 border border-yellow-600 rounded-lg hover:bg-yellow-50 transition-colors"
                     >Edit</button>
                     <button
                       onClick={() => handleDeleteAdmin(admin._id!)}
-                      className="flex-1 px-3 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-600 hover:to-red-800 transition-colors"
+                      className="flex-1 px-3 py-2 bg-white text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
                     >Delete</button>
                   </div>
                 </div>

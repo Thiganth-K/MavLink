@@ -58,5 +58,5 @@ select,
 /* Also ensure placeholder text is readable */
 input::placeholder,
 textarea::placeholder {
-  color: rgba(0,0,0,0.45) !important;
+  color: #71717a !important;
 }

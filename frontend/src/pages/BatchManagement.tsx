@@ -359,7 +359,7 @@ export default function BatchManagement() {
 											No Admin
 										</span>
 									)}
-									<span className="px-2 py-1 text-xs rounded-full bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white font-bold">
+									<span className="px-2 py-1 text-xs rounded-full bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 font-bold">
 										{batch.students.length} students
 									</span>
 								</div>
@@ -370,7 +370,7 @@ export default function BatchManagement() {
 											e.stopPropagation();
 											startEdit(batch);
 										}}
-										className="flex-1 px-3 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 	hover:to-yellow-700 transition-colors text-sm font-medium"
+										className="flex-1 px-3 py-2 bg-white text-yellow-600 border border-yellow-600 rounded-lg hover:bg-yellow-50 transition-colors text-sm font-medium"
 									>
 										Edit
 									</button>
@@ -379,7 +379,7 @@ export default function BatchManagement() {
 											e.stopPropagation();
 											deleteBatch(batch._id!);
 										}}
-										className="flex-1 px-3 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-900 transition-colors text-sm font-medium"
+										className="flex-1 px-3 py-2 bg-white text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
 									>
 										Delete
 									</button>

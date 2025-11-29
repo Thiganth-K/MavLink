@@ -18,7 +18,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
             {record.status === 'On-Duty' ? (
               <button
                 onClick={() => setShowReason(s => !s)}
-                className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full text-white font-semibold bg-gradient-to-r from-yellow-600 to-yellow-800 hover:from-yellow-700 hover:to-yellow-900 whitespace-nowrap"
+                className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-yellow-50 text-yellow-700 border border-yellow-600 hover:bg-yellow-100 whitespace-nowrap"
                 aria-expanded={showReason}
                 aria-label={showReason ? 'Hide On-Duty reason' : 'Show On-Duty reason'}
                 title={showReason ? 'Hide On-Duty reason' : 'Show On-Duty reason'}
@@ -27,8 +27,8 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
                 <span className="md:hidden">OD</span>
               </button>
             ) : (
-              <span className={`px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full text-white font-semibold whitespace-nowrap ${
-                record.status === 'Present' ? 'bg-gradient-to-r from-fuchsia-700 to-purple-600' : 'bg-gradient-to-r from-red-600 to-red-800'
+              <span className={`px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold border whitespace-nowrap ${
+                record.status === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-red-50 text-red-700 border-red-600'
               }`}>
                 <span className="hidden md:inline">{record.status}</span>
                 <span className="md:hidden">{record.status === 'Present' ? 'P' : 'A'}</span>
@@ -53,15 +53,15 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
 function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords: Attendance[] }) {
   const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
 
-  const renderSession = (session: 'FN' | 'AN') => {
+    const renderSession = (session: 'FN' | 'AN') => {
     const records = attendanceRecords.filter(r => r.session === session);
     const headerBg = session === 'FN' ? 'bg-purple-100' : 'bg-purple-100';
-    const badgeBg = session === 'FN' ? 'bg-purple-800' : 'bg-purple-950';
+    const badgeBg = session === 'FN' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600';
 
     return (
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <span className={`px-4 py-2 text-white rounded-lg font-bold text-lg ${badgeBg}`}>{session === 'FN' ? 'Forenoon (FN)' : 'Afternoon (AN)'}</span>
+          <span className={`px-4 py-2 rounded-lg font-bold text-lg ${badgeBg}`}>{session === 'FN' ? 'Forenoon (FN)' : 'Afternoon (AN)'}</span>
         </div>
         <div>
           <ResponsiveTable>
@@ -105,13 +105,13 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
       {/* mobile toggle */}
       <div className="flex items-center justify-center gap-2 mb-4 md:hidden">
         <button
-          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'FN' ? 'bg-purple-800 text-white' : 'bg-gray-100 text-purple-950'}`}
+          className={`px-3 py-1 rounded-full font-semibold border ${selectedSession === 'FN' ? 'bg-purple-50 text-purple-700 border-purple-600' : 'bg-white text-gray-700 border-gray-300'}`}
           onClick={() => setSelectedSession('FN')}
         >
           FN
         </button>
         <button
-          className={`px-3 py-1 rounded-full font-semibold ${selectedSession === 'AN' ? 'bg-purple-950 text-white' : 'bg-gray-100 text-purple-800'}`}
+          className={`px-3 py-1 rounded-full font-semibold border ${selectedSession === 'AN' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-white text-gray-700 border-gray-300'}`}
           onClick={() => setSelectedSession('AN')}
         >
           AN
@@ -278,7 +278,7 @@ export default function ViewAttendance() {
         {selectedDateForDetail && (
           <button
             onClick={handleBackToSummary}
-            className="px-4 py-2 bg-purple-800 text-white rounded-lg hover:bg-purple-950 transition-colors font-medium"
+            className="px-4 py-2 bg-white text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors font-medium"
           >
             ← Back to Summary
           </button>
@@ -315,7 +315,7 @@ export default function ViewAttendance() {
                     <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded" />
                     <button
                       onClick={() => fetchAttendanceSummary(0, activeBatchId || undefined, startDate || null, endDate || null)}
-                      className="px-3 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded hover:from-fuchsia-800 hover:to-purple-700 transition"
+                      className="px-3 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded hover:bg-fuchsia-50 transition"
                     >
                       Apply
                     </button>
@@ -360,48 +360,48 @@ export default function ViewAttendance() {
 
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-800 text-white rounded text-xs font-bold">FN</span>
+                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded text-xs font-bold">FN</span>
                     </div>
                     <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded-md w-full min-w-0">
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
                         <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
                         <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.fn.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.fn.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
+                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.fn.present}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-red-400 to-red-500 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">A</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.fn.absent}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
+                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                        <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.fn.absent}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">OD</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.fn.onDuty}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
+                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                        <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.fn.onDuty}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-950 text-white rounded text-xs font-bold">AN</span>
+                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded text-xs font-bold">AN</span>
                     </div>
                     <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded-md w-full min-w-0">
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
                         <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
                         <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.an.total}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.an.present}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
+                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                        <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.an.present}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-red-400 to-red-500 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">A</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.an.absent}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
+                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                        <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.an.absent}</span>
                       </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-md w-full min-w-0">
-                        <span className="text-white font-medium text-xxs sm:text-xs">OD</span>
-                        <span className="text-sm md:text-base font-bold text-white truncate">{summary.an.onDuty}</span>
+                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
+                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                        <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.an.onDuty}</span>
                       </div>
                     </div>
                   </div>

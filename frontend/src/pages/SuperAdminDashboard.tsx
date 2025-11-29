@@ -56,12 +56,12 @@ export default function SuperAdminDashboard() {
       {/* Unread messages overlay cards */}
       {unreadCount > 0 && (
         <div className="fixed right-6 top-6 z-50 w-80 sm:w-96">
-          <div className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-violet-200 overflow-hidden">
-            <div className="px-4 py-3 border-b bg-gradient-to-r from-violet-600 to-purple-700 text-white flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl border-2 border-violet-600 overflow-hidden">
+            <div className="px-4 py-3 border-b bg-violet-50 text-violet-900 flex items-center justify-between">
               <div className="font-semibold">You have {unreadCount} unread message{unreadCount === 1 ? '' : 's'}</div>
               <button
                 onClick={() => { window.location.href = '/super-admin/messages'; }}
-                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full"
+                className="text-xs bg-violet-100 hover:bg-violet-200 text-violet-700 px-3 py-1 rounded-full border border-violet-400"
               >
                 Open Chat
               </button>
@@ -102,7 +102,7 @@ export default function SuperAdminDashboard() {
                 <ul className="space-y-2">
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/adminManagement'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center">
                         <FiUserPlus className="w-5 h-5" />
                       </div>
                       <div>
@@ -110,12 +110,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Create, update and assign administrators to batches</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-fuchsia-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/batch-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center">
                         <FiLayers className="w-5 h-5" />
                       </div>
                       <div>
@@ -123,12 +123,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Create, organize and link batches to departments</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-purple-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/viewbatches'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-violet-50 text-violet-700 border border-violet-600 flex items-center justify-center">
                         <FiList className="w-5 h-5" />
                       </div>
                       <div>
@@ -136,12 +136,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Browse and inspect batch compositions</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-violet-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/student-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center">
                         <FiUsers className="w-5 h-5" />
                       </div>
                       <div>
@@ -149,12 +149,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Add, update and organize students</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-fuchsia-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/admin-batch-mapping'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center">
                         <FiMap className="w-5 h-5" />
                       </div>
                       <div>
@@ -162,12 +162,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Visualize admin ownership across batches</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-purple-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/export'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-violet-50 text-violet-700 border border-violet-600 flex items-center justify-center">
                         <FiDownload className="w-5 h-5" />
                       </div>
                       <div>
@@ -175,12 +175,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Download filtered or full Excel exports</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-violet-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/student-analysis'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center">
                         <FiBarChart2 className="w-5 h-5" />
                       </div>
                       <div>
@@ -188,12 +188,12 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">Drill into student attendance performance</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-fuchsia-600 mt-3" />
                   </li>
 
                   <li>
                     <button onClick={() => { window.location.pathname = '/super-admin/messages'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
-                      <div className="h-10 w-10 rounded-md bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-md bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center">
                         <FiMessageSquare className="w-5 h-5" />
                       </div>
                       <div>
@@ -201,7 +201,7 @@ export default function SuperAdminDashboard() {
                         <div className="text-xs text-black-700">View and reply to admin requests</div>
                       </div>
                     </button>
-                    <div className="h-[1px] w-[280px] bg-gradient-to-r from-fuchsia-700 to-purple-600 mt-3" />
+                    <div className="h-[1px] w-[280px] bg-purple-600 mt-3" />
                   </li>
                 </ul>
               </nav>

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { authAPI, type LoginResponse } from "../services/api";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [animationType, setAnimationType] = useState<'login' | 'logout'>('login');
@@ -165,25 +167,33 @@ export default function Login() {
 
           <div>
             <label className="block mb-1 font-medium text-black">Password</label>
-            <div className="rounded-lg bg-white border border-black">
+            <div className="rounded-lg bg-white border border-black relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="login-input w-full px-4 py-3 rounded-md bg-white text-black placeholder:text-black caret-black outline-none border-none"
+                  className="login-input w-full px-4 py-3 pr-12 rounded-md bg-white text-black placeholder:text-black caret-black outline-none border-none"
                   style={{ color: '#000', WebkitTextFillColor: '#000', backgroundColor: '#fff', WebkitBoxShadow: '0 0 0px 1000px #fff inset' }}
                   autoComplete="off"
                   spellCheck={false}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-fuchsia-700 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-white text-fuchsia-700 border-2 border-fuchsia-700 font-semibold rounded-lg shadow-md hover:bg-fuchsia-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>

@@ -62,7 +62,7 @@ export default function BatchStudentDetails({ batch, onBack }: BatchStudentDetai
                 Admin: {batch.adminId}
               </span>
             )}
-            <span className="px-3 py-1 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg text-sm font-bold">
+            <span className="px-3 py-1 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded-lg text-sm font-bold">
               {batch.students.length} Students
             </span>
           </div>

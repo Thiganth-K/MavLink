@@ -50,7 +50,7 @@ export default function AdminBatchMappingPage() {
   const [data, setData] = useState<AdminBatchMapping | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'matrix' | 'heatmap' | 'dept' | 'summary' | 'graph'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'matrix' | 'mapping ' | 'dept' | 'summary' | 'graph'>('cards');
   const [adminFilter, setAdminFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [mutating, setMutating] = useState(false);
@@ -101,8 +101,8 @@ export default function AdminBatchMappingPage() {
     return Array.from(map.entries()).map(([deptId, v]) => ({ deptId, batches: v.batches, admins: Array.from(v.admins) }));
   })();
 
-  // Build heatmap cells: rows = batches, cols = admins, value=1 if assigned else 0.
-  const heatmap = (() => {
+  // Build mapping  cells: rows = batches, cols = admins, value=1 if assigned else 0.
+  const mapping  = (() => {
     if (!data) return { rows: [] as any[], admins: [] as string[] };
     const allBatches: any[] = [];
     const seen = new Set<string>();
@@ -159,7 +159,8 @@ export default function AdminBatchMappingPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-supergreenDark">Admin ↔ Batch Mapping</h1>
-              <p className="text-sm opacity-70 mt-1">Generated {data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : '...'} | {data?.totalAdmins ?? 0} admins · {data?.totalBatches ?? 0} batches</p>
+              <p className="text-sm opacity-70 mt-1">Generated {data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : '...'}</p>
+              <p className="text-sm opacity-70">{data?.totalAdmins ?? 0} admins · {data?.totalBatches ?? 0} batches</p>
             </div>
             <button
               onClick={() => { window.location.href = '/super-admin'; }}
@@ -175,10 +176,6 @@ export default function AdminBatchMappingPage() {
                 <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Admin</label>
                 <input value={adminFilter} onChange={e => setAdminFilter(e.target.value)} placeholder="username contains..." className="px-2 py-1 rounded border text-sm" />
               </div>
-              <div className="flex flex-col">
-                <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Department</label>
-                <input value={deptFilter} onChange={e => setDeptFilter(e.target.value)} placeholder="dept id contains..." className="px-2 py-1 rounded border text-sm" />
-              </div>
               {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
             </div>
             
@@ -189,9 +186,9 @@ export default function AdminBatchMappingPage() {
               >Cards</button>
               
               <button
-                onClick={() => setViewMode('heatmap')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'heatmap' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-              >Heatmap</button>
+                onClick={() => setViewMode('mapping ')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'mapping ' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
+              >mapping </button>
               
               <button
                 onClick={() => setViewMode('summary')}
@@ -260,7 +257,7 @@ export default function AdminBatchMappingPage() {
           </div>
         )}
 
-        {!loading && !error && viewMode === 'heatmap' && (
+        {!loading && !error && viewMode === 'mapping ' && (
           <div className="overflow-auto border rounded-lg">
             <table className="min-w-full text-xs">
               <thead className="bg-supergreen text-supercream">
@@ -272,13 +269,13 @@ export default function AdminBatchMappingPage() {
                 </tr>
               </thead>
               <tbody>
-                {heatmap.rows.map(r => (
+                {mapping .rows.map(r => (
                   <tr key={r.batchId} className="odd:bg-white even:bg-slate-50">
                     <td className="px-2 py-1 whitespace-nowrap">
                       <div className="flex flex-col"><span className="font-medium">{r.batchName}</span><span className="text-[10px] opacity-60">{r.batchId} · {r.deptId}</span></div>
                     </td>
                     {r.values.map((v: number, ci: number) => {
-                      const adminId = heatmap.admins[ci];
+                      const adminId = mapping .admins[ci];
                       const assigned = v === 1;
                       return (
                         <td key={ci} className="px-2 py-1 text-center">

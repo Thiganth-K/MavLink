@@ -183,7 +183,7 @@ export default function ViewAnalysisCard() {
     <div className="relative  group overflow-hidden text-left bg-white rounded-xl shadow-xl border-2 border-black/20 hover:shadow-2xl hover:border-black/40 transition p-6 h-full">
       
       <div className="flex items-center gap-4 mb-4">
-        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
+        <div className="h-12 w-12 rounded-lg bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center font-bold">
           <FiBarChart2 className="w-6 h-6" />
         </div>
         <div>
@@ -209,7 +209,7 @@ export default function ViewAnalysisCard() {
       </div>
 
       <div className="flex items-center gap-4 mb-3">
-        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white flex items-center justify-center font-bold">
+        <div className="h-12 w-12 rounded-lg bg-purple-50 text-purple-700 border border-purple-600 flex items-center justify-center font-bold">
           <FiEye className="w-6 h-6" />
         </div>
         <div>

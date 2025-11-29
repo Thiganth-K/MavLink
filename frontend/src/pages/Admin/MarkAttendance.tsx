@@ -251,8 +251,8 @@ export default function MarkAttendance() {
           </div>
 
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 w-full md:w-auto">
-            <button onClick={() => setSelectedSession('FN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'FN' ? 'bg-gradient-to-r from-purple-500 to-fuchsia-700 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>FN</button>
-            <button onClick={() => setSelectedSession('AN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors ${selectedSession === 'AN' ? 'bg-gradient-to-r from-purple-700 to-fuchsia-900 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-gray-200'}`}>AN</button>
+            <button onClick={() => setSelectedSession('FN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors border ${selectedSession === 'FN' ? 'bg-purple-50 text-purple-700 border-purple-600 shadow-md' : 'bg-white text-gray-700 border-transparent hover:bg-gray-200'}`}>FN</button>
+            <button onClick={() => setSelectedSession('AN')} className={`flex-1 md:flex-none text-center px-4 py-2 rounded-lg font-semibold transition-colors border ${selectedSession === 'AN' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600 shadow-md' : 'bg-white text-gray-700 border-transparent hover:bg-gray-200'}`}>AN</button>
           </div>
 
           <div className="w-full md:w-auto">
@@ -263,16 +263,16 @@ export default function MarkAttendance() {
           </div>
 
           <div className="w-full md:w-auto">
-            <button onClick={handleSubmit} disabled={isLoading} className="w-full md:w-auto px-6 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-purple-800 hover:to-fuchsia-800 transition-colors disabled:opacity-50 font-semibold">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
+            <button onClick={handleSubmit} disabled={isLoading} className="w-full md:w-auto px-6 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50 font-semibold">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
           </div>
         </div>
       </div>
 
       <div className="mb-4 flex gap-3">
         <div className="flex-1" />
-        <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-fuchsia-800 hover:to-purple-700 transition-colors font-medium">Mark All Present</button>
-        <button onClick={handleMarkAllAbsent} className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg hover:bg-gradient-to-r hover:from-red-700 hover:to-red-900 transition-colors font-medium">Mark All Absent</button>
-        <button onClick={handleClearAll} className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-lg hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-900 transition-colors font-medium">Clear All</button>
+        <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors font-medium">Mark All Present</button>
+        <button onClick={handleMarkAllAbsent} className="px-4 py-2 bg-white text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium">Mark All Absent</button>
+        <button onClick={handleClearAll} className="px-4 py-2 bg-white text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium">Clear All</button>
       </div>
 
         {students.length === 0 ? (
@@ -297,12 +297,12 @@ export default function MarkAttendance() {
                 const reg = (student.regno || '').toUpperCase();
                 const stat = attendanceStats[reg];
                 const pct = stat ? stat.combinedPercentage : null;
-                let pctCls = 'bg-gray-200 text-gray-700';
+                let pctCls = 'bg-gray-100 text-gray-700 border border-gray-400';
                 if (pct !== null) {
-                  if (pct >= 75) pctCls = 'bg-purple-600 text-white';
-                  else if (pct >= 60) pctCls = 'bg-yellow-500 text-white';
-                  else if (pct >= 40) pctCls = 'bg-orange-500 text-white';
-                  else pctCls = 'bg-red-600 text-white';
+                  if (pct >= 75) pctCls = 'bg-purple-50 text-purple-700 border border-purple-600';
+                  else if (pct >= 60) pctCls = 'bg-yellow-50 text-yellow-700 border border-yellow-600';
+                  else if (pct >= 40) pctCls = 'bg-orange-50 text-orange-700 border border-orange-600';
+                  else pctCls = 'bg-red-50 text-red-700 border border-red-600';
                 }
 
                 return (
@@ -319,9 +319,9 @@ export default function MarkAttendance() {
                       </div>
 
                       <div className="flex-shrink-0 flex items-center gap-2">
-                        <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
-                        <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-gradient-to-r from-red-600 to-red-800 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
-                        <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-gradient-to-r from-yellow-600 to-yellow-800 text-white' : 'bg-gray-200 text-gray-700'}`}>OD</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>OD</button>
                       </div>
 
                     </div>
@@ -359,11 +359,11 @@ export default function MarkAttendance() {
                       const stat = attendanceStats[reg];
                       if (!stat) return <span className="text-gray-400 text-sm">--</span>;
                       const pct = stat.combinedPercentage; // using combined (Present + On-Duty)
-                      let cls = 'bg-gray-200 text-gray-700';
-                      if (pct >= 75) cls = 'bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white';
-                      else if (pct >= 60) cls = 'bg-gradient-to-r from-yellow-500 to-yellow-700 text-white';
-                      else if (pct >= 40) cls = 'bg-gradient-to-r from-orange-500 to-orange-700 text-white';
-                      else cls = 'bg-gradient-to-r from-red-600 to-red-800 text-white';
+                      let cls = 'bg-gray-100 text-gray-700 border border-gray-400';
+                      if (pct >= 75) cls = 'bg-purple-50 text-purple-700 border border-purple-600';
+                      else if (pct >= 60) cls = 'bg-yellow-50 text-yellow-700 border border-yellow-600';
+                      else if (pct >= 40) cls = 'bg-orange-50 text-orange-700 border border-orange-600';
+                      else cls = 'bg-red-50 text-red-700 border border-red-600';
                       return (
                         <span
                           title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Absent: ${stat.absent} | Total: ${stat.total} | Pure Present%: ${stat.percentage.toFixed(1)}%`}
@@ -374,9 +374,9 @@ export default function MarkAttendance() {
                   </td>
                   <td className="border border-purple-200 px-4 py-3">
                     <div className="flex gap-2 justify-center">
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Present' ? 'bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Present</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'Absent' ? 'bg-gradient-to-r from-red-600 to-red-800 text-white' : 'bg-gray-200 text-gray-700'}`}>Absent</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-gradient-to-r from-yellow-600 to-yellow-800 text-white' : 'bg-gray-200 text-gray-700'}`}>On-Duty</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
+                      <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>On-Duty</button>
                     </div>
                     {attendanceMap[student._id!] === 'On-Duty' && (
                       <div className="mt-2">
@@ -392,7 +392,7 @@ export default function MarkAttendance() {
       )}
 
       <div className="mt-6 flex justify-center">
-        <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3 bg-gradient-to-r from-fuchsia-700 to-purple-600 text-white rounded-lg hover:bg-gradient-to-r hover:from-purple-700 hover:to-purple-900 transition-colors disabled:opacity-50 font-semibold text-lg shadow-lg">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
+        <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3 bg-white text-purple-600 border-2 border-purple-600 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50 font-semibold text-lg shadow-lg">{isLoading ? 'Submitting...' : (attendanceRecords.length > 0 ? `Update ${selectedSession} Attendance` : `Submit ${selectedSession} Attendance`)}</button>
       </div>
 
       {showSummary && submittedSummary && (
@@ -434,10 +434,10 @@ export default function MarkAttendance() {
               </div>
 
               <div className="flex justify-center gap-4">
-                <button onClick={closeSummary} className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">Mark New Attendance</button>
+                <button onClick={closeSummary} className="px-6 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors font-medium">Mark New Attendance</button>
                 <button
                   onClick={() => { window.location.href = '/admin-dashboard/view-attendance'; }}
-                  className="px-6 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition-colors font-semibold"
+                  className="px-6 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors font-semibold"
                   aria-label="View all attendance records"
                 >
                   View All Records
