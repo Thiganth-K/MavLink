@@ -132,9 +132,9 @@ export default function ViewStudents() {
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Email</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Department</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Phone</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days Present</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days Absent</th>
-                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Days OD</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions Present</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions Absent</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions OD</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Attendance %</th>
                   </tr>
                 </thead>
