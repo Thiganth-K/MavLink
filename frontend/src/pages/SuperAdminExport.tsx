@@ -71,8 +71,9 @@ export default function SuperAdminExport() {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-violet-950 mb-2">Super Admin Export</h1>
-            <p className="text-violet-700 mb-6">Select departments and date range or use quick presets to export filtered data. Use Super Export to include all departments and data.</p>
+            <h1 className="text-3xl font-extrabold text-violet-950 mb-4">Super Admin Export</h1>
+            <p className="text-violet-700">Select departments and date range or use quick presets to export filtered data.</p>
+            <p className="text-violet-700 mb-6">Use Super Export to include all departments and data.</p>
           </div>
           <div>
             <button
