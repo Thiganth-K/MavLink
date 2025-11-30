@@ -164,28 +164,38 @@ export const updateBatch = async (req, res) => {
 				await newAdmin.save();
 			}
 		}
-		if (typeof studentsText === 'string') {
+		// Only parse & sync students when a non-empty string is provided.
+		if (typeof studentsText === 'string' && studentsText.trim()) {
 			try {
-				const newStudents = parseStudents(studentsText);
-				batch.students = newStudents;
-				// sync student docs
-				for (const s of newStudents) {
+				// parseStudents returns objects with keys: studentname, regno, dept, email, phno
+				const parsed = parseStudents(studentsText);
+				// Map parsed students into Batch embedded snapshot (Batch expects name/mobile)
+				batch.students = parsed.map(s => ({
+					name: s.studentname,
+					regno: s.regno,
+					dept: s.dept,
+					email: s.email,
+					mobile: s.phno
+				}));
+
+				// Sync Student collection documents with correct field names
+				for (const s of parsed) {
 					const existingStudent = await Student.findOne({ regno: s.regno });
 					if (existingStudent) {
 						existingStudent.batchId = batch.batchId;
-						existingStudent.studentname = s.name;
+						existingStudent.studentname = s.studentname;
 						existingStudent.dept = s.dept;
 						existingStudent.email = s.email;
-						existingStudent.phno = s.mobile;
+						existingStudent.phno = s.phno;
 						await existingStudent.save();
 					} else {
 						await Student.create({
 							regno: s.regno,
-							studentname: s.name,
+							studentname: s.studentname,
 							dept: s.dept,
 							batchId: batch.batchId,
 							email: s.email,
-							phno: s.mobile
+							phno: s.phno
 						});
 					}
 				}
