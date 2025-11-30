@@ -1,4 +1,4 @@
-# MavLink Login Page
+# STARS Login Page
 
 A beautiful and responsive login page built with React, TypeScript, and Tailwind CSS featuring hot toast notifications and cream blue to dark blue branding.
 

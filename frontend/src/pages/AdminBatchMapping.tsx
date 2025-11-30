@@ -52,7 +52,7 @@ export default function AdminBatchMappingPage() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'matrix' | 'mapping ' | 'dept' | 'summary' | 'graph'>('cards');
   const [adminFilter, setAdminFilter] = useState('');
-  const [deptFilter, setDeptFilter] = useState('');
+  const [deptFilter] = useState('');
   const [mutating, setMutating] = useState(false);
   const summaryChartRef = useRef<HTMLCanvasElement | null>(null);
   const summaryChartInstance = useRef<Chart | null>(null);

@@ -39,13 +39,12 @@ import { adminAPI } from '../../services/api';
 
 const AdminDashboard: React.FC = () => {
     // Strictly filter batches for dashboard (if used)
-    const [assignedBatches, setAssignedBatches] = useState<any[]>([]);
     useEffect(() => {
       const fetchAssignedBatches = async () => {
         const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
         const all = await (await import('../../services/api')).batchAPI.getBatches();
         const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
-        setAssignedBatches(mine);
+        // Batches are fetched for validation purposes
       };
       fetchAssignedBatches();
     }, []);
@@ -185,7 +184,7 @@ const AdminDashboard: React.FC = () => {
     <div className="w-full px-2 sm:px-4 lg:px-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
       <div className="mx-auto max-w-3xl w-full animate-superIn text-black">
         <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-wrap items-center justify-center gap-2">
-          <span>Welcome To MavLink,</span>
+          <span>Welcome To Sona Training Attendance and Recording System,</span>
           <span className="inline-block border-b-2 border-fuchsia-700 text-fuchsia-700 px-1 font-semibold">
             {adminDisplayName}!!
           </span>
