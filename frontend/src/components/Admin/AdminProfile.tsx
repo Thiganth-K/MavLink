@@ -167,11 +167,11 @@ export default function AdminProfile(props: Props) {
 
           <div className="pt-3">
             <div className="space-y-2">
-              <button onClick={() => setOpenChat(true)} className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-lg hover:from-purple-700 hover:to-fuchsia-700 flex items-center justify-center gap-2" aria-label="Open chat">
+              <button onClick={() => setOpenChat(true)} className="w-full px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 flex items-center justify-center gap-2" aria-label="Open chat">
                 <FaComments className="w-4 h-4" />
                 <span>Chat</span>
               </button>
-              <button onClick={onLogout} className="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-lg flex items-center justify-center gap-2"><FaSignOutAlt /> Logout</button>
+              <button onClick={onLogout} className="w-full px-4 py-2 bg-red-50 text-red-700 border border-red-600 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"><FaSignOutAlt /> Logout</button>
             </div>
           </div>
           {openChat && <AdminChatModal onClose={() => setOpenChat(false)} />}
