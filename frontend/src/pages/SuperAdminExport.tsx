@@ -8,6 +8,8 @@ export default function SuperAdminExport() {
   const [preset, setPreset] = useState<'today' | 'thisWeek' | 'thisMonth' | 'all' | ''>('');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[] | null>(null);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
@@ -22,11 +24,30 @@ export default function SuperAdminExport() {
       try {
         const depts = await departmentAPI.listDepartments();
         setDepartments(Array.isArray(depts) ? depts : []);
+        // load available export years from backend
+        try {
+          const yrs = await superAdminAPI.getExportYears();
+          setAvailableYears(Array.isArray(yrs) ? yrs : []);
+        } catch (e) {
+          // non-fatal: keep availableYears null so UI falls back to manual input
+          setAvailableYears(null);
+        }
       } catch (e: any) {
         toast.error(e.message || 'Failed to load departments');
       }
     })();
   }, []);
+
+  const handleYearChange = (year: string, checked: boolean) => {
+    setSelectedYears(prev => {
+      if (checked) {
+        if (prev.includes(year)) return prev;
+        return [...prev, year];
+      } else {
+        return prev.filter(y => y !== year);
+      }
+    });
+  };
 
   const toggleDept = (deptId: string) => {
     setSelectedDeptIds(prev => prev.includes(deptId) ? prev.filter(d => d !== deptId) : [...prev, deptId]);
@@ -44,6 +65,7 @@ export default function SuperAdminExport() {
       const params: any = {};
       if (allMode) params.deptIds = 'ALL';
       else params.deptIds = selectedDeptIds.length ? selectedDeptIds : 'ALL';
+      if (selectedYears.length) params.batchYears = selectedYears;
       if (preset) params.preset = preset;
       if (customStart) params.startDate = customStart;
       if (customEnd) params.endDate = customEnd;
@@ -147,6 +169,64 @@ export default function SuperAdminExport() {
               <button onClick={() => setPreset('thisMonth')} className={`px-3 py-1 rounded-lg border ${preset === 'thisMonth' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Month</button>
               <button onClick={() => setPreset('all')} className={`px-3 py-1 rounded-lg border ${preset === 'all' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>All Dates</button>
               <button onClick={() => setPreset('')} className={`px-3 py-1 rounded-lg border ${preset === '' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Custom</button>
+            </div>
+            <div className="mt-3 mb-3">
+              <label className="text-sm font-medium text-violet-800 mr-2">Filter by Batch Year</label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {availableYears === null ? (
+                  // fallback hardcoded options if backend call failed
+                  ['2026','2027'].map(y => {
+                    const isSel = selectedYears.includes(y);
+                    return (
+                      <label key={y} className={`flex items-center gap-2 p-1 rounded ${isSel ? 'bg-violet-100' : ''}`}>
+                        <div className="relative flex-shrink-0">
+                          <input type="checkbox" checked={isSel} onChange={(e) => handleYearChange(y, (e.target as HTMLInputElement).checked)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 bg-white border-2 border-violet-400 rounded appearance-none cursor-pointer" />
+                          {isSel && (
+                            <svg className="absolute top-0 left-0 w-4 h-4 text-violet-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm">{y}</span>
+                      </label>
+                    );
+                  })
+                ) : (availableYears.length ? availableYears.map(y => {
+                  const ys = String(y);
+                  const isSel = selectedYears.includes(ys);
+                  return (
+                    <label key={y} className={`flex items-center gap-2 p-1 rounded ${isSel ? 'bg-violet-100' : ''}`}>
+                      <div className="relative flex-shrink-0">
+                        <input type="checkbox" checked={isSel} onChange={(e) => handleYearChange(ys, (e.target as HTMLInputElement).checked)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 bg-white border-2 border-violet-400 rounded appearance-none cursor-pointer" />
+                        {isSel && (
+                          <svg className="absolute top-0 left-0 w-4 h-4 text-violet-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm">{String(y)}</span>
+                    </label>
+                  );
+                }) : (
+                  ['2026','2027'].map(y => {
+                    const isSel = selectedYears.includes(y);
+                    return (
+                      <label key={y} className={`flex items-center gap-2 p-1 rounded ${isSel ? 'bg-violet-100' : ''}`}>
+                        <div className="relative flex-shrink-0">
+                          <input type="checkbox" checked={isSel} onChange={(e) => handleYearChange(y, (e.target as HTMLInputElement).checked)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 bg-white border-2 border-violet-400 rounded appearance-none cursor-pointer" />
+                          {isSel && (
+                            <svg className="absolute top-0 left-0 w-4 h-4 text-violet-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm">{y}</span>
+                      </label>
+                    );
+                  })
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-1">Selecting years will limit export to batches from those years.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
