@@ -1,5 +1,7 @@
-// Use environment override if provided, fallback to backend default port 3000
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// Use environment override if provided. In production prefer a relative path
+// so the client talks to the same origin (works when backend serves frontend).
+// Fallback to '/api' instead of localhost so deployed builds don't call localhost.
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 // Types for API responses
 export interface LoginResponse {
