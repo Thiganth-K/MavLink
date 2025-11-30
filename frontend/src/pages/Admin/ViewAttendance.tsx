@@ -11,9 +11,13 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
   return (
     <>
       <tr className="hover:bg-purple-50">
-        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base w-20 md:w-32">{record.regno}</td>
-        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base min-w-0 truncate">{record.studentname}</td>
-        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center w-20 md:w-24">
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base">
+          {record.regno}
+        </td>
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-purple-900 text-sm md:text-base">
+          {record.studentname}
+        </td>
+        <td className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center">
           <div className="flex flex-col items-center md:flex-row md:justify-center gap-2">
             {record.status === 'On-Duty' ? (
               <button
@@ -65,12 +69,18 @@ function MobileSessionToggleAndTables({ attendanceRecords }: { attendanceRecords
         </div>
         <div>
           <ResponsiveTable>
-            <table className="min-w-[320px] w-full table-fixed border-collapse border border-purple-200">
+            <table className="min-w-[320px] w-full border-collapse border border-purple-200">
               <thead>
                 <tr className={headerBg}>
-                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base w-20 md:w-32">Reg No</th>
-                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base min-w-0">Name</th>
-                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center text-purple-950 font-semibold text-sm md:text-base w-20 md:w-24">Status</th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base">
+                    Reg No
+                  </th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-left text-purple-950 font-semibold text-sm md:text-base">
+                    Name
+                  </th>
+                  <th className="border border-purple-200 px-2 py-2 md:px-4 md:py-3 text-center text-purple-950 font-semibold text-sm md:text-base">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
