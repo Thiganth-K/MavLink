@@ -1,7 +1,20 @@
-// Use environment override if provided. In production prefer a relative path
-// so the client talks to the same origin (works when backend serves frontend).
-// Fallback to '/api' instead of localhost so deployed builds don't call localhost.
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+// Runtime override (set by server or hosting) -> build-time Vite env -> fallback to '/api'
+// This order lets you change the API host without rebuilding by setting `window.__API_BASE_URL`.
+const runtimeApi = typeof window !== 'undefined' ? (window as any).__API_BASE_URL : undefined;
+const API_BASE_URL = runtimeApi || (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+
+// Helpful dev-time warning if accidentally pointing to localhost in production
+try {
+  if (typeof window !== 'undefined' && window.location && API_BASE_URL.includes('localhost')) {
+    // Only warn in non-local environments
+    if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+      // eslint-disable-next-line no-console
+      console.warn('[config] API_BASE_URL contains localhost; requests may fail from deployed site');
+    }
+  }
+} catch (e) {
+  // ignore environment errors
+}
 
 // Types for API responses
 export interface LoginResponse {
