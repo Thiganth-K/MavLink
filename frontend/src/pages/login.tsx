@@ -143,7 +143,8 @@ export default function Login() {
               </svg>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold mt-4 text-black">STARS</h2>
-            <p className="text-black text-sm">Please login to continue</p>
+            <p className="text-sm text-gray-600 font-medium">Sona Training Attendance and Recording System</p>
+            <p className="text-black text-sm mt-2">Please login to continue</p>
           </div>
 
         <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off" spellCheck={false}>

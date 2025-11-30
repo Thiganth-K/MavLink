@@ -43,8 +43,8 @@ const AdminDashboard: React.FC = () => {
       const fetchAssignedBatches = async () => {
         const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
         const all = await (await import('../../services/api')).batchAPI.getBatches();
-        const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
-        // Batches are fetched for validation purposes
+        // Filter batches for validation purposes
+        all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
       };
       fetchAssignedBatches();
     }, []);
