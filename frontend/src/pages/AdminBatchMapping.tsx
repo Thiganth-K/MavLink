@@ -164,61 +164,67 @@ export default function AdminBatchMappingPage() {
             </div>
             <button
               onClick={() => { window.location.href = '/super-admin'; }}
-              className="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white"
+              className="px-4 py-2 rounded-md text-sm font-medium bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50"
             >
               Back to Dashboard
             </button>
           </div>
           
-          <div className="flex flex-wrap gap-4 items-end justify-between">
-            <div className="flex flex-wrap gap-4 items-end">
-              <div className="flex flex-col">
-                <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Admin</label>
-                <input value={adminFilter} onChange={e => setAdminFilter(e.target.value)} placeholder="username contains..." className="px-2 py-1 rounded border text-sm" />
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex flex-wrap gap-4 items-end justify-between mb-6">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex flex-col">
+                  <label className="text-xs font-semibold text-supergreenDark mb-1">Filter Admin</label>
+                  <input value={adminFilter} onChange={e => setAdminFilter(e.target.value)} placeholder="username contains..." className="px-2 py-1 rounded border text-sm" />
+                </div>
+                {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
               </div>
-              {mutating && <div className="text-xs text-violet-700 animate-pulse">Updating...</div>}
+              
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setViewMode('cards')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'cards' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50'}`}
+                >Cards</button>
+                
+                <button
+                  onClick={() => setViewMode('mapping ')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'mapping ' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50'}`}
+                >mapping </button>
+                
+                <button
+                  onClick={() => setViewMode('summary')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50'}`}
+                >Summary</button>
+                
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
+                  }}
+                  className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-50 text-violet-700 border border-violet-600 hover:bg-violet-50"
+                >Refresh</button>
+              </div>
             </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'cards' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-              >Cards</button>
-              
-              <button
-                onClick={() => setViewMode('mapping ')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'mapping ' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-              >mapping </button>
-              
-              <button
-                onClick={() => setViewMode('summary')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-supergreen text-supercream' : 'bg-supergreenAccent/30 hover:bg-supergreenAccent/50'}`}
-              >Summary</button>
-              
-              <button
-                onClick={async () => {
-                  setLoading(true);
-                  try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
-                }}
-                className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white"
-              >Refresh</button>
-            </div>
+
+            {loading && (
+              <div className="w-full p-4 text-center text-sm animate-pulse">Loading mapping...</div>
+            )}
+            {error && (
+              <div className="w-full p-4 mb-4 rounded-md bg-red-100 border border-red-300 text-red-800 text-sm">{error}</div>
+            )}
+
+            {!loading && !error && viewMode === 'cards' && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {admins.map((a, idx) => (
+                  <AdminCard key={a.adminId} admin={a} colorClass={palette[idx % palette.length]} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
         
-        {loading && (
-          <div className="w-full p-4 text-center text-sm animate-pulse">Loading mapping...</div>
-        )}
-        {error && (
-          <div className="w-full p-4 mb-4 rounded-md bg-red-100 border border-red-300 text-red-800 text-sm">{error}</div>
-        )}
-
         {!loading && !error && viewMode === 'cards' && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
-            {admins.map((a, idx) => (
-              <AdminCard key={a.adminId} admin={a} colorClass={palette[idx % palette.length]} />
-            ))}
-          </div>
+          <></>
         )}
 
         {!loading && !error && viewMode === 'matrix' && (
