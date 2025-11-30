@@ -66,10 +66,10 @@ export default function SuperAdminExport() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-100 to-violet-300 p-6">
+    <div className="min-h-screen bg-white p-6">
       <Toaster position="top-center" />
-      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl p-6 border border-violet-200">
-        <div className="flex items-start justify-between">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-violet-950 mb-2">Super Admin Export</h1>
             <p className="text-violet-700 mb-6">Select departments and date range or use quick presets to export filtered data. Use Super Export to include all departments and data.</p>
@@ -77,19 +77,20 @@ export default function SuperAdminExport() {
           <div>
             <button
               onClick={() => { window.location.href = '/super-admin'; }}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
             >
               Back to Dashboard
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h2 className="text-lg font-semibold text-violet-900 mb-2">Departments</h2>
             <div className="flex gap-2 mb-3">
-              <button onClick={quickSelectAll} className="px-3 py-1 bg-white text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50">Select All</button>
-              <button onClick={quickClearAll} className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Clear</button>
+              <button onClick={quickSelectAll} className="px-3 py-1 bg-violet-50 text-violet-700 border border-violet-600 rounded-lg hover:bg-violet-50">Select All</button>
+              <button onClick={quickClearAll} className="px-3 py-1 bg-gray-50 text-gray-700 border border-gray-600 rounded-lg hover:bg-gray-50">Clear</button>
             </div>
             <div className="max-h-64 overflow-auto border border-violet-200 rounded-lg p-3 space-y-2 bg-violet-50">
               {departments.map(d => {
@@ -140,11 +141,11 @@ export default function SuperAdminExport() {
           <div>
             <h2 className="text-lg font-semibold text-violet-900 mb-2">Date Range</h2>
             <div className="flex flex-wrap gap-2 mb-3">
-              <button onClick={() => setPreset('today')} className={`px-3 py-1 rounded-lg border ${preset === 'today' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}>Today</button>
-              <button onClick={() => setPreset('thisWeek')} className={`px-3 py-1 rounded-lg border ${preset === 'thisWeek' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}>This Week</button>
-              <button onClick={() => setPreset('thisMonth')} className={`px-3 py-1 rounded-lg border ${preset === 'thisMonth' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}>This Month</button>
-              <button onClick={() => setPreset('all')} className={`px-3 py-1 rounded-lg border ${preset === 'all' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}>All Dates</button>
-              <button onClick={() => setPreset('')} className={`px-3 py-1 rounded-lg border ${preset === '' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}>Custom</button>
+              <button onClick={() => setPreset('today')} className={`px-3 py-1 rounded-lg border ${preset === 'today' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Today</button>
+              <button onClick={() => setPreset('thisWeek')} className={`px-3 py-1 rounded-lg border ${preset === 'thisWeek' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Week</button>
+              <button onClick={() => setPreset('thisMonth')} className={`px-3 py-1 rounded-lg border ${preset === 'thisMonth' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Month</button>
+              <button onClick={() => setPreset('all')} className={`px-3 py-1 rounded-lg border ${preset === 'all' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>All Dates</button>
+              <button onClick={() => setPreset('')} className={`px-3 py-1 rounded-lg border ${preset === '' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Custom</button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -161,9 +162,10 @@ export default function SuperAdminExport() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <button disabled={downloading} onClick={() => download(false)} className="px-4 py-2 bg-white text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 disabled:opacity-50">Export Selected</button>
-          <button disabled={downloading} onClick={() => download(true)} className="px-4 py-2 bg-white text-fuchsia-600 border border-fuchsia-600 rounded-lg hover:bg-fuchsia-50 disabled:opacity-50">Super Export (All)</button>
+          <button disabled={downloading} onClick={() => download(false)} className="px-4 py-2 bg-violet-50 text-violet-700 border border-violet-600 rounded-lg hover:bg-violet-50 disabled:opacity-50">Export Selected</button>
+          <button disabled={downloading} onClick={() => download(true)} className="px-4 py-2 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded-lg hover:bg-fuchsia-50 disabled:opacity-50">Super Export (All)</button>
         </div>
+      </div>
       </div>
     </div>
   );

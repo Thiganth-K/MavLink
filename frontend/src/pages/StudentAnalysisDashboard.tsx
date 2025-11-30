@@ -258,11 +258,11 @@ export default function StudentAnalysisDashboard() {
               <tbody>
                 {filteredSorted.map(s => {
                   const pct = s.attendancePercentage || 0;
-                  let badge = 'bg-gray-300 text-gray-800';
-                  if (pct >= 75) badge = 'bg-violet-600 text-white';
-                  else if (pct >= 60) badge = 'bg-yellow-500 text-white';
-                  else if (pct >= 40) badge = 'bg-orange-500 text-white';
-                  else badge = 'bg-red-600 text-white';
+                  let badge = 'bg-gray-50 text-gray-700 border border-gray-400';
+                  if (pct >= 75) badge = 'bg-violet-50 text-violet-700 border border-violet-600';
+                  else if (pct >= 60) badge = 'bg-yellow-50 text-yellow-700 border border-yellow-600';
+                  else if (pct >= 40) badge = 'bg-orange-50 text-orange-700 border border-orange-600';
+                  else badge = 'bg-red-50 text-red-700 border border-red-600';
                   return (
                     <tr key={s._id || s.regno} className="hover:bg-supercream/40">
                       <td className="border border-supergreenDark/10 px-3 py-2 text-supergreenDark text-sm">{s.regno}</td>
