@@ -52,7 +52,7 @@ export default function SuperAdminExport() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'mavlink_export_advanced.xlsx';
+      a.download = 'STARS_export_advanced.xlsx';
       document.body.appendChild(a);
       a.click();
       a.remove();
