@@ -16,7 +16,7 @@ export default function SuperAdminFooter() {
               >
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
-              <h4 className="font-semibold text-white">Stars</h4>
+              <h4 className="font-semibold text-white">STARS</h4>
             </div>
             <p className="text-sm text-supercream/90">Sona Training Attendance and Recording System helps admins and super admins manage batches, students and attendance with a simple modern interface.</p>
           </div>
@@ -79,7 +79,7 @@ export default function SuperAdminFooter() {
           <div className="py-4 md:py-0 md:px-4">
             <h5 className="font-semibold text-white mb-2 underline decoration-2 decoration-white underline-offset-4">Contact</h5>
             <ul className="space-y-2 text-supercream">
-              <li className="flex items-center gap-2"><FiMail /> <a className="underline" href="mailto:support@stars.example">support@stars.example</a></li>
+              <li className="flex items-center gap-2"><FiMail /> <a className="underline" href="mailto:support@STARS.example">support@STARS.example</a></li>
               <li className="flex items-center gap-2"><FiPhone /> <a href="tel:+1234567890">+1 234 567 890</a></li>
               <li className="flex items-center gap-2"><FiMapPin /> <span>123 College Road, City</span></li>
             </ul>

@@ -296,7 +296,7 @@ export const exportAdvancedData = async (req, res) => {
 
     // Build workbook
     const wb = new ExcelJS.Workbook();
-    wb.creator = 'Stars';
+    wb.creator = 'STARS';
     wb.created = new Date();
 
     const metaSheet = wb.addWorksheet('ExportMeta');
@@ -439,7 +439,7 @@ export const exportAdvancedData = async (req, res) => {
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="stars_export_advanced.xlsx"');
+    res.setHeader('Content-Disposition', 'attachment; filename="STARS_export_advanced.xlsx"');
     await wb.xlsx.write(res);
     res.end();
     logger.info('exportAdvancedData success', { durationMs: Date.now() - start, admins: admins.length, batches: batches.length, departments: departments.length, students: students.length, attendanceDocs: attendance.length });

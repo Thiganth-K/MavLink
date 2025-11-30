@@ -78,7 +78,7 @@ export default function AdminNavbar() {
             >
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
-            <span className="text-2xl font-bold text-white">Stars</span>
+            <span className="text-2xl font-bold text-white">STARS</span>
           </div>
 
           <div className="flex items-center gap-2">
