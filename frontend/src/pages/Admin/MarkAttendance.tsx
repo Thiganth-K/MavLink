@@ -380,7 +380,7 @@ export default function MarkAttendance() {
                       else cls = 'bg-red-50 text-red-700 border border-red-600';
                       return (
                         <span
-                          title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Absent: ${stat.absent} | Total: ${stat.total} | Pure Present%: ${stat.percentage.toFixed(1)}%`}
+                          title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Absent: ${stat.absent} | Total: ${stat.total} | Attendance: ${pct.toFixed(1)}%`}
                           className={`inline-block min-w-[60px] px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${cls}`}
                         >{pct.toFixed(1)}%</span>
                       );
