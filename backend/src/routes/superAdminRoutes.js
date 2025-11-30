@@ -6,6 +6,7 @@ import {
   updateAdmin,
   deleteAdmin,
   logoutSuperAdmin,
+  getExportYears,
   getAdminBatchMapping,
   exportAdvancedData
 } from "../controllers/superAdminControllers.js";
@@ -23,6 +24,8 @@ router.put("/admin/:id", updateAdmin);
 router.delete("/admin/:id", deleteAdmin);
 // Mapping of admins to batches
 router.get('/admin-batch-mapping', getAdminBatchMapping);
+// Available export years for UI dropdown
+router.get('/export-years', getExportYears);
 // Advanced export with filters
 router.get('/export-advanced', exportAdvancedData);
 export default router;

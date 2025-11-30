@@ -219,11 +219,15 @@ export const superAdminAPI = {
 
     return response.json();
   },
-  exportAdvanced: async (params: { deptIds?: string[] | 'ALL'; preset?: 'today' | 'thisWeek' | 'thisMonth' | 'all'; startDate?: string; endDate?: string }): Promise<Blob> => {
+  exportAdvanced: async (params: { deptIds?: string[] | 'ALL'; batchYears?: Array<number | string>; preset?: 'today' | 'thisWeek' | 'thisMonth' | 'all'; startDate?: string; endDate?: string }): Promise<Blob> => {
     const q: string[] = [];
     if (params.deptIds) {
       if (Array.isArray(params.deptIds)) q.push(`deptIds=${encodeURIComponent(params.deptIds.join(','))}`);
       else q.push(`deptIds=${params.deptIds}`);
+    }
+    if (params.batchYears && params.batchYears.length) {
+      const yrs = params.batchYears.map(y => String(y).trim()).filter(Boolean);
+      if (yrs.length) q.push(`batchYears=${encodeURIComponent(yrs.join(','))}`);
     }
     if (params.preset) q.push(`preset=${params.preset}`);
     if (params.startDate) q.push(`startDate=${params.startDate}`);
@@ -237,6 +241,14 @@ export const superAdminAPI = {
       throw new Error(error.message || 'Failed to export data');
     }
     return response.blob();
+  }
+  ,getExportYears: async (): Promise<number[]> => {
+    const res = await fetch(`${API_BASE_URL}/superadmin/export-years`, { headers: { 'X-Role': localStorage.getItem('role') || '' } });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch export years');
+    }
+    return res.json();
   }
 };
 // Mapping types & API

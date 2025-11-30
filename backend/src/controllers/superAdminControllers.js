@@ -270,14 +270,22 @@ export const exportAdvancedData = async (req, res) => {
       }
     }
 
+    // Determine batch years filter (optional) - expects comma separated values
+    let batchYearsFilter = [];
+    if (req.query.batchYears && String(req.query.batchYears).trim().length) {
+      batchYearsFilter = String(req.query.batchYears).split(',').map(s => Number(s.trim())).filter(n => !Number.isNaN(n));
+    }
+
     // Fetch datasets
     const [admins, departments] = await Promise.all([
       Admin.find().lean(),
       Department.find().lean()
     ]);
 
-    // Batches filtered by departments (or all)
-    const batchQuery = deptFilterIds.length ? { deptId: { $in: deptFilterIds } } : {};
+    // Batches filtered by departments and/or batchYears (or all)
+    const batchQuery = {};
+    if (deptFilterIds.length) batchQuery.deptId = { $in: deptFilterIds };
+    if (batchYearsFilter.length) batchQuery.batchYear = { $in: batchYearsFilter };
     const batches = await Batch.find(batchQuery).lean();
     const batchIds = new Set(batches.map(b => b.batchId));
 
@@ -446,5 +454,28 @@ export const exportAdvancedData = async (req, res) => {
   } catch (err) {
     logger.error('exportAdvancedData error', { error: err.message });
     res.status(500).json({ message: 'Failed to export data', error: err.message });
+  }
+};
+
+// ---------- GET AVAILABLE EXPORT YEARS ----------
+// Returns distinct batchYear values present in the Batch collection (sorted ascending)
+export const getExportYears = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getExportYears start');
+  try {
+    const role = req.headers['x-role'] || req.headers['X-Role'];
+    if (role !== 'SUPER_ADMIN') {
+      logger.warn('getExportYears forbidden', { role });
+      return res.status(403).json({ message: 'SUPER_ADMIN role required' });
+    }
+
+    const years = await Batch.distinct('batchYear');
+    const yearsSorted = (Array.isArray(years) ? years.map(y => Number(y)).filter(n => !Number.isNaN(n)) : []).sort((a,b) => a - b);
+
+    logger.info('getExportYears success', { durationMs: Date.now() - start, count: yearsSorted.length });
+    return res.status(200).json(yearsSorted);
+  } catch (err) {
+    logger.error('getExportYears error', { error: err.message });
+    return res.status(500).json({ message: 'Failed to fetch export years', error: err.message });
   }
 };
