@@ -162,7 +162,7 @@ export default function StudentAnalysisDashboard() {
               <label className="text-xs font-semibold text-supergreenDark mb-1">Search</label>
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Reg no / Name" className="px-3 py-2 rounded-lg border border-supergreenDark/30" />
             </div>
-            <button onClick={fetchStats} disabled={!selectedDept || loading} className="px-5 py-2 bg-supergreenDark text-white rounded-lg shadow hover:bg-supergreenAccent transition-colors disabled:opacity-50">{loading ? 'Loading...' : 'Refresh'}</button>
+            <button onClick={fetchStats} disabled={!selectedDept || loading} className="px-5 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50">{loading ? 'Loading...' : 'Refresh'}</button>
           </div>
           <div className="mt-4 flex gap-2 sm:gap-4 md:gap-6 justify-between items-stretch">
             <div className="flex flex-col bg-supercream/60 rounded-lg px-2 py-3 sm:px-3 sm:py-4 md:p-4 w-1/3 min-w-0 shadow">
