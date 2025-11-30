@@ -167,9 +167,9 @@ export default function AdminNavbar() {
               title="Profile"
               aria-label="Toggle profile"
               onClick={() => { try { window.dispatchEvent(new CustomEvent('toggleProfile')); } catch (e) {} }}
-              className="ml-3 relative w-10 h-10 rounded-full flex items-center justify-center self-center font-semibold shadow-md"
+              className="ml-3 relative w-10 h-10 rounded-full flex items-center justify-center self-center font-semibold"
             >
-                <span className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center text-white font-bold">{firstLetter}</span>
+                <span className="w-10 h-10 rounded-full bg-white border-2 border-purple-400 flex items-center justify-center text-purple-700 font-bold shadow-md">{firstLetter}</span>
             </button>
           </div>
         </div>

@@ -513,7 +513,9 @@ export const getAttendanceStats = async (req, res) => {
 
     const results = [];
     for (const [k, v] of map.entries()) {
-      const attendancePercentage = v.totalClasses > 0 ? Math.round((v.present / v.totalClasses) * 10000) / 100 : 0;
+      // Calculate attendance percentage: both Present and On-Duty count as present
+      const effectivePresent = v.present + v.onDuty;
+      const attendancePercentage = v.totalClasses > 0 ? Math.round((effectivePresent / v.totalClasses) * 10000) / 100 : 0;
       results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, attendancePercentage });
     }
 

@@ -18,8 +18,9 @@ export default function StudentManagement() {
   });
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [departments, setDepartments] = useState<{ deptId: string; deptName: string }[]>([]);
-  const [batches, setBatches] = useState<{ batchId: string; batchName: string; deptId?: string }[]>([]);
+  const [batches, setBatches] = useState<{ batchId: string; batchName: string; deptId?: string; batchYear?: number }[]>([]);
   const [filterDept, setFilterDept] = useState<string>('');
+  const [filterYear, setFilterYear] = useState<string>('');
 
   // Check if user is authenticated (Legacy page - use AdminDashboard instead)
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function StudentManagement() {
   const fetchBatches = async () => {
     try {
       const all = await (await import('../services/api')).batchAPI.getBatches();
-      setBatches(Array.isArray(all) ? all.map((b: any) => ({ batchId: b.batchId, batchName: b.batchName, deptId: b.deptId })) : []);
+      setBatches(Array.isArray(all) ? all.map((b: any) => ({ batchId: b.batchId, batchName: b.batchName, deptId: b.deptId, batchYear: b.batchYear })) : []);
     } catch (err) {
       console.debug('Failed to load batches', err);
     }
@@ -269,27 +270,58 @@ export default function StudentManagement() {
             </div>
           </div>
 
-          {/* Department filter */}
-          <div className="flex items-center gap-4 mb-4">
-            <label className="block text-purple-900 font-medium">Filter by Department</label>
-            <select
-              value={filterDept}
-              onChange={(e) => setFilterDept(e.target.value)}
-              className="px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-            >
-              <option value="">All departments</option>
-              { (departments && departments.length > 0 ? departments : Array.from(new Set(students.map(s => String(s.dept || '').toUpperCase()))).map(d => ({ deptId: d, deptName: d })) )
-                .filter(d => d.deptId)
-                .map(d => (
-                <option key={d.deptId} value={String(d.deptId).toUpperCase()}>{`${d.deptId} - ${d.deptName}`}</option>
-              ))}
-            </select>
-            {filterDept && (
-              <button
-                onClick={() => setFilterDept('')}
-                className="px-3 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg"
+          {/* Department and Year filters */}
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <label className="block text-purple-900 font-medium">Filter by Department</label>
+              <select
+                value={filterDept}
+                onChange={(e) => setFilterDept(e.target.value)}
+                className="px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
               >
-                Clear
+                <option value="">All departments</option>
+                {(() => {
+                  // Filter departments based on selected year
+                  const availableBatches = filterYear 
+                    ? batches.filter(b => String(b.batchYear) === String(filterYear))
+                    : batches;
+                  const availableDepts = Array.from(new Set(availableBatches.map(b => b.deptId).filter(d => d)));
+                  
+                  return (departments && departments.length > 0 ? departments : Array.from(new Set(students.map(s => String(s.dept || '').toUpperCase()))).map(d => ({ deptId: d, deptName: d })))
+                    .filter(d => d.deptId && (!filterYear || availableDepts.includes(d.deptId)))
+                    .map(d => (
+                      <option key={d.deptId} value={String(d.deptId).toUpperCase()}>{`${d.deptId} - ${d.deptName}`}</option>
+                    ));
+                })()}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="block text-purple-900 font-medium">Filter by Year</label>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                className="px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              >
+                <option value="">All years</option>
+                {(() => {
+                  // Filter years based on selected department
+                  const availableBatches = filterDept
+                    ? batches.filter(b => b.deptId === filterDept)
+                    : batches;
+                  const availableYears = Array.from(new Set(availableBatches.map(b => b.batchYear).filter(y => y)));
+                  
+                  return availableYears.sort((a, b) => (b || 0) - (a || 0)).map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ));
+                })()}
+              </select>
+            </div>
+            {(filterDept || filterYear) && (
+              <button
+                onClick={() => { setFilterDept(''); setFilterYear(''); }}
+                className="px-3 py-2 bg-gray-50 text-gray-700 border border-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                Clear All
               </button>
             )}
           </div>
@@ -433,9 +465,16 @@ export default function StudentManagement() {
                     </td>
                   </tr>
                 ) : (
-                  // apply department filter client-side
-                  (filterDept ? students.filter(s => String(s.dept || '').toUpperCase() === String(filterDept).toUpperCase()) : students)
-                  .map((student) => (
+                  // apply department and year filters client-side
+                  students
+                    .filter(s => !filterDept || String(s.dept || '').toUpperCase() === String(filterDept).toUpperCase())
+                    .filter(s => {
+                      if (!filterYear) return true;
+                      const studentBatchId = s.batchId || (s as any).batch;
+                      const studentBatch = batches.find(b => b.batchId === studentBatchId);
+                      return studentBatch && String(studentBatch.batchYear) === String(filterYear);
+                    })
+                    .map((student) => (
                     <tr key={student._id} className="hover:bg-purple-50">
                       <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.studentname}</td>
                       <td className="border border-purple-200 px-4 py-3 text-purple-900">{student.email}</td>
