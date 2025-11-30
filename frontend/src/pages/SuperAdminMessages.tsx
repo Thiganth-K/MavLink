@@ -194,7 +194,7 @@ const SuperAdminMessages: React.FC = () => {
                         onClick={() => setSelectedAdmin(aid)}
                         className={`w-full flex items-center gap-3 p-4 transition-all duration-200 ${
                           isSelected
-                            ? 'bg-purple-50 text-purple-700 border-2 border-purple-600 shadow-lg transform scale-105 rounded-xl'
+                            ? 'bg-purple-50 text-black-700 border-2 border-purple-600 shadow-lg transform scale-105 rounded-xl'
                             : 'bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-gray-800 rounded-xl'
                         }`}
                       >
@@ -206,12 +206,12 @@ const SuperAdminMessages: React.FC = () => {
                         <div className="flex-1 text-left min-w-0">
                           <div className="mb-1">
                             <span className={`inline-block px-3 py-1 rounded-full truncate text-sm font-semibold ${
-                              isSelected ? 'bg-transparent text-white' : 'bg-gray-100 text-gray-800'
+                              isSelected ? 'bg-transparent text-black' : 'bg-gray-100 text-gray-800'
                             }`}>
                               {displayName}
                             </span>
                           </div>
-                          <p className={`text-xs ${isSelected ? 'text-purple-100' : 'text-gray-500'}`}>
+                          <p className={`text-xs ${isSelected ? 'text-black/60' : 'text-gray-500'}`}>
                             {aid}
                           </p>
                         </div>
