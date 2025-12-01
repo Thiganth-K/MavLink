@@ -15,7 +15,6 @@ export default function ViewAnalysisCard() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AttendanceStats[] | null>(null);
   // Always show all charts; removed single-chart selection
-  const [adminCount, setAdminCount] = useState<number | null>(null);
   const [batchCount, setBatchCount] = useState<number | null>(null);
   const [studentCount, setStudentCount] = useState<number | null>(null);
   // avgAttendance removed — not shown in summary cards
@@ -60,7 +59,6 @@ export default function ViewAnalysisCard() {
         ]);
 
         setStats(fetchedStats || []);
-        setAdminCount(Array.isArray(admins) ? admins.length : null);
         setBatchCount(Array.isArray(batches) ? batches.length : null);
         setStudentCount(Array.isArray(students) ? students.length : null);
         setUnassignedBatchesCount(mapping && Array.isArray((mapping as any).unassignedBatches) ? (mapping as any).unassignedBatches.length : null);
@@ -301,12 +299,11 @@ export default function ViewAnalysisCard() {
       {/* Summary cards - uniform styling via MetricCard */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-10">
         {[
-          { label: 'Total Admins', value: adminCount },
           { label: 'Admins', value: adminsWithRoleCount },
           { label: 'Batches', value: batchCount },
           { label: 'Unassigned Batches', value: unassignedBatchesCount },
           { label: 'Students', value: studentCount },
-          { label: "Today's Present FN", value: todaysPresentFNCount },
+          { label: "Today's Present  FN", value: todaysPresentFNCount },
           { label: "Today's Present AN", value: todaysPresentANCount },
         ].map((m, idx) => (
           <div key={idx} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-purple-200">
