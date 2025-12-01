@@ -1,16 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FiBarChart2, FiEye } from 'react-icons/fi';
-import { Chart, BarController, PieController, BarElement, CategoryScale, LinearScale, ArcElement, LineElement, PointElement, LineController, Tooltip, Legend } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarController,
+  LineController,
+  PieController,
+  DoughnutController,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { attendanceAPI, superAdminAPI, batchAPI, studentAPI, mappingAPI } from '../services/api';
 import type { AttendanceStats } from '../services/api';
 
-Chart.register(BarController, PieController, BarElement, CategoryScale, LinearScale, ArcElement, LineElement, PointElement, LineController, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarController,
+  LineController,
+  PieController,
+  DoughnutController,
+  Tooltip,
+  Legend
+);
 
 export default function ViewAnalysisCard() {
-  const barRef = useRef<HTMLCanvasElement | null>(null);
-  const pieRef = useRef<HTMLCanvasElement | null>(null);
-  const lineRef = useRef<HTMLCanvasElement | null>(null);
-  const doughnutRef = useRef<HTMLCanvasElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AttendanceStats[] | null>(null);
@@ -163,73 +187,46 @@ export default function ViewAnalysisCard() {
     // no chart cleanup here (charts are created/cleaned in the charts effect)
   }, []);
 
-  // Recreate charts whenever `stats` changes. Always render all four charts (no per-chart selection).
-  useEffect(() => {
-    if (!stats || !stats.length) return;
+  // derive chart data from `stats` using useMemo for performance
+  const { labels, deptData, binLabels, binValues, commonOptions } = useMemo(() => {
+    if (!stats || !stats.length) {
+      return { labels: [], deptData: [], binLabels: [], binValues: [], commonOptions: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'bottom' as const } }
+      } };
+    }
 
-    // prepare grouped data with normalization
     const grouped: Record<string, { total: number; count: number }> = {};
     for (const s of stats) {
-      // prefer explicit deptName, then dept, then department
       const raw = (s as any).deptName ?? (s as any).dept ?? (s as any).department ?? '';
       let dept = String(raw).trim();
-
-      // If the source contains placeholder values like 'DEPT' or 'DEPARTMENT' or is empty,
-      // try some common alternate fields, otherwise mark as 'Unknown'. This avoids creating
-      // a spurious group named exactly "DEPT" coming from bad/placeholder data.
       if (!dept || /^dept(?:artment)?$/i.test(dept)) {
         const alt = (s as any).departmentName ?? (s as any).branch ?? (s as any).deptName ?? '';
         dept = String(alt || '').trim();
-        if (!dept || /^dept(?:artment)?$/i.test(dept)) {
-          dept = 'Unknown';
-        }
+        if (!dept || /^dept(?:artment)?$/i.test(dept)) dept = 'Unknown';
       }
-
-      // Normalize whitespace and collapse multiple spaces
       dept = dept.replace(/\s+/g, ' ');
-
       if (!grouped[dept]) grouped[dept] = { total: 0, count: 0 };
       grouped[dept].total += Number(s.attendancePercentage || 0);
       grouped[dept].count += 1;
     }
-    // Convert groups to a sortable array and compute averages
+
     const entries = Object.keys(grouped).map((k) => ({
       dept: k,
       total: grouped[k].total,
       count: grouped[k].count,
       avg: grouped[k].count ? grouped[k].total / grouped[k].count : 0,
     }));
-
-    // Sort by count (most records first), then by average attendance
     entries.sort((a, b) => (b.count - a.count) || (b.avg - a.avg));
 
-    let labels: string[] = [];
-    let dataValues: number[] = [];
-
-    // Only include entries with a positive count and meaningful department names.
-    // Exclude placeholder values like 'Unknown' or generic 'DEPT'/'DEPARTMENT'.
     const validEntries = entries.filter(
       (e) => e.count > 0 && !/^unknown$/i.test(e.dept) && !/^dept(?:artment)?$/i.test(e.dept)
     );
 
-    // Use only the valid entries (show all counted departments). If none remain, leave labels empty.
-    labels = validEntries.map(e => e.dept);
-    dataValues = validEntries.map(e => Math.round((e.total / Math.max(1, e.count)) * 100) / 100);
+    const labels = validEntries.map(e => e.dept);
+    const deptData = validEntries.map(e => Math.round((e.total / Math.max(1, e.count)) * 100) / 100);
 
-    const commonOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'bottom' as const }
-      }
-    };
-
-    let barChart: Chart | null = null;
-    let pieChart: Chart | null = null;
-    let lineChart: Chart | null = null;
-    let doughnutChart: Chart | null = null;
-
-    // build bins
     const bins = { '<50': 0, '50-70': 0, '70-90': 0, '90-100': 0 };
     for (const s of stats) {
       const p = Number(s.attendancePercentage || 0);
@@ -241,45 +238,13 @@ export default function ViewAnalysisCard() {
     const binLabels = Object.keys(bins);
     const binValues = binLabels.map(l => bins[l as keyof typeof bins]);
 
-    // Create charts if their canvas is mounted
-    if (barRef.current) {
-      barChart = new Chart(barRef.current, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Avg Attendance %', data: dataValues, backgroundColor: 'rgba(34,197,94,0.7)' }] },
-        options: commonOptions
-      });
-    }
-
-    if (pieRef.current) {
-      pieChart = new Chart(pieRef.current, {
-        type: 'pie',
-        data: { labels, datasets: [{ label: 'Avg Attendance %', data: dataValues, backgroundColor: labels.map((_, i) => `hsl(${(i / labels.length) * 360} 70% 50% / 0.8)`) }] },
-        options: commonOptions
-      });
-    }
-
-    if (lineRef.current) {
-      lineChart = new Chart(lineRef.current, {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Avg Attendance %', data: dataValues, borderColor: 'rgba(16,185,129,0.9)', backgroundColor: 'rgba(16,185,129,0.2)', fill: true, tension: 0.2, pointRadius: 4 }] },
-        options: commonOptions
-      });
-    }
-
-    if (doughnutRef.current) {
-      doughnutChart = new Chart(doughnutRef.current, {
-        type: 'doughnut',
-        data: { labels: binLabels, datasets: [{ label: 'Students', data: binValues, backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'] }] },
-        options: commonOptions
-      });
-    }
-
-    return () => {
-      barChart?.destroy();
-      pieChart?.destroy();
-      lineChart?.destroy();
-      doughnutChart?.destroy();
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom' as const } }
     };
+
+    return { labels, deptData, binLabels, binValues, commonOptions };
   }, [stats]);
 
   // removed selection/fade effect — always showing all charts
@@ -335,28 +300,36 @@ export default function ViewAnalysisCard() {
               <div className="bg-white p-3 rounded flex flex-col h-full min-h-0">
                 <div className="text-sm font-medium mb-2">Bar Graph</div>
                 <div className="flex-1 min-h-0">
-                  <canvas ref={barRef} className="h-full w-full" />
+                  <div style={{ height: 200 }} className="w-full">
+                    <Bar data={{ labels, datasets: [{ label: 'Avg Attendance %', data: deptData, backgroundColor: 'rgba(34,197,94,0.7)' }] }} options={commonOptions} />
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white p-3 rounded flex flex-col h-full min-h-0">
                 <div className="text-sm font-medium mb-2">Pie Chart</div>
                 <div className="flex-1 min-h-0">
-                  <canvas ref={pieRef} className="h-full w-full" />
+                  <div style={{ height: 200 }} className="w-full">
+                    <Pie data={{ labels, datasets: [{ label: 'Avg Attendance %', data: deptData, backgroundColor: labels.map((_, i) => `hsl(${(i / Math.max(1, labels.length)) * 360} 70% 50% / 0.8)`) }] }} options={commonOptions} />
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white p-3 rounded flex flex-col h-full min-h-0">
                 <div className="text-sm font-medium mb-2">Line Graph</div>
                 <div className="flex-1 min-h-0">
-                  <canvas ref={lineRef} className="h-full w-full" />
+                  <div style={{ height: 200 }} className="w-full">
+                    <Line data={{ labels, datasets: [{ label: 'Avg Attendance %', data: deptData, borderColor: 'rgba(16,185,129,0.9)', backgroundColor: 'rgba(16,185,129,0.2)', fill: true, tension: 0.2, pointRadius: 4 }] }} options={commonOptions} />
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white p-3 rounded flex flex-col h-full min-h-0">
                 <div className="text-sm font-medium mb-2">Attendance Distribution</div>
                 <div className="flex-1 min-h-0">
-                  <canvas ref={doughnutRef} className="h-full w-full" />
+                  <div style={{ height: 200 }} className="w-full">
+                    <Doughnut data={{ labels: binLabels, datasets: [{ label: 'Students', data: binValues, backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'] }] }} options={commonOptions} />
+                  </div>
                 </div>
               </div>
             </div>
