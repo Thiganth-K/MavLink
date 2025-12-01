@@ -368,16 +368,7 @@ export default function BatchManagement() {
 									<button
 										onClick={(e) => {
 											e.stopPropagation();
-											// Navigate to Student Management and pre-fill filters
-											try {
-												const params = new URLSearchParams();
-												if (batch.deptId) params.set('dept', String(batch.deptId));
-												if (batch.batchYear) params.set('year', String(batch.batchYear));
-												window.location.href = '/super-admin/student-management' + (params.toString() ? `?${params.toString()}` : '');
-											} catch (err) {
-												// fallback to in-place edit if navigation fails
-												startEdit(batch);
-											}
+											startEdit(batch);
 										}}
 										className="flex-1 px-3 py-2 bg-white text-yellow-600 border border-yellow-600 rounded-lg hover:bg-yellow-50 transition-colors text-sm font-medium"
 									>
