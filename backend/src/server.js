@@ -1,11 +1,40 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Always load .env from backend folder, even if run from project root
+// Normalize NODE_ENV and load environment file based on mode (development|production)
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Try a few likely locations for env files to support running from project root or backend folder
+const candidates = [
+  path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`),
+  path.resolve(process.cwd(), `.env`),
+  path.resolve(__dirname, '../.env.' + process.env.NODE_ENV),
+  path.resolve(__dirname, '../.env'),
+  path.resolve(__dirname, '../../.env.' + process.env.NODE_ENV),
+  path.resolve(__dirname, '../../.env')
+];
+let loaded = false;
+for (const p of candidates) {
+  try {
+    if (fs.existsSync(p)) {
+      dotenv.config({ path: p });
+      console.log(`Loaded environment from ${p}`);
+      loaded = true;
+      break;
+    }
+  } catch (e) {
+    // ignore and continue
+  }
+}
+if (!loaded) {
+  // fallback to default dotenv behavior
+  dotenv.config();
+  console.warn('No environment file found in candidates, falling back to default dotenv load');
+}
 
 import express from 'express';
 import mongoose from 'mongoose';
