@@ -539,11 +539,27 @@ export const getAttendanceStats = async (req, res) => {
   const start = Date.now();
   logger.debug('getAttendanceStats start', { query: req.query });
   try {
-    // Optional query params for date range or batchId
-    const { startDate, endDate, batchId, deptId } = req.query;
+    // Optional query params for date range, batchId, deptId or batchYear
+    const { startDate, endDate, batchId, deptId, batchYear } = req.query;
 
     const filter = {};
     if (batchId) filter.batchId = String(batchId).toUpperCase();
+
+    // If a batchYear is provided (and batchId not explicitly provided), resolve batchIds for that year
+    if (!batchId && batchYear) {
+      const yearNum = parseInt(String(batchYear), 10);
+      if (!isNaN(yearNum)) {
+        const batchQuery = { batchYear: yearNum };
+        if (deptId) batchQuery.deptId = String(deptId);
+        const matchedBatches = await Batch.find(batchQuery).select('batchId').lean();
+        if (!matchedBatches || matchedBatches.length === 0) {
+          logger.info('getAttendanceStats no batches for year', { batchYear: yearNum, deptId });
+          return res.status(200).json([]);
+        }
+        const ids = matchedBatches.map(b => String(b.batchId).toUpperCase());
+        filter.batchId = { $in: ids };
+      }
+    }
 
     if (startDate || endDate) {
       const sd = startDate ? parseISTDate(startDate) : new Date(0);

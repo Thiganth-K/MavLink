@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { attendanceAPI, departmentAPI, type AttendanceStats } from '../services/api';
+import { attendanceAPI, departmentAPI, batchAPI, type AttendanceStats, type Batch } from '../services/api';
 import toast from 'react-hot-toast';
 import { Chart, BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
 
@@ -8,8 +8,12 @@ Chart.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElem
 interface DeptOption { deptId: string; deptName: string; }
 
 export default function StudentAnalysisDashboard() {
-  const [departments, setDepartments] = useState<DeptOption[]>([]);
+  
+  const [allDepts, setAllDepts] = useState<DeptOption[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('');
+  const [years, setYears] = useState<number[]>([]);
+  const [selectedYear, setSelectedYear] = useState<number | ''>('');
   const [stats, setStats] = useState<AttendanceStats[]>([]);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -24,23 +28,81 @@ export default function StudentAnalysisDashboard() {
 
   useEffect(() => { loadDepartments(); }, []);
 
-  useEffect(() => { if (selectedDept) fetchStats(); }, [selectedDept, startDate, endDate]);
+  useEffect(() => { if (selectedDept) fetchStats(); }, [selectedDept, startDate, endDate, selectedYear]);
 
   const loadDepartments = async () => {
     try {
       const list = await departmentAPI.listDepartments();
       const opts = Array.isArray(list) ? list.map((d: any) => ({ deptId: d.deptId, deptName: d.deptName })) : [];
-      setDepartments(opts);
-      if (opts.length) setSelectedDept(opts[0].deptId);
+      setAllDepts(opts);
+      // do not set displayed `departments` here; it will be derived from `allDepts` and `batches`
+      if (!selectedDept && opts.length) setSelectedDept(opts[0].deptId);
     } catch (err: any) { toast.error(err.message || 'Failed to load departments'); }
   };
 
+  // Load batches and compute available years
+  useEffect(() => {
+    const loadBatches = async () => {
+      try {
+        const bs = await batchAPI.getBatches().catch(() => [] as Batch[]);
+        setBatches(Array.isArray(bs) ? bs : []);
+        const ys = Array.from(new Set((Array.isArray(bs) ? bs.map(b => Number(b.batchYear)) : []).filter(n => !isNaN(n)))).sort((a, b) => b - a);
+        setYears(ys);
+        // Default year is All Years (empty string). Do not auto-select newest year.
+      } catch (err) {
+        // non-fatal
+      }
+    };
+    loadBatches();
+  }, []);
+
   const fetchStats = async () => {
     try {
-      const data = await attendanceAPI.getAttendanceStats(startDate || undefined, endDate || undefined, undefined, selectedDept);
+      const data = await attendanceAPI.getAttendanceStats(startDate || undefined, endDate || undefined, undefined, selectedDept, selectedYear === '' ? undefined : selectedYear);
       setStats(Array.isArray(data) ? data : []);
     } catch (err: any) { toast.error(err.message || 'Failed to load attendance stats'); }
   };
+
+  // Derived displayed years and departments based on selected filters
+  const displayedYears = useMemo(() => {
+    if (selectedDept) {
+      const ys = Array.from(new Set(batches.filter(b => String(b.deptId || '').toUpperCase() === String(selectedDept).toUpperCase()).map(b => Number(b.batchYear)).filter(n => !isNaN(n))));
+      return ys.sort((a, b) => b - a);
+    }
+    return years;
+  }, [batches, selectedDept, years]);
+
+  const displayedDepartments = useMemo(() => {
+    if (selectedYear !== '' && selectedYear !== undefined) {
+      const depts = Array.from(new Set(batches.filter(b => Number(b.batchYear) === Number(selectedYear)).map(b => String(b.deptId || '').toUpperCase())));
+      // map back to dept objects (preserve original casing/name)
+      return allDepts.filter(d => depts.includes(String(d.deptId).toUpperCase()));
+    }
+    return allDepts;
+  }, [batches, selectedYear, allDepts]);
+
+  // Ensure selection stays valid when displayed options change
+  useEffect(() => {
+    // If there are no years for the current department, clear the year selection (All Years)
+    if (!displayedYears || displayedYears.length === 0) {
+      if (selectedYear !== '') setSelectedYear('');
+      return;
+    }
+    // If user has explicitly selected a year but it becomes unavailable, reset to All Years
+    if (selectedYear !== '' && !displayedYears.includes(Number(selectedYear))) {
+      setSelectedYear('');
+    }
+  }, [displayedYears]);
+
+  useEffect(() => {
+    if (displayedDepartments && displayedDepartments.length) {
+      if (!selectedDept || !displayedDepartments.some(d => d.deptId === selectedDept)) {
+        setSelectedDept(displayedDepartments[0].deptId);
+      }
+    } else {
+      setSelectedDept('');
+    }
+  }, [displayedDepartments]);
 
   const filteredSorted = useMemo(() => {
     let rows = stats;
@@ -144,8 +206,15 @@ export default function StudentAnalysisDashboard() {
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-supergreenDark mb-1">Department</label>
               <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)} className="px-3 py-2 rounded-lg border border-supergreenDark/30 focus:ring-2 focus:ring-supergreenAccent">
-                {departments.map(d => <option key={d.deptId} value={d.deptId}>{d.deptId} - {d.deptName}</option>)}
-                {!departments.length && <option value="" disabled>Loading...</option>}
+                {displayedDepartments.map(d => <option key={d.deptId} value={d.deptId}>{d.deptId} - {d.deptName}</option>)}
+                {!displayedDepartments.length && <option value="" disabled>Loading...</option>}
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-supergreenDark mb-1">Year</label>
+              <select value={selectedYear} onChange={e => setSelectedYear(e.target.value === '' ? '' : Number(e.target.value))} className="px-3 py-2 rounded-lg border border-supergreenDark/30">
+                <option value="">All Years</option>
+                {displayedYears.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div className="flex flex-col">
