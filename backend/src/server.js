@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import fs from 'fs/promises';
 import { dropLegacyAttendanceIndexes } from './utils/indexCleanup.js';
 import logger from './utils/logger.js';
 
@@ -97,20 +98,42 @@ app.get('/api/health', (req, res) => {
   res.send('Server is up and running');
 });
 
-// Serve frontend static files
-app.use(express.static(frontendDistPath));
-
-// Fallback to index.html for non-API routes (SPA)
-// Use a middleware instead of wildcard route to avoid path-to-regexp '*' errors
-app.use((req, res, next) => {
+// Inject runtime config into SPA index routes before static assets are served.
+// This middleware sends an injected index.html for HTML-navigation routes,
+// but lets static asset requests pass through to express.static.
+app.use(async (req, res, next) => {
   // Only handle GET requests
   if (req.method !== 'GET') return next();
   // Skip API routes
   if (req.path.startsWith('/api')) return next();
-  // If the request matches a file in dist, let express.static serve it
-  // Otherwise, serve index.html (client-side routing)
-  res.sendFile(path.join(frontendDistPath, 'index.html'));
+
+  // If the request appears to be for a static asset (has an extension), skip
+  // and let express.static handle it.
+  const lastSegment = req.path.split('/').pop() || '';
+  if (lastSegment.includes('.')) return next();
+
+  const indexPath = path.join(frontendDistPath, 'index.html');
+  try {
+    let html = await fs.readFile(indexPath, 'utf8');
+    const isDev = String(process.env.NODE_ENV || '').toLowerCase() === 'development';
+    const apiBase = isDev ? 'http://localhost:3000/api' : '/api';
+    const appMode = isDev ? 'development' : 'production';
+    const injection = `\n<script>window.__API_BASE_URL = '${apiBase}'; window.__APP_MODE = '${appMode}';</script>\n`;
+    if (html.includes('</head>')) {
+      html = html.replace('</head>', `${injection}</head>`);
+    } else {
+      html = injection + html;
+    }
+
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(html);
+  } catch (err) {
+    return res.sendFile(indexPath);
+  }
 });
+
+// Serve frontend static files
+app.use(express.static(frontendDistPath));
 
 // Start server
 app.listen(PORT, () => {

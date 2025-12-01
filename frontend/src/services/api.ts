@@ -106,6 +106,15 @@ export interface AttendanceSummary {
   };
 }
 
+export interface BatchPresentCount {
+  batchId: string;
+  batchName?: string | null;
+  batchYear?: number | null;
+  totalStudents?: number | null;
+  FN_present: number;
+  AN_present: number;
+}
+
 export interface CombinedAttendanceSummary {
   date: string;
   fn: {
@@ -717,6 +726,22 @@ export const attendanceAPI = {
     const data: AttendanceAPIResponse = await response.json();
     // Expect data.data to be { FN: Attendance[], AN: Attendance[] }
     return (data.data as any) || { FN: [], AN: [] };
+  },
+
+  /**
+   * Get batch-wise present counts (FN/AN) for a given date. Returns an array
+   * of BatchPresentCount objects. Date is optional and should be YYYY-MM-DD.
+   */
+  getBatchPresentCounts: async (date?: string): Promise<BatchPresentCount[]> => {
+    let url = `${API_BASE_URL}/attendance/batches/today-counts`;
+    if (date) url += `?date=${encodeURIComponent(date)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error('Failed to fetch batch present counts');
+    }
+    const body = await res.json();
+    // Expect body.data to be the array
+    return body.data || [];
   },
 
   getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN', batchId?: string): Promise<Attendance[]> => {

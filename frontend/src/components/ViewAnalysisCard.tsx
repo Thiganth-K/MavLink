@@ -21,7 +21,8 @@ export default function ViewAnalysisCard() {
   // avgAttendance removed — not shown in summary cards
   const [unassignedBatchesCount, setUnassignedBatchesCount] = useState<number | null>(null);
   const [adminsWithRoleCount, setAdminsWithRoleCount] = useState<number | null>(null);
-  const [todaysPresentCount, setTodaysPresentCount] = useState<number | null>(null);
+  const [todaysPresentFNCount, setTodaysPresentFNCount] = useState<number | null>(null);
+  const [todaysPresentANCount, setTodaysPresentANCount] = useState<number | null>(null);
 
   useEffect(() => {
     // no local chart instances here — charts are created in the charts effect
@@ -68,20 +69,88 @@ export default function ViewAnalysisCard() {
 
         // average attendance computation removed (not displayed)
 
-        // fetch today's attendance and compute present count
+        // fetch today's attendance via batch-level counts if backend supports it
         try {
-          const attended = await attendanceAPI.getAttendanceByDate(today).catch(() => null);
-          let present = 0;
-          if (Array.isArray(attended)) {
-            present = attended.filter((r: any) => String(r.status).toLowerCase() === 'present').length;
-          } else if (attended && (attended as any).FN) {
-            const fn = Array.isArray((attended as any).FN) ? (attended as any).FN : [];
-            const an = Array.isArray((attended as any).AN) ? (attended as any).AN : [];
-            present = [...fn, ...an].filter((r: any) => String(r.status).toLowerCase() === 'present').length;
+          const batchCounts = await attendanceAPI.getBatchPresentCounts(today).catch(() => []);
+          if (Array.isArray(batchCounts) && batchCounts.length > 0) {
+            let fn = 0;
+            let an = 0;
+            for (const b of batchCounts) {
+              fn += Number(b.FN_present || 0);
+              an += Number(b.AN_present || 0);
+            }
+            setTodaysPresentFNCount(fn);
+            setTodaysPresentANCount(an);
+          } else {
+            // Fallback to older per-entry aggregation when batch endpoint not available
+            const attended = await attendanceAPI.getAttendanceByDate(today).catch(() => null);
+
+            // Helper to normalize any date-like value to YYYY-MM-DD in IST
+            const toISTDateString = (val: any): string | null => {
+              if (!val && val !== 0) return null;
+              try {
+                const d = new Date(val);
+                if (isNaN(d.getTime())) return null;
+                const ist = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+                const y = ist.getFullYear();
+                const m = String(ist.getMonth() + 1).padStart(2, '0');
+                const dd = String(ist.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+              } catch (err) {
+                return null;
+              }
+            };
+
+            const flatten = (node: any, parentSessionDate?: any): any[] => {
+              if (!node) return [];
+              const out: any[] = [];
+              if (Array.isArray(node)) {
+                for (const el of node) out.push(...flatten(el, parentSessionDate));
+                return out;
+              }
+              if (Array.isArray(node.FN) || Array.isArray(node.AN)) {
+                const sessionDate = node.date ?? node.sessionDate ?? parentSessionDate;
+                const normalized = toISTDateString(sessionDate);
+                if (Array.isArray(node.FN)) for (const it of node.FN) out.push({ ...it, _sessionDate: normalized, _sessionPart: 'FN' });
+                if (Array.isArray(node.AN)) for (const it of node.AN) out.push({ ...it, _sessionDate: normalized, _sessionPart: 'AN' });
+                return out;
+              }
+              if (typeof node.status !== 'undefined' || typeof node.attendanceStatus !== 'undefined' || node.studentId || node.student) {
+                const sessionDate = node.date ?? node.attendanceDate ?? node.sessionDate ?? parentSessionDate;
+                return [{ ...node, _sessionDate: toISTDateString(sessionDate) }];
+              }
+              for (const key of ['records', 'attendances', 'students']) {
+                if (Array.isArray(node[key])) {
+                  out.push(...flatten(node[key], node.date ?? node.sessionDate ?? parentSessionDate));
+                }
+              }
+              return out;
+            };
+
+            const entries = flatten(attended);
+            const presentFNSet = new Set<string>();
+            const presentANSet = new Set<string>();
+            for (const e of entries) {
+              const statusRaw = (e.status ?? e.attendanceStatus ?? '').toString();
+              const status = statusRaw.toLowerCase().trim();
+              const entryDate = (e._sessionDate ?? e.date ?? e.attendanceDate ?? e.sessionDate) as any;
+              const entryDateStr = toISTDateString(entryDate);
+              if (!entryDateStr || entryDateStr !== today) continue;
+              if (!(status === 'present' || status === 'p' || status.indexOf('present') !== -1)) continue;
+              const studentKey = String(e.studentId ?? e.student?._id ?? e.admissionNo ?? e.rollNo ?? e._id ?? '').trim();
+              if (!studentKey) continue;
+              const partRaw = (e._sessionPart ?? e.session ?? e.part ?? e.slot ?? '').toString();
+              const part = partRaw.toLowerCase();
+              if (part.includes('fn') || part === 'fn') presentFNSet.add(studentKey);
+              else if (part.includes('an') || part === 'an') presentANSet.add(studentKey);
+              else { presentFNSet.add(studentKey); presentANSet.add(studentKey); }
+            }
+            setTodaysPresentFNCount(presentFNSet.size);
+            setTodaysPresentANCount(presentANSet.size);
           }
-          setTodaysPresentCount(typeof present === 'number' ? present : null);
         } catch (e) {
-          setTodaysPresentCount(null);
+          setTodaysPresentFNCount(null);
+          setTodaysPresentANCount(null);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to load attendance data');
@@ -237,7 +306,8 @@ export default function ViewAnalysisCard() {
           { label: 'Batches', value: batchCount },
           { label: 'Unassigned Batches', value: unassignedBatchesCount },
           { label: 'Students', value: studentCount },
-          { label: "Today's Present", value: todaysPresentCount },
+          { label: "Today's Present FN", value: todaysPresentFNCount },
+          { label: "Today's Present AN", value: todaysPresentANCount },
         ].map((m, idx) => (
           <div key={idx} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-purple-200">
             <div className="text-[13px] font-medium text-gray-700">{m.label}</div>

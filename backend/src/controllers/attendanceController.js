@@ -420,6 +420,70 @@ export const getAttendanceByDateSummary = async (req, res) => {
 };
 
 // ============================================================
+// GET BATCH-WISE FN/AN PRESENT COUNTS FOR A GIVEN DATE (DEFAULT: TODAY)
+// ============================================================
+export const getBatchSessionPresentCounts = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getBatchSessionPresentCounts start', { query: req.query });
+  try {
+    const { date } = req.query;
+
+    const dateStr = date && typeof date === 'string' ? date : toISTDateString(getISTTimestamp());
+    const attendanceDate = parseISTDate(dateStr);
+    const nextDate = getNextISTDay(attendanceDate);
+
+    // Fetch attendance docs for the date
+    const docs = await Attendance.find({ date: { $gte: attendanceDate, $lt: nextDate } });
+
+    // Map batchId -> { fnPresent: number, anPresent: number }
+    const map = new Map();
+
+    docs.forEach(doc => {
+      const batchId = doc.batchId;
+      if (!map.has(batchId)) map.set(batchId, { fnPresent: 0, anPresent: 0 });
+      const entries = Array.isArray(doc.entries) ? doc.entries : [];
+      const presentCount = entries.filter(e => e && e.status === 'Present').length;
+      if (doc.session === 'FN') map.get(batchId).fnPresent += presentCount;
+      else if (doc.session === 'AN') map.get(batchId).anPresent += presentCount;
+    });
+
+    // Enrich with batch metadata (name, year, totalStudents)
+    const batchIds = Array.from(map.keys());
+    let batches = [];
+    if (batchIds.length) {
+      batches = await Batch.find({ batchId: { $in: batchIds } }).select('batchId batchName batchYear students').lean();
+    }
+    const batchMap = new Map();
+    batches.forEach(b => batchMap.set(String(b.batchId).toUpperCase(), b));
+
+    const results = [];
+    for (const [bid, counts] of map.entries()) {
+      const b = batchMap.get(String(bid).toUpperCase()) || null;
+      results.push({
+        batchId: bid,
+        batchName: b ? b.batchName : null,
+        batchYear: b ? b.batchYear : null,
+        totalStudents: b && Array.isArray(b.students) ? b.students.length : null,
+        FN_present: counts.fnPresent,
+        AN_present: counts.anPresent
+      });
+    }
+
+    // Also include batches with zero attendance (optional) — include batches found in DB but missing in map
+    // (If you prefer to include all batches always, query Batch.find({}) instead.)
+
+    // Sort results by batchId
+    results.sort((a, b) => String(a.batchId).localeCompare(String(b.batchId)));
+
+    logger.info('getBatchSessionPresentCounts success', { durationMs: Date.now() - start, date: dateStr, batches: results.length });
+    return res.status(200).json({ success: true, message: `Batch-wise present counts for ${dateStr}`, date: dateStr, data: results });
+  } catch (error) {
+    logger.error('getBatchSessionPresentCounts error', { error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to fetch batch session present counts', error: error.message });
+  }
+};
+
+// ============================================================
 // GET STUDENTS FOR A BATCH (HELPER FOR MARKING ATTENDANCE)
 // ============================================================
 export const getStudentsByBatch = async (req, res) => {
