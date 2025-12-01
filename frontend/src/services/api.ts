@@ -1,16 +1,35 @@
-// Runtime override (set by server or hosting) -> build-time Vite env -> fallback to '/api'
-// This order lets you change the API host without rebuilding by setting `window.__API_BASE_URL`.
+// Resolve API base with preference order:
+// 1) runtime override `window.__API_BASE_URL`
+// 2) Vite build-time override `import.meta.env.VITE_API_BASE_URL`
+// 3) If running under Vite dev (import.meta.env.MODE === 'development') or the
+//    app is being served on localhost, prefer the backend dev server at http://localhost:3000/api
+// 4) Fallback to relative `/api` for production builds served from same origin
 const runtimeApi = typeof window !== 'undefined' ? (window as any).__API_BASE_URL : undefined;
-const API_BASE_URL = runtimeApi || (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+const viteApi = (import.meta as any).env?.VITE_API_BASE_URL;
+const viteMode = (import.meta as any).env?.MODE;
+const runningOnLocalhost = typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname === '127.0.0.1');
+
+let API_BASE_URL: string | undefined = runtimeApi || viteApi;
+if (!API_BASE_URL) {
+  if (viteMode === 'development' || runningOnLocalhost) {
+    API_BASE_URL = 'http://localhost:3000/api';
+  } else {
+    API_BASE_URL = '/api';
+  }
+}
 
 // Helpful dev-time warning if accidentally pointing to localhost in production
 try {
   if (typeof window !== 'undefined' && window.location && API_BASE_URL.includes('localhost')) {
-    // Only warn in non-local environments
-    if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+    if (!(viteMode === 'development' || runningOnLocalhost)) {
       // eslint-disable-next-line no-console
       console.warn('[config] API_BASE_URL contains localhost; requests may fail from deployed site');
     }
+  }
+  // Log resolved value to aid debugging when frontend runs separately
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.info('[config] API_BASE_URL resolved to', API_BASE_URL, { runtimeApi: runtimeApi || null, viteApi: viteApi || null, viteMode: viteMode || null, runningOnLocalhost });
   }
 } catch (e) {
   // ignore environment errors
@@ -104,6 +123,15 @@ export interface AttendanceSummary {
     absent: number;
     onDuty: number;
   };
+}
+
+export interface BatchPresentCount {
+  batchId: string;
+  batchName?: string | null;
+  batchYear?: number | null;
+  totalStudents?: number | null;
+  FN_present: number;
+  AN_present: number;
 }
 
 export interface CombinedAttendanceSummary {
@@ -719,6 +747,22 @@ export const attendanceAPI = {
     return (data.data as any) || { FN: [], AN: [] };
   },
 
+  /**
+   * Get batch-wise present counts (FN/AN) for a given date. Returns an array
+   * of BatchPresentCount objects. Date is optional and should be YYYY-MM-DD.
+   */
+  getBatchPresentCounts: async (date?: string): Promise<BatchPresentCount[]> => {
+    let url = `${API_BASE_URL}/attendance/batches/today-counts`;
+    if (date) url += `?date=${encodeURIComponent(date)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error('Failed to fetch batch present counts');
+    }
+    const body = await res.json();
+    // Expect body.data to be the array
+    return body.data || [];
+  },
+
   getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN', batchId?: string): Promise<Attendance[]> => {
     let url = `${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
@@ -787,11 +831,12 @@ export const attendanceAPI = {
     return response.json();
   },
 
-  getAttendanceStats: async (startDate?: string, endDate?: string, batchId?: string, deptId?: string): Promise<AttendanceStats[]> => {
+  getAttendanceStats: async (startDate?: string, endDate?: string, batchId?: string, deptId?: string, batchYear?: number | string): Promise<AttendanceStats[]> => {
     const params: string[] = [];
     if (startDate && endDate) params.push(`startDate=${startDate}`, `endDate=${endDate}`);
     if (batchId) params.push(`batchId=${encodeURIComponent(batchId)}`);
     if (deptId) params.push(`deptId=${encodeURIComponent(deptId)}`);
+    if (batchYear !== undefined && batchYear !== null && String(batchYear).trim() !== '') params.push(`batchYear=${encodeURIComponent(String(batchYear))}`);
     const query = params.length ? `?${params.join('&')}` : '';
     const url = `${API_BASE_URL}/attendance/stats${query}`;
 

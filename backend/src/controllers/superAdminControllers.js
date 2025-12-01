@@ -9,41 +9,48 @@ import { parseISTDate, getNextISTDay, getTodayIST, toISTDateString } from '../ut
 
 // ---------- LOGIN ----------
 export const loginController = async (req, res) => {
-  logger.debug('loginController start', { bodyKeys: Object.keys(req.body || {}) });
-  const { username, password } = req.body;
+  try {
+    logger.debug('loginController start', { bodyKeys: Object.keys(req.body || {}) });
+    const { username, password } = req.body || {};
 
-  const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME;
-  const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
+    const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME;
+    const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
 
-  // SUPER ADMIN LOGIN (from .env)
-  if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
-    logger.info('loginController superadmin success', { username });
+    logger.debug('loginController env presence', { hasSuperAdminUsername: !!SUPER_ADMIN_USERNAME, hasSuperAdminPassword: !!SUPER_ADMIN_PASSWORD });
+
+    // SUPER ADMIN LOGIN (from .env)
+    if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
+      logger.info('loginController superadmin success', { username });
+      return res.status(200).json({
+        message: "Super Admin login successful",
+        role: "SUPER_ADMIN",
+        user: { username }
+      });
+    }
+
+    // ADMIN LOGIN (from DB)
+    const adminUser = await Admin.findOne({ username });
+
+    if (!adminUser) {
+      logger.warn('loginController admin not found', { username });
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (password !== adminUser.password) {
+      logger.warn('loginController invalid credentials', { username });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    logger.info('loginController admin success', { username });
     return res.status(200).json({
-      message: "Super Admin login successful",
-      role: "SUPER_ADMIN",
-      user: { username }
+      message: "Admin login successful",
+      role: adminUser.role,
+      user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
     });
+  } catch (err) {
+    logger.error('loginController error', { error: err && err.message ? err.message : err, stack: err && err.stack ? err.stack : undefined });
+    return res.status(500).json({ message: 'Internal server error during login', error: err && err.message ? err.message : err });
   }
-
-  // ADMIN LOGIN (from DB)
-  const adminUser = await Admin.findOne({ username });
-
-  if (!adminUser) {
-    logger.warn('loginController admin not found', { username });
-    return res.status(404).json({ message: "User not found" });
-  }
-
-  if (password !== adminUser.password) {
-    logger.warn('loginController invalid credentials', { username });
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
-
-  logger.info('loginController admin success', { username });
-  return res.status(200).json({
-    message: "Admin login successful",
-    role: adminUser.role,
-    user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
-  });
 };
 
 // ---------- CREATE ADMIN ----------
@@ -230,6 +237,10 @@ export const exportAdvancedData = async (req, res) => {
     let endDate = qEnd ? parseISTDate(String(qEnd)) : null;
 
     const p = String(preset || '').toLowerCase();
+    // Support explicit all-dates via query param `allDates=true` or preset=all
+    const allDatesParam = req.query.allDates;
+    const allDates = (typeof allDatesParam === 'string' && (allDatesParam === 'true' || allDatesParam === '1')) || p === 'all';
+
     if (p) {
       if (p === 'today') {
         const todayStr = getTodayIST();
@@ -277,10 +288,7 @@ export const exportAdvancedData = async (req, res) => {
     }
 
     // Fetch datasets
-    const [admins, departments] = await Promise.all([
-      Admin.find().lean(),
-      Department.find().lean()
-    ]);
+    const departments = await Department.find().lean();
 
     // Batches filtered by departments and/or batchYears (or all)
     const batchQuery = {};
@@ -292,168 +300,135 @@ export const exportAdvancedData = async (req, res) => {
     // Students filtered by those batches (or all departments if none specified)
     const students = await Student.find(deptFilterIds.length ? { dept: { $in: departments.filter(d => deptFilterIds.includes(d.deptId)).map(d => d.deptName) } } : {}).lean();
 
-    // Attendance filtered by batchId set and date range
+    // Attendance filtered by batchId set and date range (skip date filter if allDates requested)
     const attendanceQuery = {};
     if (batchIds.size) attendanceQuery['batchId'] = { $in: Array.from(batchIds) };
-    if (startDate && endDate) {
-      // Use exclusive upper bound for end date: date >= startDate && date < nextDay(endDate)
+    if (!allDates && startDate && endDate) {
       const endExclusive = getNextISTDay(endDate);
       attendanceQuery['date'] = { $gte: startDate, $lt: endExclusive };
     }
     const attendance = await Attendance.find(attendanceQuery).lean();
 
-    // Build workbook
+    // Build workbook with a single combined sheet: department/batch/student + date pivot + summary
     const wb = new ExcelJS.Workbook();
     wb.creator = 'STARS';
     wb.created = new Date();
 
-    const metaSheet = wb.addWorksheet('ExportMeta');
-    metaSheet.addRow(['GeneratedAt', new Date().toISOString()]);
-    metaSheet.addRow(['Preset', p || 'custom']);
-    metaSheet.addRow(['StartDate', startDate ? startDate.toISOString().slice(0,10) : '']);
-    metaSheet.addRow(['EndDate', endDate ? endDate.toISOString().slice(0,10) : '']);
-    metaSheet.addRow(['DeptIds', deptFilterIds.length ? deptFilterIds.join(',') : 'ALL']);
+    // Build lookup maps
+    const batchById = new Map();
+    batches.forEach(b => batchById.set(b.batchId, b));
+    const deptById = new Map();
+    departments.forEach(d => deptById.set(d.deptId, d.deptName));
 
-    const adminSheet = wb.addWorksheet('Admins');
-    adminSheet.columns = [
-      { header: 'adminId', key: 'adminId', width: 16 },
-      { header: 'username', key: 'username', width: 20 },
-      { header: 'role', key: 'role', width: 14 },
-      { header: 'assignedBatchIds', key: 'assignedBatchIds', width: 40 }
-    ];
-    admins.forEach(a => adminSheet.addRow({
-      adminId: a.adminId,
-      username: a.username,
-      role: a.role,
-      assignedBatchIds: (a.assignedBatchIds || []).join(',')
-    }));
+    // Collect distinct dates and build student maps
+    const dateSet = new Set();
+    const studentDateSessionMap = new Map(); // regno -> Map(date::session -> status)
+    const studentAttendanceMap = new Map();
+    attendance.forEach(a => {
+      const dateStr = a.date ? toISTDateString(new Date(a.date)) : '';
+      if (!dateStr) return;
+      dateSet.add(dateStr);
+      (a.entries || []).forEach(entry => {
+        const reg = String(entry.regno || '').trim();
+        if (!reg) return;
+        if (!studentDateSessionMap.has(reg)) studentDateSessionMap.set(reg, new Map());
+        const sessionKey = `${dateStr}::${String(entry.session || a.session || '').toUpperCase()}`;
+        studentDateSessionMap.get(reg).set(sessionKey, entry.status || '');
 
-    const deptSheet = wb.addWorksheet('Departments');
-    deptSheet.columns = [
+        if (!studentAttendanceMap.has(reg)) {
+          studentAttendanceMap.set(reg, { regno: reg, studentname: entry.studentname, totalClasses: 0, present: 0, absent: 0, onDuty: 0 });
+        }
+        const st = studentAttendanceMap.get(reg);
+        st.totalClasses++;
+        if (entry.status === 'Present') st.present++;
+        else if (entry.status === 'Absent') st.absent++;
+        else if (entry.status === 'On-Duty') st.onDuty++;
+      });
+    });
+
+    const sortedDates = Array.from(dateSet).sort((a,b) => a < b ? -1 : a > b ? 1 : 0);
+
+    // Build columns
+    const dateColumns = [];
+    for (const d of sortedDates) {
+      dateColumns.push({ header: `${d} FN`, key: `d_${d.replace(/-/g,'')}_FN`, width: 12 });
+      dateColumns.push({ header: `${d} AN`, key: `d_${d.replace(/-/g,'')}_AN`, width: 12 });
+    }
+
+    const baseColumns = [
       { header: 'deptId', key: 'deptId', width: 12 },
-      { header: 'deptName', key: 'deptName', width: 24 }
-    ];
-    (deptFilterIds.length ? departments.filter(d => deptFilterIds.includes(d.deptId)) : departments)
-      .forEach(d => deptSheet.addRow({ deptId: d.deptId, deptName: d.deptName }));
-
-    const batchSheet = wb.addWorksheet('Batches');
-    batchSheet.columns = [
+      { header: 'deptName', key: 'deptName', width: 24 },
       { header: 'batchId', key: 'batchId', width: 16 },
       { header: 'batchName', key: 'batchName', width: 20 },
       { header: 'batchYear', key: 'batchYear', width: 10 },
-      { header: 'deptId', key: 'deptId', width: 12 },
-      { header: 'adminId', key: 'adminId', width: 16 }
-    ];
-    batches.forEach(b => batchSheet.addRow({ batchId: b.batchId, batchName: b.batchName, batchYear: b.batchYear, deptId: b.deptId, adminId: b.adminId || '' }));
-
-    const studentSheet = wb.addWorksheet('Students');
-    studentSheet.columns = [
-      { header: 'regno', key: 'regno', width: 16 },
-      { header: 'studentname', key: 'studentname', width: 20 },
-      { header: 'dept', key: 'dept', width: 12 },
-      { header: 'batchId', key: 'batchId', width: 16 },
-      { header: 'email', key: 'email', width: 28 },
-      { header: 'phno', key: 'phno', width: 16 }
-    ];
-    students.forEach(s => studentSheet.addRow({ regno: s.regno, studentname: s.studentname, dept: s.dept, batchId: s.batchId || '', email: s.email, phno: s.phno }));
-
-    const attendanceSheet = wb.addWorksheet('Attendance');
-    attendanceSheet.columns = [
-      { header: 'batchId', key: 'batchId', width: 12 },
-      { header: 'date', key: 'date', width: 14 },
-      { header: 'session', key: 'session', width: 8 },
-      { header: 'markedBy', key: 'markedBy', width: 18 },
       { header: 'regno', key: 'regno', width: 14 },
-      { header: 'studentname', key: 'studentname', width: 20 },
-      { header: 'status', key: 'status', width: 12 },
-      { header: 'reason', key: 'reason', width: 30 }
+      { header: 'studentname', key: 'studentname', width: 20 }
     ];
-    attendance.forEach(a => {
-      const dateStr = a.date ? toISTDateString(new Date(a.date)) : '';
-      (a.entries || []).forEach(entry => {
-        attendanceSheet.addRow({
-          batchId: a.batchId,
-          date: dateStr,
-          session: a.session,
-          markedBy: a.markedBy,
-          regno: entry.regno,
-          studentname: entry.studentname,
-          status: entry.status,
-          reason: entry.reason || ''
-        });
-      });
-    });
 
-    // Calculate attendance percentage for each student
-    const studentAttendanceMap = new Map();
-    attendance.forEach(a => {
-      (a.entries || []).forEach(entry => {
-        const key = entry.regno;
-        if (!studentAttendanceMap.has(key)) {
-          studentAttendanceMap.set(key, {
-            regno: entry.regno,
-            studentname: entry.studentname,
-            totalClasses: 0,
-            present: 0,
-            absent: 0,
-            onDuty: 0
-          });
-        }
-        const stats = studentAttendanceMap.get(key);
-        stats.totalClasses++;
-        if (entry.status === 'Present') stats.present++;
-        else if (entry.status === 'Absent') stats.absent++;
-        else if (entry.status === 'On-Duty') stats.onDuty++;
-      });
-    });
-
-    // Create Attendance Summary sheet
-    const summarySheet = wb.addWorksheet('Attendance Summary');
-    summarySheet.columns = [
-      { header: 'regno', key: 'regno', width: 16 },
-      { header: 'studentname', key: 'studentname', width: 20 },
+    const summaryColumns = [
       { header: 'totalClasses', key: 'totalClasses', width: 14 },
       { header: 'present', key: 'present', width: 12 },
       { header: 'absent', key: 'absent', width: 12 },
       { header: 'onDuty', key: 'onDuty', width: 12 },
       { header: 'attendancePercentage', key: 'attendancePercentage', width: 20 }
     ];
-    
-    Array.from(studentAttendanceMap.values())
-      .sort((a, b) => a.regno.localeCompare(b.regno))
-      .forEach(stats => {
-        const percentage = stats.totalClasses > 0 
-          ? ((stats.present / stats.totalClasses) * 100).toFixed(2) 
-          : '0.00';
-        summarySheet.addRow({
-          regno: stats.regno,
-          studentname: stats.studentname,
-          totalClasses: stats.totalClasses,
-          present: stats.present,
-          absent: stats.absent,
-          onDuty: stats.onDuty,
-          attendancePercentage: `${percentage}%`
-        });
-      });
 
-    [metaSheet, adminSheet, deptSheet, batchSheet, studentSheet, attendanceSheet, summarySheet].forEach(sh => {
-      sh.getRow(1).font = { bold: true };
-      sh.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
-      sh.getRow(1).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFE8E5F4' }
+    const exportSheet = wb.addWorksheet('ExportData');
+    exportSheet.columns = [...baseColumns, ...dateColumns, ...summaryColumns];
+
+    // One row per student
+    const allStudents = Array.isArray(students) ? students : [];
+    for (const s of allStudents) {
+      const reg = String(s.regno || '').trim();
+      const batchInfo = batchById.get(s.batchId) || {};
+      const deptName = s.dept || (batchInfo.deptId ? deptById.get(batchInfo.deptId) || '' : '');
+      const stats = studentAttendanceMap.get(reg) || { totalClasses: 0, present: 0, absent: 0, onDuty: 0 };
+      const percentage = stats.totalClasses > 0 ? `${((stats.present / stats.totalClasses) * 100).toFixed(2)}%` : '0.00%';
+
+      const row = {
+        deptId: batchInfo.deptId || '',
+        deptName,
+        batchId: s.batchId || '',
+        batchName: batchInfo.batchName || '',
+        batchYear: batchInfo.batchYear || '',
+        regno: s.regno,
+        studentname: s.studentname
       };
-    });
+
+      const mapForStudent = studentDateSessionMap.get(reg);
+      for (const d of sortedDates) {
+        const keyFN = `${d}::FN`;
+        const keyAN = `${d}::AN`;
+        const cellKeyFN = `d_${d.replace(/-/g,'')}_FN`;
+        const cellKeyAN = `d_${d.replace(/-/g,'')}_AN`;
+        row[cellKeyFN] = mapForStudent && mapForStudent.has(keyFN) ? mapForStudent.get(keyFN) : '';
+        row[cellKeyAN] = mapForStudent && mapForStudent.has(keyAN) ? mapForStudent.get(keyAN) : '';
+      }
+
+      row.totalClasses = stats.totalClasses;
+      row.present = stats.present;
+      row.absent = stats.absent;
+      row.onDuty = stats.onDuty;
+      row.attendancePercentage = percentage;
+
+      exportSheet.addRow(row);
+    }
+
+    // style header
+    try {
+      exportSheet.getRow(1).font = { bold: true };
+      exportSheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+      exportSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E5F4' } };
+    } catch (e) {}
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="STARS_export_advanced.xlsx"');
     await wb.xlsx.write(res);
     res.end();
-    logger.info('exportAdvancedData success', { durationMs: Date.now() - start, admins: admins.length, batches: batches.length, departments: departments.length, students: students.length, attendanceDocs: attendance.length });
+    logger.info('exportAdvancedData success', { durationMs: Date.now() - start, batches: batches.length, departments: departments.length, students: students.length, attendanceDocs: attendance.length });
   } catch (err) {
-    logger.error('exportAdvancedData error', { error: err.message });
-    res.status(500).json({ message: 'Failed to export data', error: err.message });
+    logger.error('exportAdvancedData error', { error: err && err.message ? err.message : err });
+    res.status(500).json({ message: 'Failed to export data', error: err && err.message ? err.message : err });
   }
 };
 

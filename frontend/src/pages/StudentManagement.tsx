@@ -32,7 +32,18 @@ export default function StudentManagement() {
       window.location.href = '/';
       return;
     }
-    
+    // If this page was opened with query params (e.g. from Batch Management),
+    // prefill the filters so the list is focused on that batch's year and dept.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qDept = params.get('dept') || params.get('department') || '';
+      const qYear = params.get('year') || params.get('batchYear') || '';
+      if (qDept) setFilterDept(String(qDept).toUpperCase());
+      if (qYear) setFilterYear(String(qYear));
+    } catch (err) {
+      // ignore
+    }
+
     fetchStudents();
     fetchDepartments();
     fetchBatches();

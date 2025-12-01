@@ -164,11 +164,11 @@ export default function SuperAdminExport() {
           <div>
             <h2 className="text-lg font-semibold text-violet-900 mb-2">Date Range</h2>
             <div className="flex flex-wrap gap-2 mb-3">
-              <button onClick={() => setPreset('today')} className={`px-3 py-1 rounded-lg border ${preset === 'today' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Today</button>
-              <button onClick={() => setPreset('thisWeek')} className={`px-3 py-1 rounded-lg border ${preset === 'thisWeek' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Week</button>
-              <button onClick={() => setPreset('thisMonth')} className={`px-3 py-1 rounded-lg border ${preset === 'thisMonth' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Month</button>
-              <button onClick={() => setPreset('all')} className={`px-3 py-1 rounded-lg border ${preset === 'all' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>All Dates</button>
-              <button onClick={() => setPreset('')} className={`px-3 py-1 rounded-lg border ${preset === '' ? 'bg-violet-50 text-violet-700 border-violet-600' : 'bg-violet-50 text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Custom</button>
+              <button onClick={() => setPreset('today')} className={`px-3 py-1 rounded-lg border ${preset === 'today' ? 'bg-violet-100 text-violet-700 border-violet-600' : 'bg-white text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Today</button>
+              <button onClick={() => setPreset('thisWeek')} className={`px-3 py-1 rounded-lg border ${preset === 'thisWeek' ? 'bg-violet-100 text-violet-700 border-violet-600' : 'bg-white text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Week</button>
+              <button onClick={() => setPreset('thisMonth')} className={`px-3 py-1 rounded-lg border ${preset === 'thisMonth' ? 'bg-violet-100 text-violet-700 border-violet-600' : 'bg-white text-violet-700 border-violet-600 hover:bg-violet-50'}`}>This Month</button>
+              <button onClick={() => setPreset('all')} className={`px-3 py-1 rounded-lg border ${preset === 'all' ? 'bg-violet-100 text-violet-700 border-violet-600' : 'bg-white text-violet-700 border-violet-600 hover:bg-violet-50'}`}>All Dates</button>
+              <button onClick={() => setPreset('')} className={`px-3 py-1 rounded-lg border ${preset === '' ? 'bg-violet-100 text-violet-700 border-violet-600' : 'bg-white text-violet-700 border-violet-600 hover:bg-violet-50'}`}>Custom</button>
             </div>
             <div className="mt-3 mb-3">
               <label className="text-sm font-medium text-violet-800 mr-2">Filter by Batch Year</label>

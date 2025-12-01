@@ -42,7 +42,8 @@ export default function AdminChatModal({ onClose }: Props) {
     };
 
     doLoad();
-    pollRef.current = window.setInterval(load, 8000) as unknown as number;
+    // Poll chat messages every 5 minutes
+    pollRef.current = window.setInterval(load, 300000) as unknown as number;
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
   }, []);
 

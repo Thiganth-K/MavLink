@@ -18,5 +18,8 @@
     "url": "https://github.com/Thiganth-K/MavLink/issues"
   },
   "homepage": "https://github.com/Thiganth-K/MavLink#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "react-chartjs-2": "^5.3.1"
+  }
 }

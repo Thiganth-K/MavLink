@@ -189,20 +189,14 @@ export default function AdminBatchMappingPage() {
                 <button
                   onClick={() => setViewMode('mapping ')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'mapping ' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50'}`}
-                >mapping </button>
+                >Mapping </button>
                 
                 <button
                   onClick={() => setViewMode('summary')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium ${viewMode === 'summary' ? 'bg-purple-50 text-purple-700 border border-purple-600' : 'bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50'}`}
                 >Summary</button>
                 
-                <button
-                  onClick={async () => {
-                    setLoading(true);
-                    try { const refreshed = await mappingAPI.getAdminBatchMapping(); setData(refreshed); } catch (e: any) { setError(e.message || 'Refresh failed'); } finally { setLoading(false); }
-                  }}
-                  className="px-3 py-1.5 rounded-md text-sm font-medium bg-violet-50 text-violet-700 border border-violet-600 hover:bg-violet-50"
-                >Refresh</button>
+                {/* Manual refresh button removed per UI preference; mapping updates still occur after mutations */}
               </div>
             </div>
 

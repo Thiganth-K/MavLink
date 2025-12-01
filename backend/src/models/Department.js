@@ -20,6 +20,6 @@ const departmentSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-departmentSchema.index({ deptId: 1 });
+// `deptId` is unique and creates an index automatically; avoid duplicate single-field index declaration
 
 export default mongoose.model('Department', departmentSchema);

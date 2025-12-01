@@ -5,9 +5,10 @@ import {
   getAttendanceByDateAndSession,
   getAttendanceByDateRange,
   getAttendanceByDateSummary,
-  getSessionSummaryByDate
-  , getStudentsByBatch
-  , getAttendanceStats
+  getSessionSummaryByDate,
+  getBatchSessionPresentCounts,
+  getStudentsByBatch,
+  getAttendanceStats
 } from "../controllers/attendanceController.js";
 
 const router = express.Router();
@@ -41,6 +42,10 @@ router.get("/date/session", getAttendanceByDateAndSession);
 // GET /api/attendance/date/summary?date=YYYY-MM-DD
 // If `date` is omitted, defaults to today's IST date.
 router.get("/date/summary", getSessionSummaryByDate);
+
+// Get batch-wise present counts for the given date (defaults to today's IST date)
+// GET /api/attendance/batches/today-counts?date=YYYY-MM-DD
+router.get('/batches/today-counts', getBatchSessionPresentCounts);
 
 // Get students belonging to a batch (used when marking attendance)
 // GET /api/attendance/students?batchId=BATCH1
