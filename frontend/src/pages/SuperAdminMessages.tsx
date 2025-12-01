@@ -62,7 +62,8 @@ const SuperAdminMessages: React.FC = () => {
       };
 
     loadUnreadCounts();
-    countsPollRef.current = window.setInterval(loadUnreadCounts, 8000) as unknown as number;
+    // Poll unread counts every 5 minutes
+    countsPollRef.current = window.setInterval(loadUnreadCounts, 300000) as unknown as number;
 
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
@@ -119,8 +120,8 @@ const SuperAdminMessages: React.FC = () => {
 
     refresh();
 
-    // poll every 8s
-    pollRef.current = window.setInterval(refresh, 8000) as unknown as number;
+    // poll every 5 minutes
+    pollRef.current = window.setInterval(refresh, 300000) as unknown as number;
 
     return () => {
       cancelled = true;

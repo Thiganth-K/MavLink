@@ -38,7 +38,7 @@ export default function AdminProfile(props: Props) {
   const [profile, setProfile] = useState<ProfileType | null>(profileData);
 
 
-  // Auto-refresh profile from backend on mount, every 10s, and whenever panel is opened
+  // Auto-refresh profile from backend on mount, every 5 minutes (300000 ms), and whenever panel is opened
   useEffect(() => {
     if (!open) return;
     let mounted = true;
@@ -88,9 +88,11 @@ export default function AdminProfile(props: Props) {
     const refreshLoop = async () => {
       await fetchAndFilterBatches();
       if (!mounted) return;
-      timer = window.setTimeout(refreshLoop, 10000) as unknown as number;
+      // schedule next refresh in 5 minutes
+      timer = window.setTimeout(refreshLoop, 300000) as unknown as number;
     };
-    timer = window.setTimeout(refreshLoop, 10000) as unknown as number;
+    // initial schedule in 5 minutes
+    timer = window.setTimeout(refreshLoop, 300000) as unknown as number;
 
     return () => {
       mounted = false;
@@ -157,7 +159,7 @@ export default function AdminProfile(props: Props) {
                 <div key={b.batchId} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <div>
                     <div className="text-sm font-medium text-purple-900">{b.batchId} {b.batchName ? `- ${b.batchName}` : ''}</div>
-                    <div className="text-xs text-gray-600">Dept: {b.dept || '-'}</div>
+                    <div className="text-xs text-gray-600">Dept: {b.deptId || '-'}</div>
                   </div>
                   <div className="text-sm font-semibold text-gray-700">{b.studentCount ?? 0}</div>
                 </div>

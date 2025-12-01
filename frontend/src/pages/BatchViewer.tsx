@@ -28,9 +28,7 @@ export default function BatchViewer() {
     <div className="bg-white rounded-xl shadow-xl p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-violet-950">Available Batches</h2>
-        <div className="flex gap-3">
-          <button onClick={load} className="px-4 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors">Refresh</button>
-        </div>
+        {/* Refresh button removed per UI preference */}
       </div>
 
       {isLoading ? (

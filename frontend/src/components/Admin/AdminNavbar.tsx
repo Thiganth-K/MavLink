@@ -33,7 +33,8 @@ export default function AdminNavbar() {
 
   useEffect(() => {
     load();
-    pollRef.current = window.setInterval(load, 10000) as unknown as number;
+    // Poll notifications every 5 minutes
+    pollRef.current = window.setInterval(load, 300000) as unknown as number;
     const onNotifs = () => { load().catch(() => {}); };
     window.addEventListener('notificationsChanged', onNotifs as EventListener);
     // close notifications when clicking/tapping outside

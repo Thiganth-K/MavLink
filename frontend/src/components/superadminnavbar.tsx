@@ -24,7 +24,8 @@ export default function SuperAdminNavbar() {
 
   useEffect(() => {
     load();
-    poll.current = window.setInterval(load, 10000) as unknown as number;
+    // Refresh notifications every 5 minutes (300000 ms)
+    poll.current = window.setInterval(load, 300000) as unknown as number;
     const onNotifs = () => { load().catch(() => {}); };
     window.addEventListener('notificationsChanged', onNotifs as EventListener);
     return () => { if (poll.current) window.clearInterval(poll.current); window.removeEventListener('notificationsChanged', onNotifs as EventListener); };

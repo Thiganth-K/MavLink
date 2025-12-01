@@ -155,6 +155,8 @@ export default function ViewAttendance() {
   const [activeBatchId, setActiveBatchId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(15);
 
   useEffect(() => {
     // Always refresh admin profile and update localStorage before loading batches
@@ -262,6 +264,28 @@ export default function ViewAttendance() {
     }
   };
 
+  // Pagination: compute page size based on viewport width
+  useEffect(() => {
+    const compute = () => {
+      try {
+        const w = window.innerWidth || 1024;
+        // mobile / small screens: use 10 cards per page; otherwise 15
+        setPageSize(w < 768 ? 10 : 15);
+      } catch (e) {
+        setPageSize(15);
+      }
+    };
+    compute();
+    const onResize = () => compute();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Reset page when summary or filters change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [attendanceSummary, activeBatchId, startDate, endDate]);
+
   const getCombinedSummary = (): CombinedAttendanceSummary[] => {
     return attendanceSummary.map(s => ({
       date: s.date,
@@ -364,73 +388,123 @@ export default function ViewAttendance() {
               <p className="text-purple-600 text-lg">No attendance records found in the last 30 days</p>
             </div>
           ) : (
-            <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getCombinedSummary().map((summary) => (
+            <div>
+              {/* Pagination controls (top) */}
+              <div className="flex items-center justify-between mb-3">
+                <div />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPageIndex(p => Math.max(0, p - 1))}
+                    disabled={pageIndex === 0}
+                    className="px-3 py-1 rounded-md bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+                    aria-label="Previous page"
+                  >
+                    ← Prev
+                  </button>
+                  <div className="text-sm text-gray-600">Page {Math.max(1, Math.min(Math.ceil(getCombinedSummary().length / pageSize) || 1, pageIndex + 1))} of {Math.max(1, Math.ceil(getCombinedSummary().length / pageSize))}</div>
+                  <button
+                    onClick={() => setPageIndex(p => Math.min(Math.max(0, Math.ceil(getCombinedSummary().length / pageSize) - 1), p + 1))}
+                    disabled={pageIndex >= Math.ceil(getCombinedSummary().length / pageSize) - 1}
+                    className="px-3 py-1 rounded-md bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+                    aria-label="Next page"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+
+              <div id="attendance-summary" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(() => {
+                  const all = getCombinedSummary();
+                  const start = pageIndex * pageSize;
+                  const page = all.slice(start, start + pageSize);
+                  return page.map((summary) => (
+                    <button
+                      key={summary.date}
+                      type="button"
+                      onClick={() => handleCardClick(summary.date)}
+                      aria-label={`View attendance details for ${formatDateForDisplay(summary.date)}`}
+                      className="w-full min-w-0 text-left bg-white rounded-xl shadow-lg p-3 md:p-5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-purple-100 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-300 break-words"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base md:text-lg font-bold text-purple-950 truncate">
+                          {formatDateForDisplay(summary.date, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                        </h3>
+                        <svg className="w-4 h-4 md:w-5 md:h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded text-xs font-bold">FN</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
+                            <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
+                            <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.fn.total}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
+                            <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                            <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.fn.present}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
+                            <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                            <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.fn.absent}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
+                            <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                            <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.fn.onDuty}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded text-xs font-bold">AN</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
+                            <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
+                            <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.an.total}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
+                            <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
+                            <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.an.present}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
+                            <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
+                            <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.an.absent}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
+                            <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
+                            <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.an.onDuty}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ));
+                })()}
+              </div>
+
+              {/* Pagination controls (bottom) */}
+              <div className="flex items-center justify-center mt-4">
                 <button
-                  key={summary.date}
-                  type="button"
-                  onClick={() => handleCardClick(summary.date)}
-                  aria-label={`View attendance details for ${formatDateForDisplay(summary.date)}`}
-                  className="w-full min-w-0 text-left bg-white rounded-xl shadow-lg p-3 md:p-5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-purple-100 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-300 break-words"
+                  onClick={() => setPageIndex(p => Math.max(0, p - 1))}
+                  disabled={pageIndex === 0}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 mr-2"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base md:text-lg font-bold text-purple-950 truncate">
-                      {formatDateForDisplay(summary.date, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                    </h3>
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded text-xs font-bold">FN</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
-                        <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
-                        <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.fn.total}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
-                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.fn.present}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
-                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
-                        <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.fn.absent}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
-                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
-                        <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.fn.onDuty}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded text-xs font-bold">AN</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
-                        <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
-                        <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.an.total}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-purple-50 border border-purple-600 rounded-md w-full min-w-0">
-                        <span className="text-purple-700 font-medium text-xxs sm:text-xs">P</span>
-                        <span className="text-sm md:text-base font-bold text-purple-700 truncate">{summary.an.present}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-red-50 border border-red-600 rounded-md w-full min-w-0">
-                        <span className="text-red-700 font-medium text-xxs sm:text-xs">A</span>
-                        <span className="text-sm md:text-base font-bold text-red-700 truncate">{summary.an.absent}</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
-                        <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
-                        <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.an.onDuty}</span>
-                      </div>
-                    </div>
-                  </div>
+                  ← Prev
                 </button>
-              ))}
+                <div className="text-sm text-gray-600 mx-2">Page {Math.max(1, Math.min(Math.ceil(getCombinedSummary().length / pageSize) || 1, pageIndex + 1))} of {Math.max(1, Math.ceil(getCombinedSummary().length / pageSize))}</div>
+                <button
+                  onClick={() => setPageIndex(p => Math.min(Math.max(0, Math.ceil(getCombinedSummary().length / pageSize) - 1), p + 1))}
+                  disabled={pageIndex >= Math.ceil(getCombinedSummary().length / pageSize) - 1}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 ml-2"
+                >
+                  Next →
+                </button>
+              </div>
             </div>
           )}
         </div>

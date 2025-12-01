@@ -303,8 +303,8 @@ export default function ViewAnalysisCard() {
           { label: 'Batches', value: batchCount },
           { label: 'Unassigned Batches', value: unassignedBatchesCount },
           { label: 'Students', value: studentCount },
-          { label: "Today's Present  FN", value: todaysPresentFNCount },
-          { label: "Today's Present AN", value: todaysPresentANCount },
+          { label: "Today's Present  Forenoon", value: todaysPresentFNCount },
+          { label: "Today's Present Afternoon", value: todaysPresentANCount },
         ].map((m, idx) => (
           <div key={idx} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-purple-200">
             <div className="text-[13px] font-medium text-gray-700">{m.label}</div>
