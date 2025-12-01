@@ -76,7 +76,9 @@ if (!MONGO_URI) {
 }
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// Note: `useNewUrlParser` and `useUnifiedTopology` options are deprecated for the current MongoDB Node driver.
+// Rely on mongoose defaults and let mongoose manage driver options.
+mongoose.connect(MONGO_URI)
   .then(async () => {
     logger.info('MongoDB connected');
     try {

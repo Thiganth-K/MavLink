@@ -48,13 +48,12 @@ const batchAttendanceSchema = new mongoose.Schema({
     required: [true, "Batch ID is required"],
     trim: true,
     uppercase: true,
-    index: true
+    // index created via explicit schema.index calls below
   },
   date: {
     // Date represents the IST date (midnight IST) converted to UTC when stored
     type: Date,
-    required: [true, "Date is required"],
-    index: true
+    required: [true, "Date is required"]
   },
   session: {
     type: String,

@@ -19,7 +19,7 @@ const batchSchema = new mongoose.Schema({
   students: { type: [batchStudentSchema], default: [] }
 }, { timestamps: true });
 
-batchSchema.index({ batchId: 1 });
+// `batchId` has `unique: true` which creates an index; avoid duplicate single-field index declaration
 batchSchema.index({ adminId: 1 });
 batchSchema.index({ deptId: 1 });
 

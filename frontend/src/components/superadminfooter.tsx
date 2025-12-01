@@ -18,7 +18,7 @@ export default function SuperAdminFooter() {
               </svg>
               <h4 className="font-semibold text-white">STARS</h4>
             </div>
-            <p className="text-sm text-supercream/90">Sona Training Attendance and Recording System helps admins and super admins manage batches, students and attendance with a simple modern interface.</p>
+            <p className="text-sm text-supercream/90">STARS — a secure, easy-to-use platform for administrators to manage batches, students, attendance and reports efficiently.</p>
           </div>
 
           {/* 2. First nav group */}
