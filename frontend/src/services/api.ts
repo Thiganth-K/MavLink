@@ -1,16 +1,35 @@
-// Runtime override (set by server or hosting) -> build-time Vite env -> fallback to '/api'
-// This order lets you change the API host without rebuilding by setting `window.__API_BASE_URL`.
+// Resolve API base with preference order:
+// 1) runtime override `window.__API_BASE_URL`
+// 2) Vite build-time override `import.meta.env.VITE_API_BASE_URL`
+// 3) If running under Vite dev (import.meta.env.MODE === 'development') or the
+//    app is being served on localhost, prefer the backend dev server at http://localhost:3000/api
+// 4) Fallback to relative `/api` for production builds served from same origin
 const runtimeApi = typeof window !== 'undefined' ? (window as any).__API_BASE_URL : undefined;
-const API_BASE_URL = runtimeApi || (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+const viteApi = (import.meta as any).env?.VITE_API_BASE_URL;
+const viteMode = (import.meta as any).env?.MODE;
+const runningOnLocalhost = typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname === '127.0.0.1');
+
+let API_BASE_URL: string | undefined = runtimeApi || viteApi;
+if (!API_BASE_URL) {
+  if (viteMode === 'development' || runningOnLocalhost) {
+    API_BASE_URL = 'http://localhost:3000/api';
+  } else {
+    API_BASE_URL = '/api';
+  }
+}
 
 // Helpful dev-time warning if accidentally pointing to localhost in production
 try {
   if (typeof window !== 'undefined' && window.location && API_BASE_URL.includes('localhost')) {
-    // Only warn in non-local environments
-    if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+    if (!(viteMode === 'development' || runningOnLocalhost)) {
       // eslint-disable-next-line no-console
       console.warn('[config] API_BASE_URL contains localhost; requests may fail from deployed site');
     }
+  }
+  // Log resolved value to aid debugging when frontend runs separately
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.info('[config] API_BASE_URL resolved to', API_BASE_URL, { runtimeApi: runtimeApi || null, viteApi: viteApi || null, viteMode: viteMode || null, runningOnLocalhost });
   }
 } catch (e) {
   // ignore environment errors

@@ -9,41 +9,48 @@ import { parseISTDate, getNextISTDay, getTodayIST, toISTDateString } from '../ut
 
 // ---------- LOGIN ----------
 export const loginController = async (req, res) => {
-  logger.debug('loginController start', { bodyKeys: Object.keys(req.body || {}) });
-  const { username, password } = req.body;
+  try {
+    logger.debug('loginController start', { bodyKeys: Object.keys(req.body || {}) });
+    const { username, password } = req.body || {};
 
-  const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME;
-  const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
+    const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME;
+    const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD;
 
-  // SUPER ADMIN LOGIN (from .env)
-  if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
-    logger.info('loginController superadmin success', { username });
+    logger.debug('loginController env presence', { hasSuperAdminUsername: !!SUPER_ADMIN_USERNAME, hasSuperAdminPassword: !!SUPER_ADMIN_PASSWORD });
+
+    // SUPER ADMIN LOGIN (from .env)
+    if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
+      logger.info('loginController superadmin success', { username });
+      return res.status(200).json({
+        message: "Super Admin login successful",
+        role: "SUPER_ADMIN",
+        user: { username }
+      });
+    }
+
+    // ADMIN LOGIN (from DB)
+    const adminUser = await Admin.findOne({ username });
+
+    if (!adminUser) {
+      logger.warn('loginController admin not found', { username });
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (password !== adminUser.password) {
+      logger.warn('loginController invalid credentials', { username });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    logger.info('loginController admin success', { username });
     return res.status(200).json({
-      message: "Super Admin login successful",
-      role: "SUPER_ADMIN",
-      user: { username }
+      message: "Admin login successful",
+      role: adminUser.role,
+      user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
     });
+  } catch (err) {
+    logger.error('loginController error', { error: err && err.message ? err.message : err, stack: err && err.stack ? err.stack : undefined });
+    return res.status(500).json({ message: 'Internal server error during login', error: err && err.message ? err.message : err });
   }
-
-  // ADMIN LOGIN (from DB)
-  const adminUser = await Admin.findOne({ username });
-
-  if (!adminUser) {
-    logger.warn('loginController admin not found', { username });
-    return res.status(404).json({ message: "User not found" });
-  }
-
-  if (password !== adminUser.password) {
-    logger.warn('loginController invalid credentials', { username });
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
-
-  logger.info('loginController admin success', { username });
-  return res.status(200).json({
-    message: "Admin login successful",
-    role: adminUser.role,
-    user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
-  });
 };
 
 // ---------- CREATE ADMIN ----------

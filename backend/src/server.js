@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import fs from 'fs';
+import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,7 +20,7 @@ const candidates = [
 let loaded = false;
 for (const p of candidates) {
   try {
-    if (fs.existsSync(p)) {
+    if (fsSync.existsSync(p)) {
       dotenv.config({ path: p });
       console.log(`Loaded environment from ${p}`);
       loaded = true;
@@ -39,7 +39,7 @@ if (!loaded) {
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import fs from 'fs/promises';
+import fsp from 'fs/promises';
 import { dropLegacyAttendanceIndexes } from './utils/indexCleanup.js';
 import logger from './utils/logger.js';
 
@@ -143,7 +143,7 @@ app.use(async (req, res, next) => {
 
   const indexPath = path.join(frontendDistPath, 'index.html');
   try {
-    let html = await fs.readFile(indexPath, 'utf8');
+    let html = await fsp.readFile(indexPath, 'utf8');
     const isDev = String(process.env.NODE_ENV || '').toLowerCase() === 'development';
     const apiBase = isDev ? 'http://localhost:3000/api' : '/api';
     const appMode = isDev ? 'development' : 'production';
