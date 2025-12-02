@@ -173,18 +173,22 @@ export const getAdminBatchMapping = async (req, res) => {
       Batch.find().lean()
     ]);
 
-    // Build quick lookup of batches by adminId
+    // Build quick lookup of batches by each adminId (support many-to-many via batch.adminIds)
     const batchesByAdmin = new Map();
     for (const b of batchesRaw) {
-      const key = (b.adminId || '').trim();
-      if (!key) continue;
-      if (!batchesByAdmin.has(key)) batchesByAdmin.set(key, []);
-      batchesByAdmin.get(key).push({
-        batchId: b.batchId,
-        batchName: b.batchName,
-        batchYear: b.batchYear,
-        deptId: b.deptId
-      });
+      // Support older documents that may still have `adminId` (single) field.
+      const adminIds = Array.isArray(b.adminIds)
+        ? b.adminIds.map(x => String(x).trim()).filter(Boolean)
+        : (b.adminId ? [String(b.adminId).trim()] : []);
+      for (const key of adminIds) {
+        if (!batchesByAdmin.has(key)) batchesByAdmin.set(key, []);
+        batchesByAdmin.get(key).push({
+          batchId: b.batchId,
+          batchName: b.batchName,
+          batchYear: b.batchYear,
+          deptId: b.deptId
+        });
+      }
     }
 
     const admins = adminsRaw.map(a => ({
@@ -193,8 +197,8 @@ export const getAdminBatchMapping = async (req, res) => {
       batches: batchesByAdmin.get(a.adminId) || []
     }));
 
-    // Identify unassigned batches (no adminId)
-    const unassignedBatches = batchesRaw.filter(b => !b.adminId).map(b => ({
+    // Identify unassigned batches (no adminIds)
+    const unassignedBatches = batchesRaw.filter(b => !Array.isArray(b.adminIds) || b.adminIds.length === 0).map(b => ({
       batchId: b.batchId,
       batchName: b.batchName,
       batchYear: b.batchYear,
