@@ -199,7 +199,7 @@ const AdminDashboard: React.FC = () => {
         <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-col items-center justify-center gap-2">
           <span className="block uppercase text-center">
             WELCOME TO{' '}
-              <div className="relative inline-block align-middle w-full max-w-[92vw] overflow-hidden">
+              <div className="relative inline-block align-middle w-full max-w-[92vw] overflow-visible">
                 <span className={`inline-block text-lg sm:text-4xl sm:whitespace-nowrap leading-tight transition-opacity duration-300 ${showTitle ? 'opacity-100' : 'opacity-0'}`}>
                   <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">S</span>
                   <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-1' : ''}`}>ONA </span>
@@ -248,7 +248,7 @@ const AdminDashboard: React.FC = () => {
               .admin-stars-letter:nth-child(5) { --x: 96%; }
             }
             @keyframes admin-star-move { to { left: var(--x); top: 50%; transform: translate(-50%, -50%); } }
-            .reveal-right { display:inline-block; white-space:pre-wrap; clip-path: inset(0 100% 0 0); }
+            .reveal-right { display:inline-block; white-space:pre-wrap; clip-path: inset(0 100% 0 0); -webkit-clip-path: inset(0 100% 0 0); will-change: clip-path, -webkit-clip-path; padding-right: 0.06em; }
             .reveal-start { animation: admin-reveal 0.7s ease forwards; }
             .reveal-delay-1 { animation-delay: .05s; }
             .reveal-delay-2 { animation-delay: .15s; }
