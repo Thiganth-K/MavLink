@@ -73,7 +73,8 @@ export const createBatch = async (req, res) => {
 			email: s.email,
 			mobile: s.phno
 		}));
-		const batch = await Batch.create({ batchId, batchName, batchYear, deptId, adminId: adminId || null, createdBy, students: batchStudents });
+		// Store adminIds as an array to support many-to-many mapping
+		const batch = await Batch.create({ batchId, batchName, batchYear, deptId, adminIds: adminId ? [String(adminId).toUpperCase()] : [], createdBy, students: batchStudents });
 
 		// Upsert Student docs with batchId linkage
 		for (const s of students) {
@@ -158,7 +159,10 @@ export const updateBatch = async (req, res) => {
 		if (adminId) {
 			const newAdmin = await Admin.findOne({ adminId });
 			if (!newAdmin) return res.status(404).json({ message: 'Admin not found for adminId' });
-			batch.adminId = adminId;
+			// ensure batch.adminIds contains the adminId
+			const aid = String(adminId).toUpperCase();
+			if (!Array.isArray(batch.adminIds)) batch.adminIds = [];
+			if (!batch.adminIds.includes(aid)) batch.adminIds.push(aid);
 			if (!newAdmin.assignedBatchIds.includes(batch.batchId)) {
 				newAdmin.assignedBatchIds.push(batch.batchId);
 				await newAdmin.save();
@@ -225,7 +229,10 @@ export const assignAdminToBatch = async (req, res) => {
 		if (!batch) return res.status(404).json({ message: 'Batch not found' });
 		const admin = await Admin.findOne({ adminId });
 		if (!admin) return res.status(404).json({ message: 'Admin not found' });
-		batch.adminId = adminId;
+		// ensure arrays exist and values are normalized
+		const aid = String(adminId).toUpperCase();
+		if (!Array.isArray(batch.adminIds)) batch.adminIds = [];
+		if (!batch.adminIds.includes(aid)) batch.adminIds.push(aid);
 		await batch.save();
 		if (!admin.assignedBatchIds.includes(batchId)) {
 			admin.assignedBatchIds.push(batchId);
@@ -240,30 +247,43 @@ export const assignAdminToBatch = async (req, res) => {
 };
 
 export const unassignAdminFromBatch = async (req, res) => {
-  const start = Date.now();
-  logger.debug('unassignAdminFromBatch start', { body: req.body });
-  try {
-    await ensureSuperAdmin(req);
-    const { batchId } = req.body;
-    if (!batchId) return res.status(400).json({ message: 'batchId required' });
-    const batch = await Batch.findOne({ batchId });
-    if (!batch) return res.status(404).json({ message: 'Batch not found' });
-    const prevAdminId = batch.adminId;
-    if (prevAdminId) {
-      const prevAdmin = await Admin.findOne({ adminId: prevAdminId });
-      if (prevAdmin) {
-        prevAdmin.assignedBatchIds = (prevAdmin.assignedBatchIds || []).filter(id => id !== batchId);
-        await prevAdmin.save();
-      }
-    }
-    batch.adminId = null;
-    await batch.save();
-    logger.info('unassignAdminFromBatch success', { durationMs: Date.now() - start, batchId });
-    return res.json({ message: 'Admin unassigned from batch', batch });
-  } catch (err) {
-    logger.error('unassignAdminFromBatch error', { error: err.message });
-    return res.status(403).json({ message: err.message || 'Failed to unassign admin' });
-  }
+	const start = Date.now();
+	logger.debug('unassignAdminFromBatch start', { body: req.body });
+	try {
+		await ensureSuperAdmin(req);
+		const { batchId, adminId } = req.body;
+		if (!batchId) return res.status(400).json({ message: 'batchId required' });
+		const batch = await Batch.findOne({ batchId });
+		if (!batch) return res.status(404).json({ message: 'Batch not found' });
+
+		// If adminId provided, remove only that mapping. Otherwise remove all admins from this batch.
+		if (adminId) {
+			const aid = String(adminId).toUpperCase();
+			// remove adminId from batch.adminIds
+			batch.adminIds = (batch.adminIds || []).filter(id => id !== aid);
+			// remove batchId from that admin's assignedBatchIds
+			const prevAdmin = await Admin.findOne({ adminId: aid });
+			if (prevAdmin) {
+				prevAdmin.assignedBatchIds = (prevAdmin.assignedBatchIds || []).filter(id => id !== batchId);
+				await prevAdmin.save();
+			}
+		} else {
+			// remove this batchId from all admins that had it
+			const prevAdmins = await Admin.find({ assignedBatchIds: batchId });
+			for (const pa of prevAdmins) {
+				pa.assignedBatchIds = (pa.assignedBatchIds || []).filter(id => id !== batchId);
+				await pa.save();
+			}
+			batch.adminIds = [];
+		}
+
+		await batch.save();
+		logger.info('unassignAdminFromBatch success', { durationMs: Date.now() - start, batchId });
+		return res.json({ message: 'Admin unassigned from batch', batch });
+	} catch (err) {
+		logger.error('unassignAdminFromBatch error', { error: err.message });
+		return res.status(403).json({ message: err.message || 'Failed to unassign admin' });
+	}
 };
 export const deleteBatch = async (req, res) => {
   const start = Date.now();
