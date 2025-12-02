@@ -60,7 +60,11 @@ export default function AdminProfile(props: Props) {
           // Now fetch all batches and filter
           const allBatches = await batchAPI.getBatches();
           let filteredBatches = allBatches.filter(
-            (b: any) => assignedBatchIds.includes(b.batchId || '') && b.adminId === adminId
+            (b: any) => {
+              const inAssigned = assignedBatchIds.includes(b.batchId || '');
+              const batchHasAdmin = Array.isArray(b.adminIds) ? b.adminIds.includes(adminId) : b.adminId === adminId;
+              return inAssigned && batchHasAdmin;
+            }
           );
 
           // For each batch, ensure studentCount is present
@@ -107,9 +111,11 @@ export default function AdminProfile(props: Props) {
       const adminId = profileData.adminId;
       const assignedBatchIds = profileData.assignedBatchIds || [];
       const batches: BatchSummary[] = Array.isArray(profileData.batches) ? profileData.batches : [];
-      const filteredBatches = batches.filter(
-        (b) => assignedBatchIds.includes(b.batchId || '') && b.adminId === adminId
-      );
+      const filteredBatches = batches.filter((b) => {
+        const inAssigned = assignedBatchIds.includes(b.batchId || '');
+        const batchHasAdmin = Array.isArray((b as any).adminIds) ? (b as any).adminIds.includes(adminId) : (b as any).adminId === adminId;
+        return inAssigned && batchHasAdmin;
+      });
       setLocalBatches(filteredBatches);
     } else {
       setLocalBatches([]);
