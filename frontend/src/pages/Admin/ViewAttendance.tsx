@@ -180,8 +180,15 @@ export default function ViewAttendance() {
       (window as any).showGlobalLoader?.('attendance-summary');
       const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
       const all = await batchAPI.getBatches();
-      // Only show batches where batch.adminId matches current admin and batchId is in assignedBatchIds
-      const mine = all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
+      // Only show batches where batchId is in assignedBatchIds and the batch lists this admin
+      const aid = adminInfo.adminId || '';
+      const mine = all.filter(b => {
+        const inAssigned = adminInfo.assignedBatchIds?.includes(b.batchId || '');
+        const batchHasAdmin = Array.isArray(b.adminIds)
+          ? b.adminIds.includes(aid)
+          : b.adminId === aid;
+        return inAssigned && batchHasAdmin;
+      });
       setAssignedBatches(mine);
       if (mine.length > 0) {
         const bid = mine[0].batchId || '';

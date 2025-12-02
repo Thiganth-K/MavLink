@@ -80,6 +80,8 @@ export interface Batch {
   batchYear: number;
   deptId?: string;
   adminId?: string;
+  // New many-to-many mapping: array of admin business IDs assigned to this batch
+  adminIds?: string[];
   students: BatchStudent[];
   createdAt?: string;
   updatedAt?: string;

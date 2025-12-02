@@ -43,8 +43,13 @@ const AdminDashboard: React.FC = () => {
       const fetchAssignedBatches = async () => {
         const adminInfo = JSON.parse(localStorage.getItem('user') || '{}');
         const all = await (await import('../../services/api')).batchAPI.getBatches();
-        // Filter batches for validation purposes
-        all.filter(b => adminInfo.assignedBatchIds?.includes(b.batchId || '') && b.adminId === adminInfo.adminId);
+        // Filter batches for validation purposes (respect many-to-many adminIds)
+        const aid = adminInfo.adminId || '';
+        all.filter(b => {
+          const inAssigned = adminInfo.assignedBatchIds?.includes(b.batchId || '');
+          const batchHasAdmin = Array.isArray(b.adminIds) ? b.adminIds.includes(aid) : b.adminId === aid;
+          return inAssigned && batchHasAdmin;
+        });
       };
       fetchAssignedBatches();
     }, []);
@@ -110,6 +115,14 @@ const AdminDashboard: React.FC = () => {
   const [results, setResults] = useState<Student[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const debounceRef = useRef<number | null>(null)
+  const [showTitle, setShowTitle] = useState(false)
+  const [showStarsOverlay, setShowStarsOverlay] = useState(true)
+
+  useEffect(() => {
+    const t1 = window.setTimeout(() => setShowTitle(true), 2200)
+    const t2 = window.setTimeout(() => setShowStarsOverlay(false), 2600)
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2) }
+  }, [])
 
   // Fetch all students once on mount and normalize fields
   useEffect(() => {
@@ -183,8 +196,72 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="w-full px-2 sm:px-4 lg:px-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
       <div className="mx-auto max-w-3xl w-full animate-superIn text-black">
-        <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-wrap items-center justify-center gap-2">
-          <span>Welcome To Sona Training Attendance and Recording System,</span>
+        <h2 className="text-3xl sm:text-4xl font-semibold mb-6 text-center flex flex-col items-center justify-center gap-2">
+          <span className="block uppercase text-center">
+            WELCOME TO{' '}
+              <div className="relative inline-block align-middle w-full max-w-[92vw] overflow-hidden">
+                <span className={`inline-block text-lg sm:text-4xl sm:whitespace-nowrap leading-tight transition-opacity duration-300 ${showTitle ? 'opacity-100' : 'opacity-0'}`}>
+                  <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">S</span>
+                  <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-1' : ''}`}>ONA </span>
+                  <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">T</span>
+                  <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-2' : ''}`}>RAINING </span>
+                  <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">A</span>
+                  <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-3' : ''}`}>TTENDANCE</span>
+                  <span className="mobile-break-group">
+                    <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">R</span>
+                    <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-4' : ''}`}>ECORDING </span>
+                    <span className="text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">S</span>
+                  <span className={`reveal-right ${showTitle ? 'reveal-start reveal-delay-5' : ''}`}>YSTEM,</span>
+                  </span>
+                  
+                </span>
+                {showStarsOverlay && (
+                  <div className="admin-stars-overlay">
+                    <div className="admin-stars-stage">
+                      <span className="admin-stars-letter text-xl sm:text-4xl text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">S</span>
+                      <span className="admin-stars-letter text-xl sm:text-4xl text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">T</span>
+                      <span className="admin-stars-letter text-xl sm:text-4xl text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">A</span>
+                      <span className="admin-stars-letter text-xl sm:text-4xl text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">R</span>
+                      <span className="admin-stars-letter text-xl sm:text-4xl text-purple-700 bg-purple-100 px-0 py-0.5 rounded-sm font-bold">S</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+          </span>
+
+
+          <style>{`
+            .admin-stars-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+            .admin-stars-stage { position:relative; width: 100%; max-width: 100%; height: 2.2rem; }
+            .admin-stars-letter { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); animation: admin-star-move 2.2s cubic-bezier(.2,.8,.2,1) forwards; line-height:1; }
+            .admin-stars-letter:nth-child(1) { --x: 4%; }
+            .admin-stars-letter:nth-child(2) { --x: 28%; }
+            .admin-stars-letter:nth-child(3) { --x: 51%; }
+            .admin-stars-letter:nth-child(4) { --x: 73%; }
+            .admin-stars-letter:nth-child(5) { --x: 94%; }
+            @media (min-width: 640px) {
+              .admin-stars-stage { height: 3.2rem; }
+              .admin-stars-letter:nth-child(1) { --x: 8%; }
+              .admin-stars-letter:nth-child(2) { --x: 31%; }
+              .admin-stars-letter:nth-child(3) { --x: 55%; }
+              .admin-stars-letter:nth-child(4) { --x: 77%; }
+              .admin-stars-letter:nth-child(5) { --x: 96%; }
+            }
+            @keyframes admin-star-move { to { left: var(--x); top: 50%; transform: translate(-50%, -50%); } }
+            .reveal-right { display:inline-block; white-space:pre-wrap; clip-path: inset(0 100% 0 0); }
+            .reveal-start { animation: admin-reveal 0.7s ease forwards; }
+            .reveal-delay-1 { animation-delay: .05s; }
+            .reveal-delay-2 { animation-delay: .15s; }
+            .reveal-delay-3 { animation-delay: .25s; }
+            .reveal-delay-4 { animation-delay: .35s; }
+            .reveal-delay-5 { animation-delay: .45s; }
+            @keyframes admin-reveal { to { clip-path: inset(0 0 0 0); } }
+              /* Make grouped words break to a new line on small screens */
+              .mobile-break-group { display:inline; }
+              @media (max-width: 639px) {
+                .mobile-break-group { display:block; width:100%; text-align:center; }
+              }
+          `}</style>
           <span className="inline-block border-b-2 border-fuchsia-700 text-fuchsia-700 px-1 font-semibold">
             {adminDisplayName}!!
           </span>
