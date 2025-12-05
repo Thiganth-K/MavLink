@@ -300,8 +300,22 @@ export default function ViewAttendance() {
   const getCombinedSummary = (): CombinedAttendanceSummary[] => {
     return attendanceSummary.map(s => ({
       date: s.date,
-      fn: { total: s.FN.total, present: s.FN.present, absent: s.FN.absent, onDuty: s.FN.onDuty },
-      an: { total: s.AN.total, present: s.AN.present, absent: s.AN.absent, onDuty: s.AN.onDuty }
+      fn: {
+        total: s.FN.total,
+        present: s.FN.present,
+        absent: s.FN.absent,
+        onDuty: s.FN.onDuty,
+        late: (s.FN as any).late ?? 0,
+        sickLeave: (s.FN as any).sickLeave ?? 0
+      },
+      an: {
+        total: s.AN.total,
+        present: s.AN.present,
+        absent: s.AN.absent,
+        onDuty: s.AN.onDuty,
+        late: (s.AN as any).late ?? 0,
+        sickLeave: (s.AN as any).sickLeave ?? 0
+      }
     }));
   };
 
