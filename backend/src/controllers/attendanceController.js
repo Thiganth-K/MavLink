@@ -78,8 +78,9 @@ export const markAttendance = async (req, res) => {
           continue;
         }
 
-        if (!["Present", "Absent", "On-Duty"].includes(status)) {
-          errors.push({ studentId, error: 'Status must be Present, Absent, or On-Duty' });
+        const allowedStatuses = ["Present", "Absent", "On-Duty", "Late", "Sick-Leave"];
+        if (!allowedStatuses.includes(status)) {
+          errors.push({ studentId, error: 'Status must be Present, Absent, On-Duty, Late, or Sick-Leave' });
           continue;
         }
 
@@ -259,9 +260,11 @@ export const getAttendanceByDateAndSession = async (req, res) => {
     const presentCount = flattened.filter(r => r.status === 'Present').length;
     const absentCount = flattened.filter(r => r.status === 'Absent').length;
     const onDutyCount = flattened.filter(r => r.status === 'On-Duty').length;
+    const lateCount = flattened.filter(r => r.status === 'Late').length;
+    const sickLeaveCount = flattened.filter(r => r.status === 'Sick-Leave').length;
 
     logger.info('getAttendanceByDateAndSession success', { durationMs: Date.now() - start, count: flattened.length, session });
-    return res.status(200).json({ success: true, message: `Found ${flattened.length} attendance entries for ${session} on ${dateStr}`, data: flattened, summary: { date: dateStr, session, totalRecords: flattened.length, presentCount, absentCount, onDutyCount } });
+    return res.status(200).json({ success: true, message: `Found ${flattened.length} attendance entries for ${session} on ${dateStr}`, data: flattened, summary: { date: dateStr, session, totalRecords: flattened.length, presentCount, absentCount, onDutyCount, lateCount, sickLeaveCount } });
 
   } catch (error) {
     logger.error('getAttendanceByDateAndSession error', { error: error.message });
@@ -299,8 +302,8 @@ export const getSessionSummaryByDate = async (req, res) => {
       });
     });
 
-    const fnSummary = { session: 'FN', totalRecords: fnEntries.length, presentCount: fnEntries.filter(r => r.status === 'Present').length, absentCount: fnEntries.filter(r => r.status === 'Absent').length, onDutyCount: fnEntries.filter(r => r.status === 'On-Duty').length };
-    const anSummary = { session: 'AN', totalRecords: anEntries.length, presentCount: anEntries.filter(r => r.status === 'Present').length, absentCount: anEntries.filter(r => r.status === 'Absent').length, onDutyCount: anEntries.filter(r => r.status === 'On-Duty').length };
+    const fnSummary = { session: 'FN', totalRecords: fnEntries.length, presentCount: fnEntries.filter(r => r.status === 'Present').length, absentCount: fnEntries.filter(r => r.status === 'Absent').length, onDutyCount: fnEntries.filter(r => r.status === 'On-Duty').length, lateCount: fnEntries.filter(r => r.status === 'Late').length, sickLeaveCount: fnEntries.filter(r => r.status === 'Sick-Leave').length };
+    const anSummary = { session: 'AN', totalRecords: anEntries.length, presentCount: anEntries.filter(r => r.status === 'Present').length, absentCount: anEntries.filter(r => r.status === 'Absent').length, onDutyCount: anEntries.filter(r => r.status === 'On-Duty').length, lateCount: anEntries.filter(r => r.status === 'Late').length, sickLeaveCount: anEntries.filter(r => r.status === 'Sick-Leave').length };
 
     logger.info('getSessionSummaryByDate success', { durationMs: Date.now() - start, fnTotal: fnEntries.length, anTotal: anEntries.length });
     return res.status(200).json({ success: true, message: `Session summary for ${dateStr}`, date: dateStr, summary: { FN: fnSummary, AN: anSummary, totalRecords: fnEntries.length + anEntries.length } });
@@ -401,8 +404,8 @@ export const getAttendanceByDateSummary = async (req, res) => {
       if (fnTotal > 0 || anTotal > 0) {
         summaries.push({
           date: dateStr,
-          FN: { total: fnTotal, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length },
-          AN: { total: anTotal, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length }
+          FN: { total: fnTotal, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length, late: fnEntries.filter(r => r.status === 'Late').length, sickLeave: fnEntries.filter(r => r.status === 'Sick-Leave').length },
+          AN: { total: anTotal, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length, late: anEntries.filter(r => r.status === 'Late').length, sickLeave: anEntries.filter(r => r.status === 'Sick-Leave').length }
         });
       }
     }

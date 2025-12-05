@@ -12,11 +12,11 @@ export default function MarkAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [selectedDate, setSelectedDate] = useState(getTodayIST());
   const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
-  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'On-Duty' }>({});
+  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave' }>({});
   const [attendanceReasons, setAttendanceReasons] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; total: number } | null>(null);
+  const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; late: number; sickLeave: number; total: number } | null>(null);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
   const [attendanceStats, setAttendanceStats] = useState<{ [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; total: number } }>({});
@@ -99,10 +99,10 @@ export default function MarkAttendance() {
       const filtered = sessionRecords.filter((r: any) => allowedRegnos.size ? allowedRegnos.has((r.regno || '').toUpperCase()) : true);
       setAttendanceRecords(filtered);
 
-      const newAttendanceMap: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
+      const newAttendanceMap: { [key: string]: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave' } = {};
       const newAttendanceReasons: { [key: string]: string } = {};
       filtered.forEach((record: any) => {
-        newAttendanceMap[record.studentId] = record.status as 'Present' | 'Absent' | 'On-Duty';
+        newAttendanceMap[record.studentId] = record.status as 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave';
         if ((record as any).reason) newAttendanceReasons[record.studentId] = (record as any).reason;
       });
       setAttendanceMap(newAttendanceMap);
@@ -139,7 +139,7 @@ export default function MarkAttendance() {
     }
   };
 
-  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'On-Duty') => {
+  const handleAttendanceChange = (studentId: string, status: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave') => {
     setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
     if (status !== 'On-Duty') {
       setAttendanceReasons(prev => {
@@ -156,14 +156,14 @@ export default function MarkAttendance() {
   };
 
   const handleMarkAllPresent = () => {
-    const allPresent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
+    const allPresent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave' } = {};
     students.forEach(student => { allPresent[student._id!] = 'Present'; });
     setAttendanceMap(allPresent);
     toast.success('Marked all students as Present');
   };
 
   const handleMarkAllAbsent = () => {
-    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' } = {};
+    const allAbsent: { [key: string]: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave' } = {};
     students.forEach(student => { allAbsent[student._id!] = 'Absent'; });
     setAttendanceMap(allAbsent);
     toast.success('Marked all students as Absent');
@@ -199,7 +199,9 @@ export default function MarkAttendance() {
         total: students.length,
         present: attendanceData.filter(a => a.status === 'Present').length,
         absent: attendanceData.filter(a => a.status === 'Absent').length,
-        onDuty: attendanceData.filter(a => a.status === 'On-Duty').length
+        onDuty: attendanceData.filter(a => a.status === 'On-Duty').length,
+        late: attendanceData.filter(a => a.status === 'Late').length,
+        sickLeave: attendanceData.filter(a => a.status === 'Sick-Leave').length,
       };
       // clear local selections
       setAttendanceMap({});
@@ -287,11 +289,11 @@ export default function MarkAttendance() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex-1" />
-        <button onClick={handleMarkAllPresent} className="px-4 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors font-medium">Mark All Present</button>
-        <button onClick={handleMarkAllAbsent} className="px-4 py-2 bg-white text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium">Mark All Absent</button>
-        <button onClick={handleClearAll} className="px-4 py-2 bg-white text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium">Clear All</button>
+        <button onClick={handleMarkAllPresent} className="w-full sm:w-auto px-4 py-2 bg-white text-fuchsia-700 border border-fuchsia-700 rounded-lg hover:bg-fuchsia-50 transition-colors font-medium text-sm">Mark All Present</button>
+        <button onClick={handleMarkAllAbsent} className="w-full sm:w-auto px-4 py-2 bg-white text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm">Mark All Absent</button>
+        <button onClick={handleClearAll} className="w-full sm:w-auto px-4 py-2 bg-white text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">Clear All</button>
       </div>
 
         {students.length === 0 ? (
@@ -337,10 +339,14 @@ export default function MarkAttendance() {
                         </div>
                       </div>
 
-                      <div className="flex-shrink-0 flex items-center gap-2">
-                        <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
-                        <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
-                        <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-2 py-1 md:px-3 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>OD</button>
+                      <div className="w-full overflow-x-auto show-scrollbar">
+                        <div className="min-w-max inline-grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>OD</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Sick-Leave')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Sick-Leave' ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Sick</button>
+                        </div>
                       </div>
 
                     </div>
@@ -392,10 +398,14 @@ export default function MarkAttendance() {
                     })()}
                   </td>
                   <td className="border border-purple-200 px-4 py-3">
-                    <div className="flex gap-2 justify-center">
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
-                      <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>On-Duty</button>
+                    <div className="w-full overflow-x-auto show-scrollbar">
+                      <div className="min-w-max inline-grid grid-cols-2 gap-2 sm:flex sm:gap-2 sm:justify-center">
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>On-Duty</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Sick-Leave')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Sick-Leave' ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Sick Leave</button>
+                      </div>
                     </div>
                     {attendanceMap[student._id!] === 'On-Duty' && (
                       <div className="mt-2">
@@ -430,7 +440,7 @@ export default function MarkAttendance() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-4">
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <div className="text-gray-600 font-medium mb-1">Total</div>
                   <div className="text-3xl font-bold text-purple-950">{submittedSummary.total}</div>
@@ -449,6 +459,16 @@ export default function MarkAttendance() {
                   <div className="text-yellow-700 font-medium mb-1">On-Duty</div>
                   <div className="text-3xl font-bold text-yellow-600">{submittedSummary.onDuty}</div>
                   <div className="text-sm text-gray-600 mt-1">{((submittedSummary.onDuty / submittedSummary.total) * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4 text-center">
+                  <div className="text-orange-700 font-medium mb-1">Late</div>
+                  <div className="text-3xl font-bold text-orange-600">{submittedSummary.late}</div>
+                  <div className="text-sm text-gray-600 mt-1">{((submittedSummary.late / submittedSummary.total) * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <div className="text-blue-700 font-medium mb-1">Sick Leave</div>
+                  <div className="text-3xl font-bold text-blue-600">{submittedSummary.sickLeave}</div>
+                  <div className="text-sm text-gray-600 mt-1">{((submittedSummary.sickLeave / submittedSummary.total) * 100).toFixed(1)}%</div>
                 </div>
               </div>
 

@@ -2,15 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hide scrollbar for all browsers */
-* {
+/* Hide scrollbar for all browsers except when element has the class `.show-scrollbar` */
+*:not(.show-scrollbar) {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  
 }
 
-*::-webkit-scrollbar {
+*:not(.show-scrollbar)::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+
+/* Allow visible scrollbar when `.show-scrollbar` is applied */
+.show-scrollbar {
+  /* Keep scrollable but make scrollbar visuals invisible */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* thumb, track */
+  -ms-overflow-style: auto; /* IE/Edge (legacy) */
+}
+.show-scrollbar::-webkit-scrollbar {
+  height: 8px; /* horizontal scrollbar height */
+  background: transparent;
+}
+.show-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.show-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* invisible thumb */
+  border-radius: 6px;
 }
 
 /* Simple fade & slide animations */
