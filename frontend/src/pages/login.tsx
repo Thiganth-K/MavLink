@@ -138,9 +138,7 @@ export default function Login() {
 
             <div className="flex flex-col items-center mb-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-md bg-white">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
+              <img src="/TECH-removebg-preview.png" alt="STARS" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold mt-4 text-black">STARS</h2>
             <p className="text-sm text-gray-600 font-medium">Sona Training Attendance and Recording System</p>

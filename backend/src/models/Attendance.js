@@ -24,7 +24,7 @@ const attendanceEntrySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Present", "Absent", "On-Duty"],
+    enum: ["Present", "Absent", "On-Duty", "Late", "Sick-Leave"],
     required: [true, "Status is required"]
   }
 }, { _id: false });
@@ -37,6 +37,7 @@ attendanceEntrySchema.add({
     minlength: [3, 'Reason too short'],
     maxlength: [500, 'Reason too long'],
     required: function() {
+      // Reason required for On-Duty; optional for other statuses
       return this.status === 'On-Duty';
     }
   }

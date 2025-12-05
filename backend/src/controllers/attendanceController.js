@@ -78,8 +78,9 @@ export const markAttendance = async (req, res) => {
           continue;
         }
 
-        if (!["Present", "Absent", "On-Duty"].includes(status)) {
-          errors.push({ studentId, error: 'Status must be Present, Absent, or On-Duty' });
+        const allowedStatuses = ["Present", "Absent", "On-Duty", "Late", "Sick-Leave"];
+        if (!allowedStatuses.includes(status)) {
+          errors.push({ studentId, error: 'Status must be Present, Absent, On-Duty, Late, or Sick-Leave' });
           continue;
         }
 
@@ -259,9 +260,11 @@ export const getAttendanceByDateAndSession = async (req, res) => {
     const presentCount = flattened.filter(r => r.status === 'Present').length;
     const absentCount = flattened.filter(r => r.status === 'Absent').length;
     const onDutyCount = flattened.filter(r => r.status === 'On-Duty').length;
+    const lateCount = flattened.filter(r => r.status === 'Late').length;
+    const sickLeaveCount = flattened.filter(r => r.status === 'Sick-Leave').length;
 
     logger.info('getAttendanceByDateAndSession success', { durationMs: Date.now() - start, count: flattened.length, session });
-    return res.status(200).json({ success: true, message: `Found ${flattened.length} attendance entries for ${session} on ${dateStr}`, data: flattened, summary: { date: dateStr, session, totalRecords: flattened.length, presentCount, absentCount, onDutyCount } });
+    return res.status(200).json({ success: true, message: `Found ${flattened.length} attendance entries for ${session} on ${dateStr}`, data: flattened, summary: { date: dateStr, session, totalRecords: flattened.length, presentCount, absentCount, onDutyCount, lateCount, sickLeaveCount } });
 
   } catch (error) {
     logger.error('getAttendanceByDateAndSession error', { error: error.message });
@@ -299,8 +302,8 @@ export const getSessionSummaryByDate = async (req, res) => {
       });
     });
 
-    const fnSummary = { session: 'FN', totalRecords: fnEntries.length, presentCount: fnEntries.filter(r => r.status === 'Present').length, absentCount: fnEntries.filter(r => r.status === 'Absent').length, onDutyCount: fnEntries.filter(r => r.status === 'On-Duty').length };
-    const anSummary = { session: 'AN', totalRecords: anEntries.length, presentCount: anEntries.filter(r => r.status === 'Present').length, absentCount: anEntries.filter(r => r.status === 'Absent').length, onDutyCount: anEntries.filter(r => r.status === 'On-Duty').length };
+    const fnSummary = { session: 'FN', totalRecords: fnEntries.length, presentCount: fnEntries.filter(r => r.status === 'Present').length, absentCount: fnEntries.filter(r => r.status === 'Absent').length, onDutyCount: fnEntries.filter(r => r.status === 'On-Duty').length, lateCount: fnEntries.filter(r => r.status === 'Late').length, sickLeaveCount: fnEntries.filter(r => r.status === 'Sick-Leave').length };
+    const anSummary = { session: 'AN', totalRecords: anEntries.length, presentCount: anEntries.filter(r => r.status === 'Present').length, absentCount: anEntries.filter(r => r.status === 'Absent').length, onDutyCount: anEntries.filter(r => r.status === 'On-Duty').length, lateCount: anEntries.filter(r => r.status === 'Late').length, sickLeaveCount: anEntries.filter(r => r.status === 'Sick-Leave').length };
 
     logger.info('getSessionSummaryByDate success', { durationMs: Date.now() - start, fnTotal: fnEntries.length, anTotal: anEntries.length });
     return res.status(200).json({ success: true, message: `Session summary for ${dateStr}`, date: dateStr, summary: { FN: fnSummary, AN: anSummary, totalRecords: fnEntries.length + anEntries.length } });
@@ -401,8 +404,8 @@ export const getAttendanceByDateSummary = async (req, res) => {
       if (fnTotal > 0 || anTotal > 0) {
         summaries.push({
           date: dateStr,
-          FN: { total: fnTotal, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length },
-          AN: { total: anTotal, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length }
+          FN: { total: fnTotal, present: fnEntries.filter(r => r.status === 'Present').length, absent: fnEntries.filter(r => r.status === 'Absent').length, onDuty: fnEntries.filter(r => r.status === 'On-Duty').length, late: fnEntries.filter(r => r.status === 'Late').length, sickLeave: fnEntries.filter(r => r.status === 'Sick-Leave').length },
+          AN: { total: anTotal, present: anEntries.filter(r => r.status === 'Present').length, absent: anEntries.filter(r => r.status === 'Absent').length, onDuty: anEntries.filter(r => r.status === 'On-Duty').length, late: anEntries.filter(r => r.status === 'Late').length, sickLeave: anEntries.filter(r => r.status === 'Sick-Leave').length }
         });
       }
     }
@@ -579,12 +582,14 @@ export const getAttendanceStats = async (req, res) => {
         try {
           const key = e.regno ? String(e.regno).toUpperCase() : (e.studentId ? String(e.studentId) : null);
           if (!key) continue;
-          if (!map.has(key)) map.set(key, { _id: e.studentId || null, regno: e.regno || key, studentname: e.studentname || 'Unknown', totalClasses: 0, present: 0, absent: 0, onDuty: 0 });
+          if (!map.has(key)) map.set(key, { _id: e.studentId || null, regno: e.regno || key, studentname: e.studentname || 'Unknown', totalClasses: 0, present: 0, absent: 0, onDuty: 0, late: 0, sickLeave: 0 });
           const obj = map.get(key);
           obj.totalClasses += 1;
           if (e.status === 'Present') obj.present += 1;
           else if (e.status === 'Absent') obj.absent += 1;
           else if (e.status === 'On-Duty') obj.onDuty += 1;
+          else if (e.status === 'Late') obj.late += 1;
+          else if (e.status === 'Sick-Leave') obj.sickLeave += 1;
         } catch (err) {
           // skip malformed entry
         }
@@ -596,56 +601,62 @@ export const getAttendanceStats = async (req, res) => {
       // Calculate attendance percentage: both Present and On-Duty count as present
       const effectivePresent = v.present + v.onDuty;
       const attendancePercentage = v.totalClasses > 0 ? Math.round((effectivePresent / v.totalClasses) * 10000) / 100 : 0;
-      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, attendancePercentage });
+      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, late: v.late, sickLeave: v.sickLeave, attendancePercentage });
     }
 
-    // Enrich with student -> dept / batch mapping if possible
-    try {
-      const regnos = results.map(r => String(r.regno || '').toUpperCase()).filter(Boolean);
-      if (regnos.length) {
-        const students = await Student.find({ regno: { $in: regnos } }).select('regno dept batchId').lean();
-        const studentMap = new Map();
-        students.forEach(s => studentMap.set(String(s.regno).toUpperCase(), s));
+      // Enrich with student -> dept/batch mapping and normalize deptId/deptName
+      try {
+        const regnos = results.map(r => String(r.regno || '').toUpperCase()).filter(Boolean);
+        if (regnos.length) {
+          const students = await Student.find({ regno: { $in: regnos } }).select('regno dept batchId').lean();
+          const studentMap = new Map();
+          students.forEach(s => studentMap.set(String(s.regno).toUpperCase(), s));
 
-        const deptSet = new Set();
-        results.forEach(r => {
-          const key = String(r.regno || '').toUpperCase();
-          const s = studentMap.get(key);
-          if (s) {
-            r.dept = s.dept || 'Unknown';
-            r.batchId = s.batchId || null;
-            if (r.dept) deptSet.add(r.dept);
-          } else {
-            r.dept = 'Unknown';
-            r.batchId = null;
-          }
-        });
+          // Fetch departments once; build lookup by both id and name (uppercased)
+          const allDepts = await Department.find({}).select('deptId deptName').lean();
+          const deptById = new Map(allDepts.map(d => [String(d.deptId).toUpperCase(), d]));
+          const deptByName = new Map(allDepts.map(d => [String(d.deptName).toUpperCase(), d]));
 
-        // Resolve department names
-        const deptIds = Array.from(deptSet);
-        if (deptIds.length) {
-          const depts = await Department.find({ deptId: { $in: deptIds } }).select('deptId deptName').lean();
-          const deptMap = new Map();
-          depts.forEach(d => deptMap.set(String(d.deptId).toUpperCase(), d.deptName));
           results.forEach(r => {
-            const id = String(r.dept || '').toUpperCase();
-            r.deptName = deptMap.get(id) || r.dept || 'Unknown';
+            const key = String(r.regno || '').toUpperCase();
+            const s = studentMap.get(key);
+            if (s) {
+              r.batchId = s.batchId || null;
+              const raw = String(s.dept || '').toUpperCase();
+              let matched = deptById.get(raw) || deptByName.get(raw) || null;
+              if (matched) {
+                r.deptId = matched.deptId;
+                r.deptName = matched.deptName;
+                r.dept = matched.deptId; // keep r.dept as id for legacy filters
+              } else {
+                // Fallback: assume stored value is the id
+                r.deptId = s.dept || 'Unknown';
+                r.deptName = s.dept || 'Unknown';
+                r.dept = s.dept || 'Unknown';
+              }
+            } else {
+              r.deptId = 'Unknown';
+              r.deptName = 'Unknown';
+              r.dept = 'Unknown';
+              r.batchId = null;
+            }
           });
-        } else {
-          results.forEach(r => r.deptName = r.dept || 'Unknown');
         }
-      }
-    } catch (err) {
+      } catch (err) {
       // Non-fatal: log and continue returning basic stats
       logger.warn('Failed to enrich attendance stats with student/dept info', { error: err && err.message ? err.message : err });
-      results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptName) r.deptName = r.dept; });
+        results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptId) r.deptId = r.dept; if (!r.deptName) r.deptName = r.dept; });
     }
 
     // Optional department filter (after enrichment so we have deptId/deptName available)
     let filtered = results;
-    if (deptId && typeof deptId === 'string') {
-      const key = String(deptId).toUpperCase();
-      filtered = results.filter(r => String(r.dept || '').toUpperCase() === key || String(r.deptId || '').toUpperCase() === key);
+      if (deptId && typeof deptId === 'string') {
+        const key = String(deptId).toUpperCase();
+        filtered = results.filter(r =>
+          String(r.dept || '').toUpperCase() === key ||
+          String((r.deptId || '')).toUpperCase() === key ||
+          String((r.deptName || '')).toUpperCase() === key
+        );
     }
 
     logger.info('getAttendanceStats success', { durationMs: Date.now() - start, count: filtered.length, deptFilter: deptId || null });

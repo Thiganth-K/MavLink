@@ -48,13 +48,7 @@ export default function SuperAdminNavbar() {
             <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 mr-2 rounded-md hover:bg-supergreenAccent/10">
               <FiMenu className="w-6 h-6" />
             </button>
-            <svg
-              className="w-8 h-8 text-purple-400"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
+            <img src="/stars-logo.png" alt="STARS" className="w-8 h-8 object-contain" />
           <span className="text-xl sm:text-2xl font-extrabold tracking-tight">STARS</span>
         </div>
           {mobileOpen && (

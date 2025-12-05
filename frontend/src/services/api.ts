@@ -94,7 +94,7 @@ export interface Attendance {
   studentname: string;
   date: Date | string;
   session: 'FN' | 'AN';
-  status: 'Present' | 'Absent' | 'On-Duty';
+  status: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave';
   reason?: string | null;
   markedBy: string;
   markedAt?: Date | string;
@@ -108,6 +108,8 @@ export interface AttendanceStats {
   present: number;
   absent: number;
   onDuty: number;
+  late?: number;
+  sickLeave?: number;
   attendancePercentage: number;
 }
 
@@ -118,12 +120,16 @@ export interface AttendanceSummary {
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
   AN: {
     total: number;
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
 }
 
@@ -143,12 +149,16 @@ export interface CombinedAttendanceSummary {
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
   an: {
     total: number;
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
 }
 
@@ -160,6 +170,8 @@ export interface SessionSummary {
     presentCount: number;
     absentCount: number;
     onDutyCount: number;
+    lateCount?: number;
+    sickLeaveCount?: number;
   };
   AN: {
     session: 'AN';
@@ -167,6 +179,8 @@ export interface SessionSummary {
     presentCount: number;
     absentCount: number;
     onDutyCount: number;
+    lateCount?: number;
+    sickLeaveCount?: number;
   };
   totalRecords: number;
 }
@@ -681,12 +695,16 @@ interface DatesSummaryAPIResponse {
       present: number;
       absent: number;
       onDuty: number;
+      late?: number;
+      sickLeave?: number;
     };
     AN: {
       total: number;
       present: number;
       absent: number;
       onDuty: number;
+      late?: number;
+      sickLeave?: number;
     };
   }>;
 }
@@ -698,7 +716,7 @@ export const attendanceAPI = {
       studentId: string;
       regno: string;
       studentname: string;
-      status: 'Present' | 'Absent' | 'On-Duty';
+      status: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave';
       reason?: string;
     }>,
     markedBy: string,

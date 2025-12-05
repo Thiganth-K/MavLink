@@ -72,13 +72,7 @@ export default function AdminNavbar() {
       <div className="w-full mx-0 px-4 sm:px-6">
           <div className="flex justify-between items-center h-14">
           <div className="flex items-center gap-3">
-            <svg
-              className="w-8 h-8 text-purple-400"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
+            <img src="/stars-logo.png" alt="STARS" className="w-8 h-8 object-contain" />
             <span className="text-2xl font-bold text-white">STARS</span>
           </div>
 
