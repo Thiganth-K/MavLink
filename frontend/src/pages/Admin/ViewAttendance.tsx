@@ -30,6 +30,10 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
                 <span className="hidden md:inline">On-Duty</span>
                 <span className="md:hidden">OD</span>
               </button>
+            ) : record.status === 'Late' ? (
+              <span className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-orange-50 text-orange-700 border border-orange-600 whitespace-nowrap">Late</span>
+            ) : record.status === 'Sick-Leave' ? (
+              <span className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-blue-50 text-blue-700 border border-blue-600 whitespace-nowrap">Sick Leave</span>
             ) : (
               <span className={`px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold border whitespace-nowrap ${
                 record.status === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-red-50 text-red-700 border-red-600'
@@ -446,7 +450,7 @@ export default function ViewAttendance() {
                         <div className="flex items-center gap-2 mb-2">
                           <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded text-xs font-bold">FN</span>
                         </div>
-                        <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
+                        <div className="grid grid-cols-6 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
                           <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
                             <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
                             <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.fn.total}</span>
@@ -463,6 +467,14 @@ export default function ViewAttendance() {
                             <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
                             <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.fn.onDuty}</span>
                           </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-orange-50 border border-orange-600 rounded-md w-full min-w-0">
+                            <span className="text-orange-700 font-medium text-xxs sm:text-xs">Late</span>
+                            <span className="text-sm md:text-base font-bold text-orange-700 truncate">{(summary as any).fn.late ?? 0}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-blue-50 border border-blue-600 rounded-md w-full min-w-0">
+                            <span className="text-blue-700 font-medium text-xxs sm:text-xs">Sick</span>
+                            <span className="text-sm md:text-base font-bold text-blue-700 truncate">{(summary as any).fn.sickLeave ?? 0}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -470,7 +482,7 @@ export default function ViewAttendance() {
                         <div className="flex items-center gap-2 mb-2">
                           <span className="px-1 py-0.5 sm:px-2 sm:py-1 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 rounded text-xs font-bold">AN</span>
                         </div>
-                        <div className="grid grid-cols-4 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
+                        <div className="grid grid-cols-6 gap-1 sm:gap-2 min-w-0 overflow-x-auto">
                           <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-gray-100 border border-gray-300 rounded-md w-full min-w-0">
                             <span className="text-gray-700 font-medium text-xxs sm:text-xs">Total</span>
                             <span className="text-sm md:text-base font-bold text-purple-950 truncate">{summary.an.total}</span>
@@ -486,6 +498,14 @@ export default function ViewAttendance() {
                           <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-yellow-50 border border-yellow-600 rounded-md w-full min-w-0">
                             <span className="text-yellow-700 font-medium text-xxs sm:text-xs">OD</span>
                             <span className="text-sm md:text-base font-bold text-yellow-700 truncate">{summary.an.onDuty}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-orange-50 border border-orange-600 rounded-md w-full min-w-0">
+                            <span className="text-orange-700 font-medium text-xxs sm:text-xs">Late</span>
+                            <span className="text-sm md:text-base font-bold text-orange-700 truncate">{(summary as any).an.late ?? 0}</span>
+                          </div>
+                          <div className="flex flex-col items-center justify-center p-0.5 sm:p-1.5 bg-blue-50 border border-blue-600 rounded-md w-full min-w-0">
+                            <span className="text-blue-700 font-medium text-xxs sm:text-xs">Sick</span>
+                            <span className="text-sm md:text-base font-bold text-blue-700 truncate">{(summary as any).an.sickLeave ?? 0}</span>
                           </div>
                         </div>
                       </div>
