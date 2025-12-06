@@ -582,12 +582,14 @@ export const getAttendanceStats = async (req, res) => {
         try {
           const key = e.regno ? String(e.regno).toUpperCase() : (e.studentId ? String(e.studentId) : null);
           if (!key) continue;
-          if (!map.has(key)) map.set(key, { _id: e.studentId || null, regno: e.regno || key, studentname: e.studentname || 'Unknown', totalClasses: 0, present: 0, absent: 0, onDuty: 0 });
+          if (!map.has(key)) map.set(key, { _id: e.studentId || null, regno: e.regno || key, studentname: e.studentname || 'Unknown', totalClasses: 0, present: 0, absent: 0, onDuty: 0, late: 0, sickLeave: 0 });
           const obj = map.get(key);
           obj.totalClasses += 1;
           if (e.status === 'Present') obj.present += 1;
           else if (e.status === 'Absent') obj.absent += 1;
           else if (e.status === 'On-Duty') obj.onDuty += 1;
+          else if (e.status === 'Late') obj.late += 1;
+          else if (e.status === 'Sick-Leave') obj.sickLeave += 1;
         } catch (err) {
           // skip malformed entry
         }
@@ -599,56 +601,62 @@ export const getAttendanceStats = async (req, res) => {
       // Calculate attendance percentage: both Present and On-Duty count as present
       const effectivePresent = v.present + v.onDuty;
       const attendancePercentage = v.totalClasses > 0 ? Math.round((effectivePresent / v.totalClasses) * 10000) / 100 : 0;
-      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, attendancePercentage });
+      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, late: v.late, sickLeave: v.sickLeave, attendancePercentage });
     }
 
-    // Enrich with student -> dept / batch mapping if possible
-    try {
-      const regnos = results.map(r => String(r.regno || '').toUpperCase()).filter(Boolean);
-      if (regnos.length) {
-        const students = await Student.find({ regno: { $in: regnos } }).select('regno dept batchId').lean();
-        const studentMap = new Map();
-        students.forEach(s => studentMap.set(String(s.regno).toUpperCase(), s));
+      // Enrich with student -> dept/batch mapping and normalize deptId/deptName
+      try {
+        const regnos = results.map(r => String(r.regno || '').toUpperCase()).filter(Boolean);
+        if (regnos.length) {
+          const students = await Student.find({ regno: { $in: regnos } }).select('regno dept batchId').lean();
+          const studentMap = new Map();
+          students.forEach(s => studentMap.set(String(s.regno).toUpperCase(), s));
 
-        const deptSet = new Set();
-        results.forEach(r => {
-          const key = String(r.regno || '').toUpperCase();
-          const s = studentMap.get(key);
-          if (s) {
-            r.dept = s.dept || 'Unknown';
-            r.batchId = s.batchId || null;
-            if (r.dept) deptSet.add(r.dept);
-          } else {
-            r.dept = 'Unknown';
-            r.batchId = null;
-          }
-        });
+          // Fetch departments once; build lookup by both id and name (uppercased)
+          const allDepts = await Department.find({}).select('deptId deptName').lean();
+          const deptById = new Map(allDepts.map(d => [String(d.deptId).toUpperCase(), d]));
+          const deptByName = new Map(allDepts.map(d => [String(d.deptName).toUpperCase(), d]));
 
-        // Resolve department names
-        const deptIds = Array.from(deptSet);
-        if (deptIds.length) {
-          const depts = await Department.find({ deptId: { $in: deptIds } }).select('deptId deptName').lean();
-          const deptMap = new Map();
-          depts.forEach(d => deptMap.set(String(d.deptId).toUpperCase(), d.deptName));
           results.forEach(r => {
-            const id = String(r.dept || '').toUpperCase();
-            r.deptName = deptMap.get(id) || r.dept || 'Unknown';
+            const key = String(r.regno || '').toUpperCase();
+            const s = studentMap.get(key);
+            if (s) {
+              r.batchId = s.batchId || null;
+              const raw = String(s.dept || '').toUpperCase();
+              let matched = deptById.get(raw) || deptByName.get(raw) || null;
+              if (matched) {
+                r.deptId = matched.deptId;
+                r.deptName = matched.deptName;
+                r.dept = matched.deptId; // keep r.dept as id for legacy filters
+              } else {
+                // Fallback: assume stored value is the id
+                r.deptId = s.dept || 'Unknown';
+                r.deptName = s.dept || 'Unknown';
+                r.dept = s.dept || 'Unknown';
+              }
+            } else {
+              r.deptId = 'Unknown';
+              r.deptName = 'Unknown';
+              r.dept = 'Unknown';
+              r.batchId = null;
+            }
           });
-        } else {
-          results.forEach(r => r.deptName = r.dept || 'Unknown');
         }
-      }
-    } catch (err) {
+      } catch (err) {
       // Non-fatal: log and continue returning basic stats
       logger.warn('Failed to enrich attendance stats with student/dept info', { error: err && err.message ? err.message : err });
-      results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptName) r.deptName = r.dept; });
+        results.forEach(r => { if (!r.dept) r.dept = 'Unknown'; if (!r.deptId) r.deptId = r.dept; if (!r.deptName) r.deptName = r.dept; });
     }
 
     // Optional department filter (after enrichment so we have deptId/deptName available)
     let filtered = results;
-    if (deptId && typeof deptId === 'string') {
-      const key = String(deptId).toUpperCase();
-      filtered = results.filter(r => String(r.dept || '').toUpperCase() === key || String(r.deptId || '').toUpperCase() === key);
+      if (deptId && typeof deptId === 'string') {
+        const key = String(deptId).toUpperCase();
+        filtered = results.filter(r =>
+          String(r.dept || '').toUpperCase() === key ||
+          String((r.deptId || '')).toUpperCase() === key ||
+          String((r.deptName || '')).toUpperCase() === key
+        );
     }
 
     logger.info('getAttendanceStats success', { durationMs: Date.now() - start, count: filtered.length, deptFilter: deptId || null });

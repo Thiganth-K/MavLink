@@ -318,6 +318,8 @@ export default function StudentAnalysisDashboard() {
                   <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Present</th>
                   <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Absent</th>
                   <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">On-Duty</th>
+                  <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Late</th>
+                  <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Sick-Leave</th>
                   <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Total</th>
                   <th className="border border-supergreenDark/20 px-3 py-2 text-center text-supergreenDark font-semibold">Attd %</th>
                 </tr>
@@ -325,6 +327,10 @@ export default function StudentAnalysisDashboard() {
               <tbody>
                 {filteredSorted.map(s => {
                   const pct = s.attendancePercentage || 0;
+                  // Support multiple possible field names from backend: prefer explicit keys if present
+                  const late = (s as any).late ?? (s as any).lateCount ?? 0;
+                  const sick = (s as any).sickLeave ?? (s as any).sickLeaveCount ?? (s as any).sick ?? 0;
+
                   let badge = 'bg-gray-50 text-gray-700 border border-gray-400';
                   if (pct >= 75) badge = 'bg-violet-50 text-violet-700 border border-violet-600';
                   else if (pct >= 60) badge = 'bg-yellow-50 text-yellow-700 border border-yellow-600';
@@ -337,16 +343,18 @@ export default function StudentAnalysisDashboard() {
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.present}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.absent}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.onDuty}</td>
+                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{late}</td>
+                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{sick}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.totalClasses}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center">
-                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Total: ${s.totalClasses}`}>{pct.toFixed(1)}%</span>
+                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Late: ${late} | Sick: ${sick} | Total: ${s.totalClasses}`}>{pct.toFixed(1)}%</span>
                       </td>
                     </tr>
                   );
                 })}
                 {!filteredSorted.length && (
                   <tr>
-                    <td colSpan={7} className="border border-supergreenDark/10 px-3 py-8 text-center text-supergreenDark/70 text-sm">No records match filters</td>
+                    <td colSpan={9} className="border border-supergreenDark/10 px-3 py-8 text-center text-supergreenDark/70 text-sm">No records match filters</td>
                   </tr>
                 )}
               </tbody>

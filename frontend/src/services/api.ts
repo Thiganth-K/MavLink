@@ -149,12 +149,16 @@ export interface CombinedAttendanceSummary {
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
   an: {
     total: number;
     present: number;
     absent: number;
     onDuty: number;
+    late?: number;
+    sickLeave?: number;
   };
 }
 
@@ -691,12 +695,16 @@ interface DatesSummaryAPIResponse {
       present: number;
       absent: number;
       onDuty: number;
+      late?: number;
+      sickLeave?: number;
     };
     AN: {
       total: number;
       present: number;
       absent: number;
       onDuty: number;
+      late?: number;
+      sickLeave?: number;
     };
   }>;
 }
@@ -708,7 +716,7 @@ export const attendanceAPI = {
       studentId: string;
       regno: string;
       studentname: string;
-      status: 'Present' | 'Absent' | 'On-Duty';
+      status: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave';
       reason?: string;
     }>,
     markedBy: string,
