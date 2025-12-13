@@ -38,6 +38,7 @@ export default function ViewAnalysisCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AttendanceStats[] | null>(null);
+  const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
   // Always show all charts; removed single-chart selection
   const [batchCount, setBatchCount] = useState<number | null>(null);
   const [studentCount, setStudentCount] = useState<number | null>(null);
@@ -83,6 +84,7 @@ export default function ViewAnalysisCard() {
         ]);
 
         setStats(fetchedStats || []);
+        // default selection will be set from stats in an effect below
         setBatchCount(Array.isArray(batches) ? batches.length : null);
         setStudentCount(Array.isArray(students) ? students.length : null);
         setUnassignedBatchesCount(mapping && Array.isArray((mapping as any).unassignedBatches) ? (mapping as any).unassignedBatches.length : null);
@@ -187,9 +189,46 @@ export default function ViewAnalysisCard() {
     // no chart cleanup here (charts are created/cleaned in the charts effect)
   }, []);
 
+  // derive unique departments from stats and keep selection in state
+  const uniqueDepts = useMemo(() => {
+    if (!stats || !stats.length) return [] as string[];
+    const set = new Set<string>();
+    for (const s of stats) {
+      const raw = (s as any).deptName ?? (s as any).dept ?? (s as any).department ?? '';
+      let dept = String(raw || '').trim();
+      if (!dept || /^dept(?:artment)?$/i.test(dept)) {
+        const alt = (s as any).departmentName ?? (s as any).branch ?? (s as any).deptName ?? '';
+        dept = String(alt || '').trim();
+      }
+      if (!dept) dept = 'Unknown';
+      set.add(dept.replace(/\s+/g, ' '));
+    }
+    return Array.from(set).sort();
+  }, [stats]);
+
+  // Do not auto-select departments on load; charts stay empty until user selects.
+
+  // filtered stats used for charts and summaries; if none selected, use all
+  const filteredStats = useMemo(() => {
+    if (!stats) return [] as AttendanceStats[];
+    // When no departments are selected, show empty charts
+    if (!selectedDepts || !selectedDepts.length) return [] as AttendanceStats[];
+    const sel = new Set(selectedDepts.map(s => String(s).trim()));
+    return stats.filter((s) => {
+      const raw = (s as any).deptName ?? (s as any).dept ?? (s as any).department ?? '';
+      let dept = String(raw || '').trim();
+      if (!dept || /^dept(?:artment)?$/i.test(dept)) {
+        const alt = (s as any).departmentName ?? (s as any).branch ?? (s as any).deptName ?? '';
+        dept = String(alt || '').trim();
+      }
+      if (!dept) dept = 'Unknown';
+      return sel.has(dept.replace(/\s+/g, ' '));
+    });
+  }, [stats, selectedDepts]);
+
   // derive chart data from `stats` using useMemo for performance
   const { labels, deptData, binLabels, binValues, commonOptions } = useMemo(() => {
-    if (!stats || !stats.length) {
+    if (!filteredStats || !filteredStats.length) {
       return { labels: [], deptData: [], binLabels: [], binValues: [], commonOptions: {
         responsive: true,
         maintainAspectRatio: false,
@@ -198,7 +237,7 @@ export default function ViewAnalysisCard() {
     }
 
     const grouped: Record<string, { total: number; count: number }> = {};
-    for (const s of stats) {
+    for (const s of filteredStats) {
       const raw = (s as any).deptName ?? (s as any).dept ?? (s as any).department ?? '';
       let dept = String(raw).trim();
       if (!dept || /^dept(?:artment)?$/i.test(dept)) {
@@ -228,7 +267,7 @@ export default function ViewAnalysisCard() {
     const deptData = validEntries.map(e => Math.round((e.total / Math.max(1, e.count)) * 100) / 100);
 
     const bins = { '<50': 0, '50-70': 0, '70-90': 0, '90-100': 0 };
-    for (const s of stats) {
+    for (const s of filteredStats) {
       const p = Number(s.attendancePercentage || 0);
       if (p < 50) bins['<50'] += 1;
       else if (p < 70) bins['50-70'] += 1;
@@ -245,7 +284,19 @@ export default function ViewAnalysisCard() {
     };
 
     return { labels, deptData, binLabels, binValues, commonOptions };
-  }, [stats]);
+  }, [filteredStats]);
+
+  // handlers for department selection
+  const toggleDept = (d: string) => {
+    setSelectedDepts((prev) => {
+      const cur = Array.isArray(prev) ? [...prev] : [];
+      if (cur.includes(d)) return cur.filter(x => x !== d);
+      return [...cur, d];
+    });
+  };
+
+  const selectAll = () => setSelectedDepts(uniqueDepts ? [...uniqueDepts] : []);
+  const clearSelection = () => setSelectedDepts([]);
 
   // removed selection/fade effect — always showing all charts
 
@@ -285,6 +336,29 @@ export default function ViewAnalysisCard() {
         <div>
           <h3 className="text-lg font-bold text-purple-950">View Analysis</h3>
           <p className="text-sm text-supergreen/80 mt-1">Compare attendance percentages between branches</p>
+        </div>
+      </div>
+
+      {/* Department filter checkboxes - superadmin can pick depts to compare */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-medium">Filter Departments</div>
+          <div className="flex gap-2">
+            <button type="button" onClick={selectAll} className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded border">Select All</button>
+            <button type="button" onClick={clearSelection} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded border">Clear</button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 max-h-28 overflow-auto show-scrollbar p-1">
+          {uniqueDepts && uniqueDepts.length > 0 ? (
+            uniqueDepts.map((d) => (
+              <label key={d} className="inline-flex items-center gap-2 bg-white border rounded px-2 py-1 text-sm">
+                <input type="checkbox" checked={!!selectedDepts && selectedDepts.includes(d)} onChange={() => toggleDept(d)} />
+                <span className="whitespace-nowrap">{d}</span>
+              </label>
+            ))
+          ) : (
+            <div className="text-xs text-gray-500">No departments available</div>
+          )}
         </div>
       </div>
 
