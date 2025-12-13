@@ -9,6 +9,7 @@ export default function BatchManagement() {
 	const [showForm, setShowForm] = useState(false);
 	const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
 	const [selectedBatchForDetail, setSelectedBatchForDetail] = useState<Batch | null>(null);
+	const [searchQuery, setSearchQuery] = useState('');
 	const [batchId, setBatchId] = useState('');
 	const [batchName, setBatchName] = useState('');
 	const [batchYear, setBatchYear] = useState<number | ''>('');
@@ -136,10 +137,10 @@ export default function BatchManagement() {
 		try {
 			setIsLoading(true);
 			if (editingBatch) {
-				await batchAPI.updateBatch(editingBatch._id!, { batchName, batchYear: Number(batchYear), deptId, adminId, studentsText });
+				await batchAPI.updateBatch(editingBatch._id!, { batchName, batchYear: Number(batchYear), deptId, adminId: adminId ? String(adminId).toUpperCase() : undefined, studentsText });
 				toast.success('Batch updated');
 			} else {
-				await batchAPI.createBatch({ batchId, batchName, batchYear: Number(batchYear), deptId, adminId: adminId || undefined, studentsText });
+				await batchAPI.createBatch({ batchId, batchName, batchYear: Number(batchYear), deptId, adminId: adminId ? String(adminId).toUpperCase() : undefined, studentsText });
 				toast.success('Batch created');
 			}
 			resetForm();
@@ -157,7 +158,8 @@ export default function BatchManagement() {
 		setBatchName(b.batchName);
 		setBatchYear(b.batchYear);
 		setDeptId(b.deptId || '');
-		setAdminId(b.adminId || '');
+		// Batch may store assigned admin as `adminId` (single) or `adminIds` (array). Prefer `adminId`, else first of `adminIds`.
+		setAdminId(b.adminId || (Array.isArray((b as any).adminIds) && (b as any).adminIds.length ? (b as any).adminIds[0] : '') || '');
 		setStudentsText(b.students.map(s => `${s.name},${s.regno},${s.dept},${s.email},${s.mobile}`).join('\n'));
 		setShowForm(true);
 	};
@@ -176,6 +178,28 @@ export default function BatchManagement() {
 		}
 	};
 
+	const normalized = (s: any) => String(s || '').toLowerCase();
+	const getBatchAdmin = (b: Batch) => {
+		return (b as any).adminId || (Array.isArray((b as any).adminIds) && (b as any).adminIds.length ? (b as any).adminIds[0] : '') || '';
+	};
+	const getBatchAdminUsername = (b: Batch) => {
+		const id = getBatchAdmin(b);
+		if (!id) return '';
+		const found = admins.find((a: any) => ((a.adminId && String(a.adminId).toUpperCase() === String(id).toUpperCase()) || String(a._id) === String(id)));
+		return found ? (found.username || '') : id;
+	};
+	const filteredBatches = batches.filter(b => {
+		if (!searchQuery.trim()) return true;
+		const q = searchQuery.trim().toLowerCase();
+		return (
+			normalized(b.batchName).includes(q) ||
+			normalized(b.batchId).includes(q) ||
+			String(b.batchYear || '').includes(q) ||
+			normalized(b.deptId).includes(q) ||
+			normalized(getBatchAdminUsername(b)).includes(q)
+		);
+	});
+
 	return (
 		<div className="space-y-6">
 
@@ -186,9 +210,23 @@ export default function BatchManagement() {
 				/>
 			) : (
 				<div className="bg-white rounded-xl shadow-xl p-6">
-					<div className="flex justify-between items-center mb-6">
-						<p className="mb-4 text-purple-800">Click on any batch card to view student details</p>
-						<div className="ml-auto flex gap-3">
+					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+						<div className="flex-1">
+							<p className="text-purple-800 mb-2">Click on any batch card to view student details</p>
+							<div className="relative max-w-md">
+								<label htmlFor="batch-search" className="sr-only">Search batches</label>
+								<input
+									id="batch-search"
+									type="text"
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									placeholder="Search by name, ID, year, dept, admin"
+									className="w-full px-4 py-2 pr-10 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+								/>
+								<span className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500">🔍</span>
+							</div>
+						</div>
+						<div className="md:ml-auto flex gap-3">
 								<button
 									onClick={() => {
 										if (showForm) {
@@ -258,7 +296,12 @@ export default function BatchManagement() {
 									className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
 								>
 									<option value="">None</option>
-									{admins.map(a => <option key={a._id} value={a.adminId}>{a.adminId} - {a.username}</option>)}
+									{admins.map(a => {
+										const idValue = (a.adminId && String(a.adminId).trim()) || String(a._id || '');
+										return (
+											<option key={String(a._id || idValue)} value={idValue}>{idValue} - {a.username}</option>
+										);
+									})}
 								</select>
 							</div>
 						</div>
@@ -320,8 +363,8 @@ export default function BatchManagement() {
 				</div>
 			) : (
 				<div>
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-						{batches.map(batch => (
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+							{filteredBatches.map(batch => (
 							<div
 									key={batch._id}
 									role="button"
@@ -350,15 +393,15 @@ export default function BatchManagement() {
 								</div>
 
 								<div className="flex flex-wrap gap-2 mb-3">
-									{batch.adminId ? (
+									{(getBatchAdminUsername(batch) ? (
 										<span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
-											Admin: {batch.adminId}
+											Admin: {getBatchAdminUsername(batch)}
 										</span>
 									) : (
 										<span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
 											No Admin
 										</span>
-									)}
+									))}
 									<span className="px-2 py-1 text-xs rounded-full bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 font-bold">
 										{batch.students.length} students
 									</span>
@@ -386,8 +429,13 @@ export default function BatchManagement() {
 								</div>
 							</div>
 							
-						))}
+							))}
 					</div>
+						{!isLoading && batches.length > 0 && filteredBatches.length === 0 && (
+							<div className="mt-4 text-purple-800 bg-purple-50 border border-purple-200 rounded-xl p-6 text-center">
+								No batches match "{searchQuery}".
+							</div>
+						)}
 				</div>
 			)}
 				</div>
