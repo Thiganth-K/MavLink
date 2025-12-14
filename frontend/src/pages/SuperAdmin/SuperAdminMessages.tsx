@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { chatAPI, superAdminAPI, notificationAPI } from '../services/api';
+import { chatAPI, superAdminAPI, notificationAPI } from '../../services/api';
 import { FiSend } from 'react-icons/fi';
 
 interface Message {

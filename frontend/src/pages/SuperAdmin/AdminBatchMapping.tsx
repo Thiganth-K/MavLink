@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import SuperAdminNavbar from '../components/superadminnavbar';
-import SuperAdminFooter from '../components/superadminfooter';
-import { mappingAPI, batchAPI } from '../services/api';
-import type { AdminBatchMapping } from '../services/api';
+import SuperAdminNavbar from '../../components/SuperAdmin/SuperAdminNavbar';
+import SuperAdminFooter from '../../components/SuperAdmin/SuperAdminFooter';
+import { mappingAPI, batchAPI } from '../../services/api';
+import type { AdminBatchMapping } from '../../services/api';
 import ForceGraph2D from 'react-force-graph-2d';
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);

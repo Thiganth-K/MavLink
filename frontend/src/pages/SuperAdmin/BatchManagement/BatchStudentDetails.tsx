@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Batch } from '../services/api';
-import ResponsiveTable from '../components/Admin/ResponsiveTable';
+import type { Batch } from '../../../services/api';
+import ResponsiveTable from '../../../components/Admin/ResponsiveTable';
 
 interface Student {
   name: string;

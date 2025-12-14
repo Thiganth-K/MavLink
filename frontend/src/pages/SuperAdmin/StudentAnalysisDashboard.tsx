@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { attendanceAPI, departmentAPI, batchAPI, type AttendanceStats, type Batch } from '../services/api';
+import { attendanceAPI, departmentAPI, batchAPI, type AttendanceStats, type Batch } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Chart, BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
 
@@ -28,7 +28,8 @@ export default function StudentAnalysisDashboard() {
 
   useEffect(() => { loadDepartments(); }, []);
 
-  useEffect(() => { if (selectedDept) fetchStats(); }, [selectedDept, startDate, endDate, selectedYear]);
+  // Fetch stats whenever any filter changes (including clearing filters)
+  useEffect(() => { fetchStats(); }, [selectedDept, startDate, endDate, selectedYear]);
 
   const loadDepartments = async () => {
     try {
@@ -36,7 +37,7 @@ export default function StudentAnalysisDashboard() {
       const opts = Array.isArray(list) ? list.map((d: any) => ({ deptId: d.deptId, deptName: d.deptName })) : [];
       setAllDepts(opts);
       // do not set displayed `departments` here; it will be derived from `allDepts` and `batches`
-      if (!selectedDept && opts.length) setSelectedDept(opts[0].deptId);
+      // Keep default empty selection ("Select Department"). Do not auto-select the first department.
     } catch (err: any) { toast.error(err.message || 'Failed to load departments'); }
   };
 
@@ -58,7 +59,7 @@ export default function StudentAnalysisDashboard() {
 
   const fetchStats = async () => {
     try {
-      const data = await attendanceAPI.getAttendanceStats(startDate || undefined, endDate || undefined, undefined, selectedDept, selectedYear === '' ? undefined : selectedYear);
+      const data = await attendanceAPI.getAttendanceStats(startDate || undefined, endDate || undefined, undefined, selectedDept || undefined, selectedYear === '' ? undefined : selectedYear);
       setStats(Array.isArray(data) ? data : []);
     } catch (err: any) { toast.error(err.message || 'Failed to load attendance stats'); }
   };
@@ -96,13 +97,14 @@ export default function StudentAnalysisDashboard() {
 
   useEffect(() => {
     if (displayedDepartments && displayedDepartments.length) {
-      if (!selectedDept || !displayedDepartments.some(d => d.deptId === selectedDept)) {
+      // Only auto-fix when an existing selection becomes invalid. Do not auto-select on load.
+      if (selectedDept && !displayedDepartments.some(d => d.deptId === selectedDept)) {
         setSelectedDept(displayedDepartments[0].deptId);
       }
     } else {
       setSelectedDept('');
     }
-  }, [displayedDepartments]);
+  }, [displayedDepartments, selectedDept]);
 
   const filteredSorted = useMemo(() => {
     let rows = stats;
@@ -206,6 +208,7 @@ export default function StudentAnalysisDashboard() {
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-supergreenDark mb-1">Department</label>
               <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)} className="px-3 py-2 rounded-lg border border-supergreenDark/30 focus:ring-2 focus:ring-supergreenAccent">
+                <option value="">Select Department</option>
                 {displayedDepartments.map(d => <option key={d.deptId} value={d.deptId}>{d.deptId} - {d.deptName}</option>)}
                 {!displayedDepartments.length && <option value="" disabled>Loading...</option>}
               </select>
@@ -213,9 +216,12 @@ export default function StudentAnalysisDashboard() {
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-supergreenDark mb-1">Year</label>
               <select value={selectedYear} onChange={e => setSelectedYear(e.target.value === '' ? '' : Number(e.target.value))} className="px-3 py-2 rounded-lg border border-supergreenDark/30">
-                <option value="">All Years</option>
+                <option value="">Select year</option>
                 {displayedYears.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
+            </div>
+            <div className="flex items-end">
+              <button type="button" onClick={() => { setSelectedDept(''); setSelectedYear(''); }} className="px-3 py-2 rounded bg-white border border-supergreenDark/20 text-sm hover:bg-gray-50">Clear all</button>
             </div>
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-supergreenDark mb-1">Start Date (optional)</label>
@@ -330,6 +336,9 @@ export default function StudentAnalysisDashboard() {
                   // Support multiple possible field names from backend: prefer explicit keys if present
                   const late = (s as any).late ?? (s as any).lateCount ?? 0;
                   const sick = (s as any).sickLeave ?? (s as any).sickLeaveCount ?? (s as any).sick ?? 0;
+                  const effectiveTotal = typeof (s as any).effectiveTotalClasses === 'number'
+                    ? (s as any).effectiveTotalClasses
+                    : Math.max(0, Number(s.totalClasses || 0) - Number(sick || 0));
 
                   let badge = 'bg-gray-50 text-gray-700 border border-gray-400';
                   if (pct >= 75) badge = 'bg-violet-50 text-violet-700 border border-violet-600';
@@ -345,9 +354,9 @@ export default function StudentAnalysisDashboard() {
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.onDuty}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{late}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{sick}</td>
-                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.totalClasses}</td>
+                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{effectiveTotal}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center">
-                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Late: ${late} | Sick: ${sick} | Total: ${s.totalClasses}`}>{pct.toFixed(1)}%</span>
+                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Late: ${late} | Sick: ${sick} | Total: ${s.totalClasses} | Effective Total: ${effectiveTotal}`}>{pct.toFixed(1)}%</span>
                       </td>
                     </tr>
                   );

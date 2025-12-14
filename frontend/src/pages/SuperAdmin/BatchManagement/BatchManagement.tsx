@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { batchAPI, departmentAPI, superAdminAPI, type Batch } from '../services/api';
+import { batchAPI, departmentAPI, superAdminAPI, type Batch } from '../../../services/api';
 import BatchStudentDetails from './BatchStudentDetails';
+import { FiSearch } from 'react-icons/fi';
 
 export default function BatchManagement() {
 	const [batches, setBatches] = useState<Batch[]>([]);
@@ -21,6 +22,8 @@ export default function BatchManagement() {
 	const [previewCount, setPreviewCount] = useState(0);
 	const [previewError, setPreviewError] = useState<string | null>(null);
 	const [missingDeptMessage, setMissingDeptMessage] = useState<string | null>(null);
+
+	const formRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		loadBatches();
@@ -162,6 +165,11 @@ export default function BatchManagement() {
 		setAdminId(b.adminId || (Array.isArray((b as any).adminIds) && (b as any).adminIds.length ? (b as any).adminIds[0] : '') || '');
 		setStudentsText(b.students.map(s => `${s.name},${s.regno},${s.dept},${s.email},${s.mobile}`).join('\n'));
 		setShowForm(true);
+
+		// Scroll the form into view after it becomes visible
+		setTimeout(() => {
+			formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 10);
 	};
 
 	const deleteBatch = async (id: string) => {
@@ -223,7 +231,7 @@ export default function BatchManagement() {
 									placeholder="Search by name, ID, year, dept, admin"
 									className="w-full px-4 py-2 pr-10 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
 								/>
-								<span className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500">🔍</span>
+								<FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 w-5 h-5" aria-hidden />
 							</div>
 						</div>
 						<div className="md:ml-auto flex gap-3">
@@ -243,7 +251,7 @@ export default function BatchManagement() {
 					</div>
 
 			{(showForm || editingBatch) && (
-				<div className="bg-purple-50 p-6 rounded-lg mb-6">
+				<div ref={formRef} className="bg-purple-50 p-6 rounded-lg mb-6">
 					<h3 className="text-xl font-semibold text-purple-950 mb-4">{editingBatch ? 'Edit Batch' : 'Create New Batch'}</h3>
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="grid md:grid-cols-2 gap-4">

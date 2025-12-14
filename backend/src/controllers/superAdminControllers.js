@@ -340,13 +340,15 @@ export const exportAdvancedData = async (req, res) => {
         studentDateSessionMap.get(reg).set(sessionKey, entry.status || '');
 
         if (!studentAttendanceMap.has(reg)) {
-          studentAttendanceMap.set(reg, { regno: reg, studentname: entry.studentname, totalClasses: 0, present: 0, absent: 0, onDuty: 0 });
+          studentAttendanceMap.set(reg, { regno: reg, studentname: entry.studentname, totalClasses: 0, present: 0, absent: 0, onDuty: 0, late: 0, sickLeave: 0 });
         }
         const st = studentAttendanceMap.get(reg);
         st.totalClasses++;
         if (entry.status === 'Present') st.present++;
         else if (entry.status === 'Absent') st.absent++;
         else if (entry.status === 'On-Duty') st.onDuty++;
+        else if (entry.status === 'Late') st.late++;
+        else if (entry.status === 'Sick-Leave') st.sickLeave++;
       });
     });
 
@@ -374,6 +376,8 @@ export const exportAdvancedData = async (req, res) => {
       { header: 'present', key: 'present', width: 12 },
       { header: 'absent', key: 'absent', width: 12 },
       { header: 'onDuty', key: 'onDuty', width: 12 },
+      { header: 'late', key: 'late', width: 12 },
+      { header: 'sickLeave', key: 'sickLeave', width: 12 },
       { header: 'attendancePercentage', key: 'attendancePercentage', width: 20 }
     ];
 
@@ -386,8 +390,10 @@ export const exportAdvancedData = async (req, res) => {
       const reg = String(s.regno || '').trim();
       const batchInfo = batchById.get(s.batchId) || {};
       const deptName = s.dept || (batchInfo.deptId ? deptById.get(batchInfo.deptId) || '' : '');
-      const stats = studentAttendanceMap.get(reg) || { totalClasses: 0, present: 0, absent: 0, onDuty: 0 };
-      const percentage = stats.totalClasses > 0 ? `${((stats.present / stats.totalClasses) * 100).toFixed(2)}%` : '0.00%';
+      const stats = studentAttendanceMap.get(reg) || { totalClasses: 0, present: 0, absent: 0, onDuty: 0, late: 0, sickLeave: 0 };
+      const effectivePresent = (stats.present || 0) + (stats.onDuty || 0) + (stats.late || 0);
+      const effectiveTotal = Math.max(0, (stats.totalClasses || 0) - (stats.sickLeave || 0));
+      const percentage = effectiveTotal > 0 ? `${((effectivePresent / effectiveTotal) * 100).toFixed(2)}%` : '0.00%';
 
       const row = {
         deptId: batchInfo.deptId || '',
@@ -413,6 +419,8 @@ export const exportAdvancedData = async (req, res) => {
       row.present = stats.present;
       row.absent = stats.absent;
       row.onDuty = stats.onDuty;
+      row.late = stats.late;
+      row.sickLeave = stats.sickLeave;
       row.attendancePercentage = percentage;
 
       exportSheet.addRow(row);

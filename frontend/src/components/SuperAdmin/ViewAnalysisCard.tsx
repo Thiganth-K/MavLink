@@ -16,8 +16,8 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
-import { attendanceAPI, superAdminAPI, batchAPI, studentAPI, mappingAPI } from '../services/api';
-import type { AttendanceStats } from '../services/api';
+import { attendanceAPI, superAdminAPI, batchAPI, studentAPI, mappingAPI } from '../../services/api';
+import type { AttendanceStats } from '../../services/api';
 
 ChartJS.register(
   CategoryScale,
