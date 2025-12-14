@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
-import { superAdminAPI, batchAPI, type Admin } from '../services/api';
+import { superAdminAPI, batchAPI, type Admin } from '../../services/api';
 
 export default function AdminManagementPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -12,6 +12,7 @@ export default function AdminManagementPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [assignBatchId, setAssignBatchId] = useState('');
   const [assignAdminId, setAssignAdminId] = useState('');
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const role = localStorage.getItem('role');
@@ -101,6 +102,10 @@ export default function AdminManagementPage() {
     setEditingAdmin(admin);
     setFormData({ adminId: admin.adminId || '', username: admin.username, password: admin.password });
     setShowCreateForm(true);
+    // Scroll the form into view after it becomes visible
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 10);
   };
 
   const cancelEdit = () => {
@@ -138,7 +143,7 @@ export default function AdminManagementPage() {
         
 
         {showCreateForm && (
-          <div className="bg-white rounded-xl shadow p-6 mb-8 border border-purple-700">
+          <div ref={formRef} className="bg-white rounded-xl shadow p-6 mb-8 border border-purple-700">
             <h2 className="text-xl font-semibold text-supergreenDark mb-4">{editingAdmin ? 'Edit Admin' : 'Create Admin'}</h2>
             <form onSubmit={editingAdmin ? handleUpdateAdmin : handleCreateAdmin} className="space-y-4">
               <div>

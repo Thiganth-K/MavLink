@@ -1,6 +1,6 @@
-import SuperAdminNavbar from '../components/superadminnavbar';
-import SuperAdminFooter from '../components/superadminfooter';
-import ViewAnalysisCard from '../components/ViewAnalysisCard';
+import SuperAdminNavbar from '../../components/SuperAdmin/SuperAdminNavbar';
+import SuperAdminFooter from '../../components/SuperAdmin/SuperAdminFooter';
+import ViewAnalysisCard from '../../components/SuperAdmin/ViewAnalysisCard';
 
 export default function ViewAnalysisPage() {
   return (
