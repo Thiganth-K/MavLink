@@ -110,6 +110,9 @@ export interface AttendanceStats {
   onDuty: number;
   late?: number;
   sickLeave?: number;
+  // Backend may also provide an adjusted denominator for percentage calculations
+  // (e.g., excluding Late Comer and Sick Leave).
+  effectiveTotalClasses?: number;
   attendancePercentage: number;
 }
 

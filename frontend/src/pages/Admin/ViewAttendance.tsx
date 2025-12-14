@@ -31,7 +31,7 @@ function ViewAttendanceRow({ record }: { record: Attendance }) {
                 <span className="md:hidden">OD</span>
               </button>
             ) : record.status === 'Late' ? (
-              <span className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-orange-50 text-orange-700 border border-orange-600 whitespace-nowrap">Late</span>
+              <span className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-orange-50 text-orange-700 border border-orange-600 whitespace-nowrap">Late Comer</span>
             ) : record.status === 'Sick-Leave' ? (
               <span className="px-2 py-0.5 md:px-3 md:py-1 text-sm md:text-base rounded-full font-semibold bg-blue-50 text-blue-700 border border-blue-600 whitespace-nowrap">Sick Leave</span>
             ) : (

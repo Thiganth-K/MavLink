@@ -19,7 +19,7 @@ export default function MarkAttendance() {
   const [submittedSummary, setSubmittedSummary] = useState<{ present: number; absent: number; onDuty: number; late: number; sickLeave: number; total: number } | null>(null);
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
-  const [attendanceStats, setAttendanceStats] = useState<{ [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; total: number } }>({});
+  const [attendanceStats, setAttendanceStats] = useState<{ [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; late: number; sickLeave: number; total: number; effectiveTotal: number } }>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -121,16 +121,24 @@ export default function MarkAttendance() {
   const fetchAttendanceStats = async (batchId?: string) => {
     try {
       const stats = await attendanceAPI.getAttendanceStats(undefined, undefined, batchId);
-      const map: { [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; total: number } } = {};
+      const map: { [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; late: number; sickLeave: number; total: number; effectiveTotal: number } } = {};
       stats.forEach(s => {
         const reg = (s.regno || '').toUpperCase();
         const total = s.totalClasses || 0;
         const present = s.present || 0;
         const absent = s.absent || 0;
         const onDuty = s.onDuty || 0;
-        const percentage = total > 0 ? Math.round((present / total) * 1000) / 10 : 0; // present only
-        const combinedPercentage = total > 0 ? Math.round(((present + onDuty) / total) * 1000) / 10 : 0; // treating On-Duty as attended
-        map[reg] = { percentage, combinedPercentage, present, absent, onDuty, total };
+        const late = (s as any).late || 0;
+        const sickLeave = (s as any).sickLeave || 0;
+        const effectiveTotal = Math.max(0, total - sickLeave);
+
+        // Keep both fields for UI; combinedPercentage matches backend attendancePercentage rule
+        const percentage = effectiveTotal > 0 ? Math.round((present / effectiveTotal) * 1000) / 10 : 0;
+        const combinedPercentage = typeof (s as any).attendancePercentage === 'number'
+          ? Math.round(((s as any).attendancePercentage) * 10) / 10
+          : (effectiveTotal > 0 ? Math.round(((present + onDuty) / effectiveTotal) * 1000) / 10 : 0);
+
+        map[reg] = { percentage, combinedPercentage, present, absent, onDuty, late, sickLeave, total, effectiveTotal };
       });
       setAttendanceStats(map);
     } catch (err: any) {
@@ -344,8 +352,8 @@ export default function MarkAttendance() {
                           <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
                           <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
                           <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>OD</button>
-                          <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late</button>
-                          <button onClick={() => handleAttendanceChange(student._id!, 'Sick-Leave')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Sick-Leave' ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Sick</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late Comer</button>
+                          <button onClick={() => handleAttendanceChange(student._id!, 'Sick-Leave')} className={`w-full sm:w-auto px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Sick-Leave' ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Sick Leave</button>
                         </div>
                       </div>
 
@@ -383,7 +391,7 @@ export default function MarkAttendance() {
                       const reg = (student.regno || '').toUpperCase();
                       const stat = attendanceStats[reg];
                       if (!stat) return <span className="text-gray-400 text-sm">--</span>;
-                      const pct = stat.combinedPercentage; // using combined (Present + On-Duty)
+                      const pct = stat.combinedPercentage; // Present + On-Duty, calculated over (Total - Sick Leave)
                       let cls = 'bg-gray-100 text-gray-700 border border-gray-400';
                       if (pct >= 75) cls = 'bg-purple-50 text-purple-700 border border-purple-600';
                       else if (pct >= 60) cls = 'bg-yellow-50 text-yellow-700 border border-yellow-600';
@@ -391,7 +399,7 @@ export default function MarkAttendance() {
                       else cls = 'bg-red-50 text-red-700 border border-red-600';
                       return (
                         <span
-                          title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Absent: ${stat.absent} | Total: ${stat.total} | Attendance: ${pct.toFixed(1)}%`}
+                          title={`Present: ${stat.present} | On-Duty: ${stat.onDuty} | Late: ${stat.late} | Sick Leave: ${stat.sickLeave} | Absent: ${stat.absent} | Total: ${stat.total} | Effective Total: ${stat.effectiveTotal} | Attendance: ${pct.toFixed(1)}%`}
                           className={`inline-block min-w-[60px] px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${cls}`}
                         >{pct.toFixed(1)}%</span>
                       );
@@ -403,7 +411,7 @@ export default function MarkAttendance() {
                         <button onClick={() => handleAttendanceChange(student._id!, 'Present')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Present' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Present</button>
                         <button onClick={() => handleAttendanceChange(student._id!, 'Absent')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Absent' ? 'bg-red-50 text-red-700 border-red-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Absent</button>
                         <button onClick={() => handleAttendanceChange(student._id!, 'On-Duty')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'On-Duty' ? 'bg-yellow-50 text-yellow-700 border-yellow-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>On-Duty</button>
-                        <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late</button>
+                        <button onClick={() => handleAttendanceChange(student._id!, 'Late')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Late' ? 'bg-orange-50 text-orange-700 border-orange-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Late Comer</button>
                         <button onClick={() => handleAttendanceChange(student._id!, 'Sick-Leave')} className={`w-full sm:w-auto px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm rounded-lg font-semibold border ${attendanceMap[student._id!] === 'Sick-Leave' ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>Sick Leave</button>
                       </div>
                     </div>
@@ -461,7 +469,7 @@ export default function MarkAttendance() {
                   <div className="text-sm text-gray-600 mt-1">{((submittedSummary.onDuty / submittedSummary.total) * 100).toFixed(1)}%</div>
                 </div>
                 <div className="bg-orange-50 rounded-lg p-4 text-center">
-                  <div className="text-orange-700 font-medium mb-1">Late</div>
+                  <div className="text-orange-700 font-medium mb-1">Late Comer</div>
                   <div className="text-3xl font-bold text-orange-600">{submittedSummary.late}</div>
                   <div className="text-sm text-gray-600 mt-1">{((submittedSummary.late / submittedSummary.total) * 100).toFixed(1)}%</div>
                 </div>
