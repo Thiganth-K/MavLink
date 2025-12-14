@@ -330,6 +330,9 @@ export default function StudentAnalysisDashboard() {
                   // Support multiple possible field names from backend: prefer explicit keys if present
                   const late = (s as any).late ?? (s as any).lateCount ?? 0;
                   const sick = (s as any).sickLeave ?? (s as any).sickLeaveCount ?? (s as any).sick ?? 0;
+                  const effectiveTotal = typeof (s as any).effectiveTotalClasses === 'number'
+                    ? (s as any).effectiveTotalClasses
+                    : Math.max(0, Number(s.totalClasses || 0) - Number(sick || 0));
 
                   let badge = 'bg-gray-50 text-gray-700 border border-gray-400';
                   if (pct >= 75) badge = 'bg-violet-50 text-violet-700 border border-violet-600';
@@ -345,9 +348,9 @@ export default function StudentAnalysisDashboard() {
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.onDuty}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{late}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{sick}</td>
-                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{s.totalClasses}</td>
+                      <td className="border border-supergreenDark/10 px-3 py-2 text-center text-supergreenDark text-sm">{effectiveTotal}</td>
                       <td className="border border-supergreenDark/10 px-3 py-2 text-center">
-                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Late: ${late} | Sick: ${sick} | Total: ${s.totalClasses}`}>{pct.toFixed(1)}%</span>
+                        <span className={`inline-block min-w-[58px] px-2 py-1 rounded-full text-xs font-semibold ${badge}`} title={`Present: ${s.present} | Absent: ${s.absent} | On-Duty: ${s.onDuty} | Late: ${late} | Sick: ${sick} | Total: ${s.totalClasses} | Effective Total: ${effectiveTotal}`}>{pct.toFixed(1)}%</span>
                       </td>
                     </tr>
                   );

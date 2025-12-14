@@ -9,7 +9,7 @@ export default function ViewStudents() {
   const [assignedBatches, setAssignedBatches] = useState<{ batchId?: string; batchName?: string }[]>([]);
   const [activeBatchId, setActiveBatchId] = useState<string>('');
   // date filters removed from UI; stats always fetched for last 30 days
-  const [attendanceStats, setAttendanceStats] = useState<Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }>>({});
+  const [attendanceStats, setAttendanceStats] = useState<Record<string, { present: number; absent: number; onDuty: number; late: number; sickLeave: number; attendancePercentage: number }>>({});
 
   useEffect(() => {
     fetchAssignedBatches();
@@ -58,11 +58,18 @@ export default function ViewStudents() {
         const sStr = sDate.toISOString().slice(0, 10);
         const eStr = today.toISOString().slice(0, 10);
         stats = await (await import('../../services/api')).attendanceAPI.getAttendanceStats(sStr, eStr, batchId || activeBatchId || undefined);
-        const map: Record<string, { present: number; absent: number; onDuty: number; attendancePercentage: number }> = {};
+        const map: Record<string, { present: number; absent: number; onDuty: number; late: number; sickLeave: number; attendancePercentage: number }> = {};
         stats.forEach((st: any) => {
           // prefer regno key if available, fallback to _id
           const key = st.regno || st._id || '';
-          map[key] = { present: st.present || 0, absent: st.absent || 0, onDuty: st.onDuty || 0, attendancePercentage: Math.round((st.attendancePercentage || 0) * 100) / 100 };
+          map[key] = {
+            present: st.present || 0,
+            absent: st.absent || 0,
+            onDuty: st.onDuty || 0,
+            late: st.late || 0,
+            sickLeave: st.sickLeave || 0,
+            attendancePercentage: Math.round((st.attendancePercentage || 0) * 100) / 100
+          };
         });
         setAttendanceStats(map);
       } catch (err) {
@@ -135,6 +142,8 @@ export default function ViewStudents() {
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions Present</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions Absent</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sessions OD</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Late Comer</th>
+                    <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Sick Leave</th>
                     <th className="border border-purple-200 px-4 py-3 text-left text-purple-950 font-semibold align-top">Attendance %</th>
                   </tr>
                 </thead>
@@ -149,6 +158,8 @@ export default function ViewStudents() {
                       <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].present : '-'}</td>
                       <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].absent : '-'}</td>
                       <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].onDuty : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].late : '-'}</td>
+                      <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? attendanceStats[student.regno || student._id || ''].sickLeave : '-'}</td>
                       <td className="border border-purple-200 px-4 py-3 text-purple-900 align-top break-words">{attendanceStats[student.regno || student._id || ''] ? `${attendanceStats[student.regno || student._id || ''].attendancePercentage}%` : '-'}</td>
                     </tr>
                   ))}

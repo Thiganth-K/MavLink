@@ -71,16 +71,29 @@ export const markAttendance = async (req, res) => {
 
     for (const rec of attendanceData) {
       try {
-        const { studentId, regno, studentname, status, reason } = rec;
+        const { studentId, regno, studentname, status: rawStatus, reason } = rec;
 
-        if (!studentId || !regno || !studentname || !status) {
+        if (!studentId || !regno || !studentname || !rawStatus) {
           errors.push({ studentId: studentId || 'unknown', error: 'Missing required fields' });
           continue;
         }
 
+        // Normalize status aliases coming from UI/clients
+        const normalizeStatus = (val) => {
+          const s = String(val || '').trim();
+          const key = s.toLowerCase().replace(/\s+/g, '');
+          if (key === 'present') return 'Present';
+          if (key === 'absent') return 'Absent';
+          if (key === 'onduty' || key === 'on-duty' || key === 'on_duty') return 'On-Duty';
+          if (key === 'late' || key === 'latecomer' || key === 'late-comer' || key === 'latecomerattendance') return 'Late';
+          if (key === 'sickleave' || key === 'sick-leave' || key === 'sick_leave') return 'Sick-Leave';
+          return s;
+        };
+
+        const status = normalizeStatus(rawStatus);
         const allowedStatuses = ["Present", "Absent", "On-Duty", "Late", "Sick-Leave"];
         if (!allowedStatuses.includes(status)) {
-          errors.push({ studentId, error: 'Status must be Present, Absent, On-Duty, Late, or Sick-Leave' });
+          errors.push({ studentId, error: 'Status must be Present, Absent, On-Duty, Late (Late Comer), or Sick-Leave (Sick Leave)' });
           continue;
         }
 
@@ -445,7 +458,8 @@ export const getBatchSessionPresentCounts = async (req, res) => {
       const batchId = doc.batchId;
       if (!map.has(batchId)) map.set(batchId, { fnPresent: 0, anPresent: 0 });
       const entries = Array.isArray(doc.entries) ? doc.entries : [];
-      const presentCount = entries.filter(e => e && e.status === 'Present').length;
+      // Treat Present + On-Duty + Late as "attended" for daily present counters
+      const presentCount = entries.filter(e => e && (e.status === 'Present' || e.status === 'On-Duty' || e.status === 'Late')).length;
       if (doc.session === 'FN') map.get(batchId).fnPresent += presentCount;
       else if (doc.session === 'AN') map.get(batchId).anPresent += presentCount;
     });
@@ -598,10 +612,13 @@ export const getAttendanceStats = async (req, res) => {
 
     const results = [];
     for (const [k, v] of map.entries()) {
-      // Calculate attendance percentage: both Present and On-Duty count as present
-      const effectivePresent = v.present + v.onDuty;
-      const attendancePercentage = v.totalClasses > 0 ? Math.round((effectivePresent / v.totalClasses) * 10000) / 100 : 0;
-      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, late: v.late, sickLeave: v.sickLeave, attendancePercentage });
+      // Attendance % rule:
+      // - Present + On-Duty + Late contribute to "attended" sessions
+      // - Sick Leave (stored as 'Sick-Leave') is EXCLUDED from totalClasses for percentage calc
+      const effectivePresent = v.present + v.onDuty + (v.late || 0);
+      const effectiveTotal = Math.max(0, (v.totalClasses || 0) - (v.sickLeave || 0));
+      const attendancePercentage = effectiveTotal > 0 ? Math.round((effectivePresent / effectiveTotal) * 10000) / 100 : 0;
+      results.push({ _id: v._id, regno: v.regno, studentname: v.studentname, totalClasses: v.totalClasses, present: v.present, absent: v.absent, onDuty: v.onDuty, late: v.late, sickLeave: v.sickLeave, effectiveTotalClasses: effectiveTotal, attendancePercentage });
     }
 
       // Enrich with student -> dept/batch mapping and normalize deptId/deptName
