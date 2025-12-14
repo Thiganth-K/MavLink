@@ -376,6 +376,8 @@ export const exportAdvancedData = async (req, res) => {
       { header: 'present', key: 'present', width: 12 },
       { header: 'absent', key: 'absent', width: 12 },
       { header: 'onDuty', key: 'onDuty', width: 12 },
+      { header: 'late', key: 'late', width: 12 },
+      { header: 'sickLeave', key: 'sickLeave', width: 12 },
       { header: 'attendancePercentage', key: 'attendancePercentage', width: 20 }
     ];
 
@@ -417,6 +419,8 @@ export const exportAdvancedData = async (req, res) => {
       row.present = stats.present;
       row.absent = stats.absent;
       row.onDuty = stats.onDuty;
+      row.late = stats.late;
+      row.sickLeave = stats.sickLeave;
       row.attendancePercentage = percentage;
 
       exportSheet.addRow(row);

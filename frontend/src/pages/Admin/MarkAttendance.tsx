@@ -9,6 +9,7 @@ import { adminAPI } from '../../services/api';
 
 export default function MarkAttendance() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [studentsBatchId, setStudentsBatchId] = useState<string>('');
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [selectedDate, setSelectedDate] = useState(getTodayIST());
   const [selectedSession, setSelectedSession] = useState<'FN' | 'AN'>('FN');
@@ -39,10 +40,20 @@ export default function MarkAttendance() {
   }, []);
 
   useEffect(() => {
-    // whenever date/session/batch changes fetch session-specific attendance
+    // Fetch session-specific attendance only when the students list matches the active batch.
+    // This prevents accidental "cross-batch" percentages/records (especially when regnos overlap)
+    // during the brief interval while switching batches.
+    if (!activeBatchId) {
+      setAttendanceRecords([]);
+      setAttendanceMap({});
+      setAttendanceReasons({});
+      setAttendanceStats({});
+      return;
+    }
+    if (studentsBatchId !== activeBatchId) return;
     fetchAttendance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, selectedSession, activeBatchId]);
+  }, [selectedDate, selectedSession, activeBatchId, studentsBatchId]);
 
   const fetchAssignedBatches = async () => {
     try {
@@ -58,10 +69,17 @@ export default function MarkAttendance() {
       });
       setAssignedBatches(mine);
       if (mine.length > 0) {
-        setActiveBatchId(mine[0].batchId || '');
-        await fetchStudents(mine[0].batchId || '');
+        const first = mine[0].batchId || '';
+        setActiveBatchId(first);
+        await fetchStudents(first);
       } else {
-        await fetchStudents();
+        setActiveBatchId('');
+        setStudentsBatchId('');
+        setStudents([]);
+        setAttendanceRecords([]);
+        setAttendanceMap({});
+        setAttendanceReasons({});
+        setAttendanceStats({});
       }
     } catch (e: any) {
       toast.error(e.message || 'Failed to load batches');
@@ -78,11 +96,13 @@ export default function MarkAttendance() {
       if (!batchId) studentList = await studentAPI.getAssignedStudents();
       else studentList = await studentAPI.getStudents(batchId);
       studentList.sort((a: Student, b: Student) => (a.regno || '').localeCompare(b.regno || ''));
+      setStudentsBatchId(batchId || '');
       setStudents(studentList);
       // Fetch cumulative stats after loading students
-      await fetchAttendanceStats(batchId || activeBatchId || undefined);
+      await fetchAttendanceStats(batchId);
     } catch (e: any) {
       toast.error(e.message || 'Failed to fetch students');
+      setStudentsBatchId(batchId || '');
       setStudents([]);
     } finally {
       setIsLoading(false);
@@ -94,9 +114,18 @@ export default function MarkAttendance() {
     try {
       (window as any).showGlobalLoader?.('markattendance-data');
       setIsLoading(true);
-      const sessionRecords = await attendanceAPI.getAttendanceByDateAndSession(selectedDate, selectedSession, activeBatchId || undefined);
       const allowedRegnos = new Set(students.map(s => (s.regno || '').toUpperCase()));
-      const filtered = sessionRecords.filter((r: any) => allowedRegnos.size ? allowedRegnos.has((r.regno || '').toUpperCase()) : true);
+
+      // Hard guard: never fetch without a concrete batchId, and never "show all" when students haven't loaded.
+      if (!activeBatchId || studentsBatchId !== activeBatchId || allowedRegnos.size === 0) {
+        setAttendanceRecords([]);
+        setAttendanceMap({});
+        setAttendanceReasons({});
+        return;
+      }
+
+      const sessionRecords = await attendanceAPI.getAttendanceByDateAndSession(selectedDate, selectedSession, activeBatchId);
+      const filtered = sessionRecords.filter((r: any) => allowedRegnos.has((r.regno || '').toUpperCase()));
       setAttendanceRecords(filtered);
 
       const newAttendanceMap: { [key: string]: 'Present' | 'Absent' | 'On-Duty' | 'Late' | 'Sick-Leave' } = {};
@@ -108,7 +137,7 @@ export default function MarkAttendance() {
       setAttendanceMap(newAttendanceMap);
       setAttendanceReasons(newAttendanceReasons);
       // Refresh stats as attendance may have changed earlier
-      await fetchAttendanceStats(activeBatchId || undefined);
+      await fetchAttendanceStats(activeBatchId);
     } catch (e: any) {
       toast.error(e.message || 'Failed to fetch attendance');
       setAttendanceRecords([]);
@@ -120,6 +149,11 @@ export default function MarkAttendance() {
 
   const fetchAttendanceStats = async (batchId?: string) => {
     try {
+      if (!batchId) {
+        setAttendanceStats({});
+        return;
+      }
+
       const stats = await attendanceAPI.getAttendanceStats(undefined, undefined, batchId);
       const map: { [regno: string]: { percentage: number; combinedPercentage: number; present: number; absent: number; onDuty: number; late: number; sickLeave: number; total: number; effectiveTotal: number } } = {};
       stats.forEach(s => {
