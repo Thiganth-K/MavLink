@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import ViewAnalysisCard from '../components/ViewAnalysisCard';
+import ViewAnalysisCard from '../../components/SuperAdmin/ViewAnalysisCard';
 import BatchViewer from './BatchViewer';
 import { FiUserPlus, FiLayers, FiList, FiUsers, FiMap, FiDownload, FiBarChart2, FiMessageSquare } from 'react-icons/fi';
-import { notificationAPI } from '../services/api';
+import { notificationAPI } from '../../services/api';
 
 export default function SuperAdminDashboard() {
   const [showBatchViewerPanel] = useState(false);

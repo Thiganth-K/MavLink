@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react';
-import Login from './pages/login';
-import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import SuperAdminMessages from './pages/SuperAdminMessages';
-import AdminManagementPage from './pages/AdminManagementPage';
-import BatchManagementPage from './pages/BatchManagementPage';
+import Login from './pages/Login';
+import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
+import SuperAdminMessages from './pages/SuperAdmin/SuperAdminMessages';
+import AdminManagementPage from './pages/SuperAdmin/AdminManagementPage';
+import BatchManagementPage from './pages/SuperAdmin/BatchManagement/BatchManagementPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminChatModal from './components/Admin/AdminChat';
-import StudentManagement from './pages/StudentManagement';
+import StudentManagement from './pages/SuperAdmin/StudentManagement/StudentManagement';
 import ViewAttendance from './pages/Admin/ViewAttendance';
 import MarkAttendance from './pages/Admin/MarkAttendance';
 import ViewStudents from './pages/Admin/ViewStudents';
-import SuperAdminNavbar from './components/superadminnavbar';
-import SuperAdminFooter from './components/superadminfooter';
+import SuperAdminNavbar from './components/SuperAdmin/SuperAdminNavbar';
+import SuperAdminFooter from './components/SuperAdmin/SuperAdminFooter';
 import AdminProfile from './components/Admin/AdminProfile';
 import { adminAPI, batchAPI, studentAPI } from './services/api';
 import Loader from './components/Admin/AdminLoader';
-import ViewBatchesPage from './pages/ViewBatchesPage';
-import AdminBatchMappingPage from './pages/AdminBatchMapping';
-import StudentAnalysisDashboard from './pages/StudentAnalysisDashboard';
-import SuperAdminExport from './pages/SuperAdminExport';
+import ViewBatchesPage from './pages/SuperAdmin/ViewBatchesPage';
+import AdminBatchMappingPage from './pages/SuperAdmin/AdminBatchMapping';
+import StudentAnalysisDashboard from './pages/SuperAdmin/StudentAnalysisDashboard';
+import SuperAdminExport from './pages/SuperAdmin/SuperAdminExport';
 import AdminLayout from './components/Admin/AdminLayout';
 
 function App() {

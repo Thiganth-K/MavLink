@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { batchAPI, type Batch } from '../services/api';
-import BatchStudentDetails from './BatchStudentDetails';
+import { batchAPI, type Batch } from '../../services/api';
+import BatchStudentDetails from './BatchManagement/BatchStudentDetails';
 
 export default function BatchViewer() {
   const [batches, setBatches] = useState<Batch[]>([]);

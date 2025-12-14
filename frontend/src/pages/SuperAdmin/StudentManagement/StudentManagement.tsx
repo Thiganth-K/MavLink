@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { studentAPI, departmentAPI, type Student } from '../services/api';
+import { studentAPI, departmentAPI, type Student } from '../../../services/api';
 
 
 export default function StudentManagement() {
@@ -51,7 +51,7 @@ export default function StudentManagement() {
 
   const fetchBatches = async () => {
     try {
-      const all = await (await import('../services/api')).batchAPI.getBatches();
+      const all = await (await import('../../../services/api')).batchAPI.getBatches();
       setBatches(Array.isArray(all) ? all.map((b: any) => ({ batchId: b.batchId, batchName: b.batchName, deptId: b.deptId, batchYear: b.batchYear })) : []);
     } catch (err) {
       console.debug('Failed to load batches', err);

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { notificationAPI } from '../services/api';
+import { notificationAPI } from '../../services/api';
 import { FiBell, FiMenu, FiX, FiUserPlus, FiLayers, FiList, FiUsers, FiMap, FiDownload, FiBarChart2, FiMessageSquare } from 'react-icons/fi';
 import { FaSignOutAlt } from 'react-icons/fa';
 

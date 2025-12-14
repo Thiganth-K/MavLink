@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { departmentAPI, superAdminAPI } from '../services/api';
+import { departmentAPI, superAdminAPI } from '../../services/api';
 
 export default function SuperAdminExport() {
   const [departments, setDepartments] = useState<Array<{ deptId: string; deptName: string }>>([]);
