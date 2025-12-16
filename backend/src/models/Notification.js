@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
 
-// Simple notification model targeting an Admin user.
+// Notification model targeting either an Admin or Guest user.
+// Backward compatible: older documents may not have `userModel`, which should be treated as 'Admin'.
 const notificationSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
+  userModel: { type: String, enum: ['Admin', 'Guest'], default: 'Admin' },
+  user: { type: mongoose.Schema.Types.ObjectId, refPath: 'userModel', required: true },
   type: { type: String, required: true },
   messageRef: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage' },
   meta: { type: mongoose.Schema.Types.Mixed, default: {} },

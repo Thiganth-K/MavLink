@@ -5,6 +5,7 @@ import { FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import { MdEdit } from 'react-icons/md';
 
 export default function AdminNavbar() {
+  const NOTIF_POLL_MS = 15000;
   const role = localStorage.getItem('role');
   const firstLetter = (() => {
     try {
@@ -33,8 +34,8 @@ export default function AdminNavbar() {
 
   useEffect(() => {
     load();
-    // Poll notifications every 5 minutes
-    pollRef.current = window.setInterval(load, 300000) as unknown as number;
+    // Poll notifications periodically
+    pollRef.current = window.setInterval(load, NOTIF_POLL_MS) as unknown as number;
     const onNotifs = () => { load().catch(() => {}); };
     window.addEventListener('notificationsChanged', onNotifs as EventListener);
     // close notifications when clicking/tapping outside

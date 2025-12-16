@@ -20,6 +20,8 @@ import AdminBatchMappingPage from './pages/SuperAdmin/AdminBatchMapping';
 import StudentAnalysisDashboard from './pages/SuperAdmin/StudentAnalysisDashboard';
 import SuperAdminExport from './pages/SuperAdmin/SuperAdminExport';
 import AdminLayout from './components/Admin/AdminLayout';
+import GuestAttendance from './pages/Guest/GuestAttendance';
+import GuestManagementPage from './pages/SuperAdmin/GuestManagementPage';
 
 function App() {
   useEffect(() => {
@@ -167,6 +169,16 @@ function App() {
     );
   }
 
+  if (path === '/super-admin/guest-management') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SuperAdminNavbar />
+        <GuestManagementPage />
+        <SuperAdminFooter />
+      </div>
+    );
+  }
+
   if (path === '/super-admin/adminManagement') {
     return (
       <div className="min-h-screen flex flex-col">
@@ -185,6 +197,10 @@ function App() {
         <SuperAdminFooter />
       </div>
     );
+  }
+
+  if (path === '/guest') {
+    return <GuestAttendance />;
   }
 
   if (path.startsWith('/admin-dashboard')) {

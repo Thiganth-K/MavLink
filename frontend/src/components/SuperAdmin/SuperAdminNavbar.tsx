@@ -4,6 +4,7 @@ import { FiBell, FiMenu, FiX, FiUserPlus, FiLayers, FiList, FiUsers, FiMap, FiDo
 import { FaSignOutAlt } from 'react-icons/fa';
 
 export default function SuperAdminNavbar() {
+  const NOTIF_POLL_MS = 15000;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -24,8 +25,8 @@ export default function SuperAdminNavbar() {
 
   useEffect(() => {
     load();
-    // Refresh notifications every 5 minutes (300000 ms)
-    poll.current = window.setInterval(load, 300000) as unknown as number;
+    // Refresh notifications periodically
+    poll.current = window.setInterval(load, NOTIF_POLL_MS) as unknown as number;
     const onNotifs = () => { load().catch(() => {}); };
     window.addEventListener('notificationsChanged', onNotifs as EventListener);
     return () => { if (poll.current) window.clearInterval(poll.current); window.removeEventListener('notificationsChanged', onNotifs as EventListener); };
@@ -158,6 +159,18 @@ export default function SuperAdminNavbar() {
                         </div>
                       </button>
                     </li>
+
+                    <li>
+                      <button onClick={() => { setMobileOpen(false); window.location.pathname = '/super-admin/guest-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-gray-50">
+                        <div className="h-10 w-10 rounded-lg bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center flex-shrink-0">
+                          <FiUsers className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-black">Guest Management</div>
+                          <div className="text-xs text-gray-600">Create guests and allot batches</div>
+                        </div>
+                      </button>
+                    </li>
                   </ul>
                 </nav>
               </aside>
@@ -183,19 +196,19 @@ export default function SuperAdminNavbar() {
                     key={n._id || n.id}
                     onClick={() => {
                       try {
-                        const adminId = (n.sender && n.sender.adminId) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
-                        if (adminId) {
-                          window.location.href = `/super-admin/messages?adminId=${encodeURIComponent(adminId)}`;
-                        } else {
-                          window.location.href = '/super-admin/messages';
-                        }
+                        const sender = n.sender || {};
+                        const guestId = sender.guestId || (n.meta && (n.meta.fromGuestId || n.meta.toGuestId));
+                        const adminId = sender.adminId || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
+                        if (guestId) window.location.href = `/super-admin/messages?guestId=${encodeURIComponent(String(guestId))}`;
+                        else if (adminId) window.location.href = `/super-admin/messages?adminId=${encodeURIComponent(String(adminId))}`;
+                        else window.location.href = '/super-admin/messages';
                         setOpen(false);
                       } catch (e) { console.error(e); }
                     }}
                     className={`w-full text-left p-3 border-b hover:bg-gray-50 flex justify-between items-start gap-2 ${n.read ? '' : 'bg-white'}`}
                   >
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{n.sender?.username || n.sender?.adminId || 'Message'}</div>
+                      <div className="text-sm font-medium">{n.sender?.username || n.sender?.adminId || n.sender?.guestId || 'Message'}</div>
                       <div className="text-xs text-gray-600 mt-1">{n.message || (n.meta && n.meta.preview) || ''}</div>
                     </div>
                     <div className="ml-3 flex-shrink-0">

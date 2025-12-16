@@ -59,6 +59,8 @@ export default function Login() {
           window.location.href = '/super-admin';
         } else if (response.role === 'ADMIN') {
           window.location.href = '/admin-dashboard';
+        } else if (response.role === 'GUEST') {
+          window.location.href = '/guest';
         }
       }, 2000);
       

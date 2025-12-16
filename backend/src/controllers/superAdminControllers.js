@@ -1,4 +1,5 @@
 import Admin from "../models/Admin.js";
+import Guest from "../models/Guest.js";
 import Batch from "../models/Batch.js";
 import Department from "../models/Department.js";
 import Student from "../models/Student.js";
@@ -30,26 +31,131 @@ export const loginController = async (req, res) => {
 
     // ADMIN LOGIN (from DB)
     const adminUser = await Admin.findOne({ username });
+    if (adminUser) {
+      if (password !== adminUser.password) {
+        logger.warn('loginController invalid credentials (admin)', { username });
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
 
-    if (!adminUser) {
-      logger.warn('loginController admin not found', { username });
-      return res.status(404).json({ message: "User not found" });
+      logger.info('loginController admin success', { username });
+      return res.status(200).json({
+        message: "Admin login successful",
+        role: adminUser.role,
+        user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
+      });
     }
 
-    if (password !== adminUser.password) {
-      logger.warn('loginController invalid credentials', { username });
+    // GUEST LOGIN (from DB)
+    const guestUser = await Guest.findOne({ username });
+    if (!guestUser) {
+      logger.warn('loginController user not found', { username });
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (guestUser.isActive === false) {
+      logger.warn('loginController guest disabled', { username });
+      return res.status(403).json({ message: 'Guest account disabled' });
+    }
+    if (password !== guestUser.password) {
+      logger.warn('loginController invalid credentials (guest)', { username });
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    logger.info('loginController admin success', { username });
+    logger.info('loginController guest success', { username });
     return res.status(200).json({
-      message: "Admin login successful",
-      role: adminUser.role,
-      user: { username: adminUser.username, adminId: adminUser.adminId, assignedBatchIds: adminUser.assignedBatchIds }
+      message: 'Guest login successful',
+      role: 'GUEST',
+      user: { username: guestUser.username, guestId: guestUser.guestId, assignedBatchIds: guestUser.assignedBatchIds }
     });
   } catch (err) {
     logger.error('loginController error', { error: err && err.message ? err.message : err, stack: err && err.stack ? err.stack : undefined });
     return res.status(500).json({ message: 'Internal server error during login', error: err && err.message ? err.message : err });
+  }
+};
+
+// ---------- CREATE GUEST ----------
+export const createGuest = async (req, res) => {
+  logger.debug('createGuest start', { bodyKeys: Object.keys(req.body || {}) });
+  const { guestId, username, password, assignedBatchIds, isActive } = req.body;
+
+  try {
+    const newGuest = await Guest.create({
+      guestId,
+      username,
+      password,
+      assignedBatchIds: Array.isArray(assignedBatchIds) ? assignedBatchIds.map(x => String(x).toUpperCase()) : [],
+      isActive: typeof isActive === 'boolean' ? isActive : true,
+      role: 'GUEST'
+    });
+
+    logger.info('createGuest success', { guestId });
+    return res.status(201).json({ message: 'Guest created successfully', guest: newGuest });
+  } catch (err) {
+    logger.error('createGuest error', { error: err.message });
+    return res.status(500).json({ message: 'Error creating guest', error: err });
+  }
+};
+
+// ---------- READ ALL GUESTS ----------
+export const getGuests = async (req, res) => {
+  const start = Date.now();
+  logger.debug('getGuests start');
+  try {
+    const guests = await Guest.find();
+    logger.info('getGuests success', { durationMs: Date.now() - start, count: guests.length });
+    return res.status(200).json(guests);
+  } catch (err) {
+    logger.error('getGuests error', { error: err.message });
+    return res.status(500).json({ message: 'Error fetching guests' });
+  }
+};
+
+// ---------- UPDATE GUEST ----------
+export const updateGuest = async (req, res) => {
+  const start = Date.now();
+  logger.debug('updateGuest start', { id: req.params.id, bodyKeys: Object.keys(req.body || {}) });
+  const { id } = req.params;
+  const { username, password, guestId, assignedBatchIds, isActive } = req.body;
+
+  try {
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (password) updateFields.password = password;
+    if (guestId) updateFields.guestId = guestId;
+    if (Array.isArray(assignedBatchIds)) updateFields.assignedBatchIds = assignedBatchIds.map(x => String(x).toUpperCase());
+    if (typeof isActive === 'boolean') updateFields.isActive = isActive;
+
+    const updated = await Guest.findByIdAndUpdate(id, updateFields, { new: true });
+    if (!updated) {
+      logger.warn('updateGuest not found', { id });
+      return res.status(404).json({ message: 'Guest not found' });
+    }
+
+    logger.info('updateGuest success', { durationMs: Date.now() - start, id });
+    return res.status(200).json({ message: 'Guest updated successfully', guest: updated });
+  } catch (err) {
+    logger.error('updateGuest error', { error: err.message });
+    return res.status(500).json({ message: 'Error updating guest' });
+  }
+};
+
+// ---------- DELETE GUEST ----------
+export const deleteGuest = async (req, res) => {
+  const start = Date.now();
+  logger.debug('deleteGuest start', { id: req.params.id });
+  const { id } = req.params;
+
+  try {
+    const deleted = await Guest.findByIdAndDelete(id);
+    if (!deleted) {
+      logger.warn('deleteGuest not found', { id });
+      return res.status(404).json({ message: 'Guest not found' });
+    }
+
+    logger.info('deleteGuest success', { durationMs: Date.now() - start, id });
+    return res.status(200).json({ message: 'Guest deleted successfully' });
+  } catch (err) {
+    logger.error('deleteGuest error', { error: err.message });
+    return res.status(500).json({ message: 'Error deleting guest' });
   }
 };
 

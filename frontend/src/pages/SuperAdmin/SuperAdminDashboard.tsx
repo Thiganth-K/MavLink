@@ -74,15 +74,17 @@ export default function SuperAdminDashboard() {
                   onClick={async () => {
                     try {
                       await notificationAPI.markRead(n._id || n.id).catch(() => {});
-                      const adminId = (n.sender && (n.sender.adminId || n.sender._id)) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
-                      window.location.href = adminId
-                        ? `/super-admin/messages?adminId=${encodeURIComponent(String(adminId))}`
-                        : '/super-admin/messages';
+                      const sender = n.sender || {};
+                      const guestId = (sender.guestId) || (n.meta && (n.meta.fromGuestId || n.meta.toGuestId));
+                      const adminId = (sender.adminId || sender._id) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
+                      window.location.href = guestId
+                        ? `/super-admin/messages?guestId=${encodeURIComponent(String(guestId))}`
+                        : (adminId ? `/super-admin/messages?adminId=${encodeURIComponent(String(adminId))}` : '/super-admin/messages');
                     } catch {}
                   }}
                   className="cursor-pointer bg-white rounded-xl shadow-md border border-gray-100 px-3 py-2 hover:shadow-lg transition-all"
                 >
-                  <div className="text-sm font-semibold text-purple-900">{n.sender?.username || n.sender?.adminId || 'Message'}</div>
+                  <div className="text-sm font-semibold text-purple-900">{n.sender?.username || n.sender?.adminId || n.sender?.guestId || 'Message'}</div>
                   <div className="text-xs text-gray-600 mt-0.5">{n.message || (n.meta && n.meta.preview) || 'New message'}</div>
                   <div className="text-[10px] text-gray-400 mt-1">{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
                 </div>
@@ -203,6 +205,19 @@ export default function SuperAdminDashboard() {
                       </div>
                     </button>
                     <div className="h-[1px] w-[280px] bg-purple-600 mt-3" />
+                  </li>
+
+                  <li>
+                    <button onClick={() => { window.location.pathname = '/super-admin/guest-management'; }} className="w-full text-left p-3 rounded flex items-start gap-3 hover:bg-white/40">
+                      <div className="h-10 w-10 rounded-md bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-600 flex items-center justify-center">
+                        <FiUsers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-black-900">Guest Management</div>
+                        <div className="text-xs text-black-700">Create guests and allot batches</div>
+                      </div>
+                    </button>
+                    <div className="h-[1px] w-[280px] bg-fuchsia-600 mt-3" />
                   </li>
                 </ul>
               </nav>

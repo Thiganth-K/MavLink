@@ -38,10 +38,11 @@ try {
 // Types for API responses
 export interface LoginResponse {
   message: string;
-  role: 'SUPER_ADMIN' | 'ADMIN';
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'GUEST';
   user: {
     username: string;
     adminId?: string;
+    guestId?: string;
     assignedBatchIds?: string[];
   };
 }
@@ -63,6 +64,16 @@ export interface Admin {
   role: string;
   adminId?: string;
   assignedBatchIds?: string[];
+}
+
+export interface Guest {
+  _id?: string;
+  guestId?: string;
+  username: string;
+  password: string;
+  role?: 'GUEST' | string;
+  assignedBatchIds?: string[];
+  isActive?: boolean;
 }
 
 export interface BatchStudent {
@@ -279,6 +290,56 @@ export const superAdminAPI = {
       throw new Error(error.message || 'Failed to delete admin');
     }
 
+    return response.json();
+  },
+
+  // Guest CRUD
+  createGuest: async (guestId: string, username: string, password: string, assignedBatchIds: string[] = []): Promise<{ message: string; guest: Guest }> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/guest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ guestId, username, password, assignedBatchIds }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create guest');
+    }
+    return response.json();
+  },
+
+  getGuests: async (): Promise<Guest[]> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/guest`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch guests');
+    }
+    return response.json();
+  },
+
+  updateGuest: async (id: string, guestId: string, username: string, password: string, assignedBatchIds: string[] = []): Promise<{ message: string; guest: Guest }> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/guest/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ guestId, username, password, assignedBatchIds }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update guest');
+    }
+    return response.json();
+  },
+
+  deleteGuest: async (id: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/superadmin/guest/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete guest');
+    }
     return response.json();
   },
   exportAdvanced: async (params: { deptIds?: string[] | 'ALL'; batchYears?: Array<number | string>; preset?: 'today' | 'thisWeek' | 'thisMonth' | 'all'; startDate?: string; endDate?: string }): Promise<Blob> => {
@@ -548,6 +609,27 @@ export const chatAPI = {
     return res.json();
   },
 
+  guestSend: async (content: string) => {
+    const storedUser = localStorage.getItem('user');
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (guestId) headers['X-Guest-Id'] = guestId;
+    headers['X-Role'] = 'GUEST';
+
+    const res = await fetch(`${API_BASE_URL}/chat/guest/send`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ content })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to send message');
+    }
+    return res.json();
+  },
+
   superadminReply: async (toAdminId: string, content: string) => {
     const storedUser = localStorage.getItem('user');
     let adminId: string | undefined;
@@ -569,17 +651,55 @@ export const chatAPI = {
     return res.json();
   },
 
-  listMessages: async (withAdminId?: string) => {
+  superadminReplyGuest: async (toGuestId: string, content: string) => {
     const storedUser = localStorage.getItem('user');
     let adminId: string | undefined;
     try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
-    const role = localStorage.getItem('role') || '';
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminId) headers['X-Admin-Id'] = adminId;
+    headers['X-Role'] = 'SUPER_ADMIN';
+
+    const res = await fetch(`${API_BASE_URL}/chat/superadmin/reply-guest`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ toGuestId, content })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to send reply');
+    }
+    return res.json();
+  },
+
+  listMessages: async (withAdminIdOrParams?: string | { withAdminId?: string; withGuestId?: string }) => {
+    const storedUser = localStorage.getItem('user');
+    const role = String(localStorage.getItem('role') || '').trim();
+
+    let adminId: string | undefined;
+    let guestId: string | undefined;
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : {};
+      adminId = parsed.adminId;
+      guestId = parsed.guestId;
+    } catch {}
 
     const headers: Record<string, string> = {};
-    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role === 'GUEST') {
+      if (guestId) headers['X-Guest-Id'] = guestId;
+    } else {
+      if (adminId) headers['X-Admin-Id'] = adminId;
+    }
     if (role) headers['X-Role'] = role;
 
-    const q = withAdminId ? `?withAdminId=${encodeURIComponent(withAdminId)}` : '';
+    const params = typeof withAdminIdOrParams === 'string'
+      ? { withAdminId: withAdminIdOrParams }
+      : (withAdminIdOrParams || {});
+
+    const parts: string[] = [];
+    if (params.withAdminId) parts.push(`withAdminId=${encodeURIComponent(params.withAdminId)}`);
+    if (params.withGuestId) parts.push(`withGuestId=${encodeURIComponent(params.withGuestId)}`);
+    const q = parts.length ? `?${parts.join('&')}` : '';
     const res = await fetch(`${API_BASE_URL}/chat/messages${q}`, { headers });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -590,12 +710,22 @@ export const chatAPI = {
 
   markMessageRead: async (id: string) => {
     const storedUser = localStorage.getItem('user');
+    const role = String(localStorage.getItem('role') || '').trim();
+
     let adminId: string | undefined;
-    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
-    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : {};
+      adminId = parsed.adminId;
+      guestId = parsed.guestId;
+    } catch {}
 
     const headers: Record<string, string> = {};
-    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role === 'GUEST') {
+      if (guestId) headers['X-Guest-Id'] = guestId;
+    } else {
+      if (adminId) headers['X-Admin-Id'] = adminId;
+    }
     if (role) headers['X-Role'] = role;
 
     const res = await fetch(`${API_BASE_URL}/chat/${id}/read`, {
@@ -613,11 +743,20 @@ export const chatAPI = {
 export const notificationAPI = {
   list: async () => {
     const storedUser = localStorage.getItem('user');
+    const role = String(localStorage.getItem('role') || '').trim();
     let adminId: string | undefined;
-    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
-    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : {};
+      adminId = parsed.adminId;
+      guestId = parsed.guestId;
+    } catch {}
     const headers: Record<string, string> = {};
-    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role === 'GUEST') {
+      if (guestId) headers['X-Guest-Id'] = guestId;
+    } else {
+      if (adminId) headers['X-Admin-Id'] = adminId;
+    }
     if (role) headers['X-Role'] = role;
 
     const res = await fetch(`${API_BASE_URL}/notifications`, { headers });
@@ -630,11 +769,20 @@ export const notificationAPI = {
 
   markRead: async (id: string) => {
     const storedUser = localStorage.getItem('user');
+    const role = String(localStorage.getItem('role') || '').trim();
     let adminId: string | undefined;
-    try { adminId = storedUser ? JSON.parse(storedUser).adminId : undefined; } catch {}
-    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : {};
+      adminId = parsed.adminId;
+      guestId = parsed.guestId;
+    } catch {}
     const headers: Record<string, string> = {};
-    if (adminId) headers['X-Admin-Id'] = adminId;
+    if (role === 'GUEST') {
+      if (guestId) headers['X-Guest-Id'] = guestId;
+    } else {
+      if (adminId) headers['X-Admin-Id'] = adminId;
+    }
     if (role) headers['X-Role'] = role;
 
     const res = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
@@ -759,7 +907,15 @@ export const attendanceAPI = {
     // Backend now returns an object with FN and AN arrays
     let url = `${API_BASE_URL}/attendance/date?date=${date}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
-    const response = await fetch(url);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -789,7 +945,15 @@ export const attendanceAPI = {
   getAttendanceByDateAndSession: async (date: string, session: 'FN' | 'AN', batchId?: string): Promise<Attendance[]> => {
     let url = `${API_BASE_URL}/attendance/date/session?date=${date}&session=${session}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
-    const response = await fetch(url);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -813,7 +977,15 @@ export const attendanceAPI = {
     const datesString = dates.join(',');
     let url = `${API_BASE_URL}/attendance/summary?dates=${datesString}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
-    const response = await fetch(url);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance summary');
@@ -825,7 +997,15 @@ export const attendanceAPI = {
   getAttendanceByDateRange: async (startDate: string, endDate: string, batchId?: string): Promise<AttendanceAPIResponse> => {
     let url = `${API_BASE_URL}/attendance/range?startDate=${startDate}&endDate=${endDate}`;
     if (batchId) url += `&batchId=${encodeURIComponent(batchId)}`;
-    const response = await fetch(url);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance');
@@ -863,7 +1043,15 @@ export const attendanceAPI = {
     const query = params.length ? `?${params.join('&')}` : '';
     const url = `${API_BASE_URL}/attendance/stats${query}`;
 
-    const response = await fetch(url);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error('Failed to fetch attendance statistics');
@@ -889,7 +1077,22 @@ export const attendanceAPI = {
 // Batch API
 export const batchAPI = {
   getBatches: async (): Promise<Batch[]> => {
-    const res = await fetch(`${API_BASE_URL}/batches`);
+    const storedUser = localStorage.getItem('user');
+    const role = localStorage.getItem('role') || '';
+    let adminId: string | undefined;
+    let guestId: string | undefined;
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : {};
+      adminId = parsed.adminId;
+      guestId = parsed.guestId;
+    } catch {}
+
+    const headers: Record<string, string> = {};
+    if (role) headers['X-Role'] = role;
+    if (role === 'ADMIN' && adminId) headers['X-Admin-Id'] = adminId;
+    if (role === 'GUEST' && guestId) headers['X-Guest-Id'] = guestId;
+
+    const res = await fetch(`${API_BASE_URL}/batches`, { headers: Object.keys(headers).length ? headers : undefined });
     if (!res.ok) throw new Error('Failed to fetch batches');
     return res.json();
   },
@@ -1001,6 +1204,27 @@ export const adminAPI = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch profile');
+    }
+    return res.json();
+  }
+};
+
+// Guest API (for guest-specific operations)
+export const guestAPI = {
+  getProfile: async (): Promise<{ message: string; profile: { username: string; guestId?: string; assignedBatchIds?: string[]; role?: string } }> => {
+    const storedUser = localStorage.getItem('user');
+    let guestId: string | undefined;
+    try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+
+    const headers: Record<string, string> = {
+      'X-Role': localStorage.getItem('role') || ''
+    };
+    if (guestId) headers['X-Guest-Id'] = guestId;
+
+    const res = await fetch(`${API_BASE_URL}/guest/profile`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch guest profile');
     }
     return res.json();
   }

@@ -51,6 +51,7 @@ import batchRoutes from './routes/batchRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import guestRoutes from './routes/guestRoutes.js';
 
 
 const app = express();
@@ -123,6 +124,8 @@ app.use('/api/departments', departmentRoutes);
 // Chat and notifications
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
+// Guest profile
+app.use('/api/guest', guestRoutes);
 // Health check route (API only)
 app.get('/api/health', (req, res) => {
   logger.debug('Health check route hit');

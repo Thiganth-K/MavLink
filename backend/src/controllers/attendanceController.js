@@ -1,6 +1,7 @@
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
 import Admin from "../models/Admin.js";
+import Guest from "../models/Guest.js";
 import Batch from "../models/Batch.js";
 import Department from "../models/Department.js";
 import { parseISTDate, getNextISTDay, getISTTimestamp, toISTDateString } from "../utils/dateUtils.js";
@@ -33,8 +34,15 @@ export const markAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: "session must be 'FN' or 'AN'" });
     }
 
-    // Authorization: ensure admin allowed for batch when role is ADMIN
+    // Authorization: only ADMIN or SUPER_ADMIN can mark attendance (Guest is read-only)
     const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      return res.status(403).json({ success: false, message: 'Guest accounts are read-only' });
+    }
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'ADMIN or SUPER_ADMIN role required' });
+    }
+    // Authorization: ensure admin allowed for batch when role is ADMIN
     if (role === 'ADMIN') {
       const adminId = req.headers['x-admin-id'];
       if (!adminId) return res.status(400).json({ success: false, message: 'x-admin-id header required' });
@@ -192,6 +200,19 @@ export const getAttendanceByDate = async (req, res) => {
   try {
     const { date, batchId } = req.query;
 
+    // Guest access: require batchId and ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required for guest' });
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ success: false, message: 'Guest not assigned to this batch' });
+    }
+
     // Default to today IST if no date provided
     const dateStr = date && typeof date === 'string' ? date : toISTDateString(getISTTimestamp());
     const attendanceDate = parseISTDate(dateStr);
@@ -252,6 +273,19 @@ export const getAttendanceByDateAndSession = async (req, res) => {
   logger.debug('getAttendanceByDateAndSession start', { query: req.query });
   try {
     const { date, session, batchId } = req.query;
+
+    // Guest access: require batchId and ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required for guest' });
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ success: false, message: 'Guest not assigned to this batch' });
+    }
 
     if (!session || !["FN", "AN"].includes(session)) return res.status(400).json({ success: false, message: "session query parameter is required and must be 'FN' or 'AN'" });
 
@@ -338,7 +372,7 @@ export const getAttendanceByDateRange = async (req, res) => {
   const start = Date.now();
   logger.debug('getAttendanceByDateRange start', { query: req.query });
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, batchId } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -352,7 +386,23 @@ export const getAttendanceByDateRange = async (req, res) => {
     // Set end to end of day
     end.setHours(23, 59, 59, 999);
 
-    const attendanceRecords = await Attendance.find({ date: { $gte: start, $lte: end } }).sort({ date: 1, session: 1 });
+    // Guest access: require batchId and ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required for guest' });
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ success: false, message: 'Guest not assigned to this batch' });
+    }
+
+    const query = { date: { $gte: start, $lte: end } };
+    if (batchId) query.batchId = String(batchId).toUpperCase();
+
+    const attendanceRecords = await Attendance.find(query).sort({ date: 1, session: 1 });
 
     // Group by date and session and flatten entries
     const groupedData = {};
@@ -388,6 +438,19 @@ export const getAttendanceByDateSummary = async (req, res) => {
   try {
     const { batchId } = req.query;
     const { dates } = req.query;
+
+    // Guest access: require batchId and ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required for guest' });
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ success: false, message: 'Guest not assigned to this batch' });
+    }
 
     if (!dates) return res.status(400).json({ success: false, message: "dates query parameter is required (comma-separated)" });
 
@@ -444,12 +507,28 @@ export const getBatchSessionPresentCounts = async (req, res) => {
   try {
     const { date } = req.query;
 
+    const role = req.headers['x-role'];
+    let guestBatchIds = null;
+    if (role === 'GUEST') {
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      guestBatchIds = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds.map(x => String(x).toUpperCase()) : [];
+      if (guestBatchIds.length === 0) {
+        return res.status(200).json({ success: true, message: `Batch-wise present counts for ${String(date || '')}`, date: String(date || ''), data: [] });
+      }
+    }
+
     const dateStr = date && typeof date === 'string' ? date : toISTDateString(getISTTimestamp());
     const attendanceDate = parseISTDate(dateStr);
     const nextDate = getNextISTDay(attendanceDate);
 
     // Fetch attendance docs for the date
-    const docs = await Attendance.find({ date: { $gte: attendanceDate, $lt: nextDate } });
+    const attendanceQuery = { date: { $gte: attendanceDate, $lt: nextDate } };
+    if (Array.isArray(guestBatchIds) && guestBatchIds.length) attendanceQuery.batchId = { $in: guestBatchIds };
+    const docs = await Attendance.find(attendanceQuery);
 
     // Map batchId -> { fnPresent: number, anPresent: number }
     const map = new Map();
@@ -510,6 +589,18 @@ export const getStudentsByBatch = async (req, res) => {
     const { batchId, date: dateQuery, session } = req.query;
     if (!batchId) return res.status(400).json({ success: false, message: 'batchId query parameter is required' });
 
+    // Guest access: ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ success: false, message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ success: false, message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ success: false, message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ success: false, message: 'Guest not assigned to this batch' });
+    }
+
     const key = String(batchId).toUpperCase();
     const students = await Student.find({ batchId: key }).sort({ regno: 1 }).select('_id regno studentname dept');
 
@@ -558,6 +649,19 @@ export const getAttendanceStats = async (req, res) => {
   try {
     // Optional query params for date range, batchId, deptId or batchYear
     const { startDate, endDate, batchId, deptId, batchYear } = req.query;
+
+    // Guest access: require batchId and ensure assignment
+    const role = req.headers['x-role'];
+    if (role === 'GUEST') {
+      if (!batchId) return res.status(400).json({ message: 'batchId query parameter is required for guest' });
+      const guestId = req.headers['x-guest-id'];
+      if (!guestId) return res.status(400).json({ message: 'x-guest-id header required' });
+      const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+      if (!guest) return res.status(404).json({ message: 'Guest not found' });
+      if (guest.isActive === false) return res.status(403).json({ message: 'Guest account disabled' });
+      const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+      if (!assigned.includes(String(batchId).toUpperCase())) return res.status(403).json({ message: 'Guest not assigned to this batch' });
+    }
 
     const filter = {};
     if (batchId) filter.batchId = String(batchId).toUpperCase();

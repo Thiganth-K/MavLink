@@ -1,5 +1,6 @@
 import Batch from '../models/Batch.js';
 import Admin from '../models/Admin.js';
+import Guest from '../models/Guest.js';
 import Department from '../models/Department.js';
 import Student from '../models/Student.js';
 import logger from '../utils/logger.js';
@@ -118,6 +119,21 @@ export const getBatches = async (req, res) => {
   const start = Date.now();
   logger.debug('getBatches start');
 	try {
+		const role = req.headers['x-role'];
+		// Guest visibility: only allotted batches
+		if (role === 'GUEST') {
+			const guestId = req.headers['x-guest-id'];
+			if (!guestId) return res.status(400).json({ message: 'x-guest-id header required' });
+			const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() }).lean();
+			if (!guest) return res.status(404).json({ message: 'Guest not found' });
+			if (guest.isActive === false) return res.status(403).json({ message: 'Guest account disabled' });
+			const ids = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds.map(x => String(x).toUpperCase()) : [];
+			if (ids.length === 0) return res.json([]);
+			const batches = await Batch.find({ batchId: { $in: ids } }).sort({ createdAt: -1 });
+			logger.info('getBatches success (guest)', { durationMs: Date.now() - start, count: batches.length, guestId: guest.guestId });
+			return res.json(batches);
+		}
+
 		const batches = await Batch.find().sort({ createdAt: -1 });
 		logger.info('getBatches success', { durationMs: Date.now() - start, count: batches.length });
 		res.json(batches);

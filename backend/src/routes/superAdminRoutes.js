@@ -5,6 +5,10 @@ import {
   getAdmins,
   updateAdmin,
   deleteAdmin,
+  createGuest,
+  getGuests,
+  updateGuest,
+  deleteGuest,
   logoutSuperAdmin,
   getExportYears,
   getAdminBatchMapping,
@@ -22,6 +26,12 @@ router.post("/admin", createAdmin);
 router.get("/admin", getAdmins);
 router.put("/admin/:id", updateAdmin);
 router.delete("/admin/:id", deleteAdmin);
+
+// Guest CRUD
+router.post('/guest', createGuest);
+router.get('/guest', getGuests);
+router.put('/guest/:id', updateGuest);
+router.delete('/guest/:id', deleteGuest);
 // Mapping of admins to batches
 router.get('/admin-batch-mapping', getAdminBatchMapping);
 // Available export years for UI dropdown

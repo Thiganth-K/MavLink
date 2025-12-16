@@ -2,9 +2,10 @@
 // In production replace with JWT/session validation.
 import Admin from '../models/Admin.js';
 import Batch from '../models/Batch.js';
+import Guest from '../models/Guest.js';
 
 export const verifySuperAdmin = (req, res, next) => {
-  const role = req.headers['x-role'];
+  const role = String(req.headers['x-role'] || '').trim();
   if (role !== 'SUPER_ADMIN') {
     return res.status(403).json({ message: 'SUPER_ADMIN role required' });
   }
@@ -13,7 +14,7 @@ export const verifySuperAdmin = (req, res, next) => {
 
 // Accept either SUPER_ADMIN or ADMIN (for ADMIN we delegate to verifyAdmin checks)
 export const verifyAdminOrSuperAdmin = async (req, res, next) => {
-  const role = req.headers['x-role'];
+  const role = String(req.headers['x-role'] || '').trim();
   if (role === 'SUPER_ADMIN') return next();
   if (role === 'ADMIN') {
     // delegate to verifyAdmin which performs additional admin checks
@@ -24,7 +25,7 @@ export const verifyAdminOrSuperAdmin = async (req, res, next) => {
 
 // verifyAdmin ensures admin role and optionally restricts to batchId parameter/body
 export const verifyAdmin = async (req, res, next) => {
-  const role = req.headers['x-role'];
+  const role = String(req.headers['x-role'] || '').trim();
   if (role !== 'ADMIN') {
     return res.status(403).json({ message: 'ADMIN role required' });
   }
@@ -41,6 +42,30 @@ export const verifyAdmin = async (req, res, next) => {
     }
   }
   req.admin = admin;
+  next();
+};
+
+export const verifyGuest = async (req, res, next) => {
+  const role = String(req.headers['x-role'] || '').trim();
+  if (role !== 'GUEST') {
+    return res.status(403).json({ message: 'GUEST role required' });
+  }
+  const guestId = req.headers['x-guest-id'];
+  if (!guestId) return res.status(400).json({ message: 'x-guest-id header required' });
+
+  const guest = await Guest.findOne({ guestId: String(guestId).trim().toUpperCase() });
+  if (!guest) return res.status(404).json({ message: 'Guest not found' });
+  if (guest.isActive === false) return res.status(403).json({ message: 'Guest account disabled' });
+
+  const batchId = (req.body && req.body.batchId) || (req.params && req.params.batchId) || (req.query && req.query.batchId);
+  if (batchId) {
+    const assigned = Array.isArray(guest.assignedBatchIds) ? guest.assignedBatchIds : [];
+    if (!assigned.includes(String(batchId).toUpperCase())) {
+      return res.status(403).json({ message: 'Guest not assigned to this batch' });
+    }
+  }
+
+  req.guest = guest;
   next();
 };
 

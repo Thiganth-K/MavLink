@@ -12,28 +12,53 @@ interface Message {
 }
 
 const SuperAdminMessages: React.FC = () => {
-  const [admins, setAdmins] = useState<any[]>([]);
+  const CHAT_POLL_MS = 5000;
+  const NOTIF_POLL_MS = 15000;
+  const [peers, setPeers] = useState<Array<{ id: string; type: 'ADMIN' | 'GUEST'; displayName: string }>>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
+  const [selectedPeer, setSelectedPeer] = useState<{ id: string; type: 'ADMIN' | 'GUEST' } | null>(null);
   const [reply, setReply] = useState('');
   const pollRef = useRef<number | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const countsPollRef = useRef<number | null>(null);
 
-  const loadAdmins = async () => {
+  const loadPeers = async () => {
     try {
-      const list = await superAdminAPI.getAdmins();
-      // show only ADMIN role entries (exclude SUPER_ADMIN)
-      const filtered = Array.isArray(list) ? list.filter((x: any) => x.role === 'ADMIN') : [];
-      setAdmins(filtered);
+      const [adminsList, guestsList] = await Promise.all([
+        superAdminAPI.getAdmins(),
+        superAdminAPI.getGuests()
+      ]);
+
+      const admins = Array.isArray(adminsList) ? adminsList.filter((x: any) => x.role === 'ADMIN') : [];
+      const guests = Array.isArray(guestsList) ? guestsList : [];
+
+      const merged: Array<{ id: string; type: 'ADMIN' | 'GUEST'; displayName: string }> = [];
+
+      admins.forEach((a: any) => {
+        const id = (a.adminId || a._id) ? String(a.adminId || a._id) : '';
+        if (!id) return;
+        merged.push({ id, type: 'ADMIN', displayName: a.username || a.name || a.email || id });
+      });
+
+      guests.forEach((g: any) => {
+        const id = (g.guestId || g._id) ? String(g.guestId || g._id) : '';
+        if (!id) return;
+        merged.push({ id, type: 'GUEST', displayName: g.username || g.name || g.email || id });
+      });
+
+      setPeers(merged);
     } catch (err) {
-      console.error('Failed to load admins', err);
+      console.error('Failed to load peers', err);
     }
   };
 
-  const loadMessages = async (adminId?: string | null) => {
+  const loadMessages = async (peer?: { id: string; type: 'ADMIN' | 'GUEST' } | null) => {
     try {
-      const res = await chatAPI.listMessages(adminId || undefined);
+      const res = peer
+        ? (peer.type === 'ADMIN'
+          ? await chatAPI.listMessages({ withAdminId: peer.id })
+          : await chatAPI.listMessages({ withGuestId: peer.id }))
+        : await chatAPI.listMessages();
       setMessages(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error('Failed to load messages', err);
@@ -41,7 +66,7 @@ const SuperAdminMessages: React.FC = () => {
   };
 
   useEffect(() => {
-    loadAdmins();
+    loadPeers();
     // load unread counts and poll
     const loadUnreadCounts = async () => {
         try {
@@ -51,9 +76,12 @@ const SuperAdminMessages: React.FC = () => {
           const counts: Record<string, number> = {};
           arr.forEach((n: any) => {
             // use sender from populated notification or meta
-            const aid = (n.sender && (n.sender.adminId || n.sender._id)) || (n.meta && (n.meta.fromAdminId || n.meta.toAdminId));
-            if (!aid) return;
-            counts[aid.toString()] = (counts[aid.toString()] || 0) + 1;
+            const key =
+              (n.sender && (n.sender.adminId || n.sender.guestId || n.sender._id)) ||
+              (n.meta && (n.meta.fromAdminId || n.meta.toAdminId || n.meta.fromGuestId || n.meta.toGuestId));
+            if (!key) return;
+            const k = String(key);
+            counts[k] = (counts[k] || 0) + 1;
           });
           setUnreadCounts(counts);
         } catch (err) {
@@ -62,8 +90,8 @@ const SuperAdminMessages: React.FC = () => {
       };
 
     loadUnreadCounts();
-    // Poll unread counts every 5 minutes
-    countsPollRef.current = window.setInterval(loadUnreadCounts, 300000) as unknown as number;
+    // Poll unread counts periodically
+    countsPollRef.current = window.setInterval(loadUnreadCounts, NOTIF_POLL_MS) as unknown as number;
 
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
@@ -76,13 +104,15 @@ const SuperAdminMessages: React.FC = () => {
     try {
       const qs = new URLSearchParams(window.location.search);
       const aid = qs.get('adminId') || qs.get('withAdminId');
-      if (aid) setSelectedAdmin(aid);
+      const gid = qs.get('guestId') || qs.get('withGuestId');
+      if (gid) setSelectedPeer({ id: gid, type: 'GUEST' });
+      else if (aid) setSelectedPeer({ id: aid, type: 'ADMIN' });
     } catch (e) {}
   }, []);
 
   // When selected admin changes, fetch messages for that admin and auto-mark unread admin->superadmin messages
   useEffect(() => {
-    if (!selectedAdmin) {
+    if (!selectedPeer) {
       setMessages([]);
       if (pollRef.current) {
         window.clearInterval(pollRef.current);
@@ -95,7 +125,9 @@ const SuperAdminMessages: React.FC = () => {
 
     const refresh = async () => {
       try {
-        const res = await chatAPI.listMessages(selectedAdmin);
+        const res = selectedPeer.type === 'ADMIN'
+          ? await chatAPI.listMessages({ withAdminId: selectedPeer.id })
+          : await chatAPI.listMessages({ withGuestId: selectedPeer.id });
         if (cancelled) return;
         setMessages(Array.isArray(res) ? res : []);
 
@@ -110,7 +142,9 @@ const SuperAdminMessages: React.FC = () => {
           // notify navbars to refresh notifications immediately
           try { window.dispatchEvent(new CustomEvent('notificationsChanged')); } catch (e) {}
           // refresh after marking
-          const after = await chatAPI.listMessages(selectedAdmin);
+          const after = selectedPeer.type === 'ADMIN'
+            ? await chatAPI.listMessages({ withAdminId: selectedPeer.id })
+            : await chatAPI.listMessages({ withGuestId: selectedPeer.id });
           if (!cancelled) setMessages(Array.isArray(after) ? after : []);
         }
       } catch (err) {
@@ -120,8 +154,8 @@ const SuperAdminMessages: React.FC = () => {
 
     refresh();
 
-    // poll every 5 minutes
-    pollRef.current = window.setInterval(refresh, 300000) as unknown as number;
+    // poll chat periodically
+    pollRef.current = window.setInterval(refresh, CHAT_POLL_MS) as unknown as number;
 
     return () => {
       cancelled = true;
@@ -130,16 +164,20 @@ const SuperAdminMessages: React.FC = () => {
         pollRef.current = null;
       }
     };
-  }, [selectedAdmin]);
+  }, [selectedPeer?.type, selectedPeer?.id]);
 
   const sendReply = async () => {
-    if (!selectedAdmin || !reply.trim()) return;
+    if (!selectedPeer || !reply.trim()) return;
     try {
-      await chatAPI.superadminReply(selectedAdmin, reply.trim());
+      if (selectedPeer.type === 'ADMIN') {
+        await chatAPI.superadminReply(selectedPeer.id, reply.trim());
+      } else {
+        await chatAPI.superadminReplyGuest(selectedPeer.id, reply.trim());
+      }
       setReply('');
       // notify admin navbars/clients to refresh notifications immediately
       try { window.dispatchEvent(new CustomEvent('notificationsChanged')); } catch (e) {}
-      await loadMessages(selectedAdmin);
+      await loadMessages(selectedPeer);
     } catch (err) {
       console.error('Failed to send reply', err);
     }
@@ -163,36 +201,36 @@ const SuperAdminMessages: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ minHeight: '75vh' }}>
           <div className="grid grid-cols-1 md:grid-cols-12 h-full" style={{ minHeight: '75vh' }}>
             
-            {/* Left Sidebar - Admin List */}
+            {/* Left Sidebar - Conversations */}
             <div className="md:col-span-4 border-r border-gray-200 bg-gradient-to-b from-purple-50 to-white p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-purple-950">Admins</h2>
+                <h2 className="text-lg font-bold text-purple-950">Users</h2>
                 <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
-                  {admins.length} {admins.length === 1 ? 'Admin' : 'Admins'}
+                  {peers.length} {peers.length === 1 ? 'User' : 'Users'}
                 </span>
               </div>
               
               <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(75vh - 120px)' }}>
-                {admins.length === 0 ? (
+                {peers.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                       <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                     </div>
-                    <p className="text-sm text-gray-500">No admins available</p>
+                    <p className="text-sm text-gray-500">No users available</p>
                   </div>
                 ) : (
-                  admins.map((a: any) => {
-                    const aid = (a.adminId || a._id).toString();
-                    const unread = unreadCounts[aid] || 0;
-                    const displayName = a.username || a.name || a.email || 'Admin';
-                    const isSelected = selectedAdmin === aid;
+                  peers.map((p) => {
+                    const pid = String(p.id);
+                    const unread = unreadCounts[pid] || 0;
+                    const displayName = p.displayName || pid;
+                    const isSelected = !!selectedPeer && selectedPeer.id === pid && selectedPeer.type === p.type;
                     
                     return (
                       <button
-                        key={aid}
-                        onClick={() => setSelectedAdmin(aid)}
+                        key={`${p.type}:${pid}`}
+                        onClick={() => setSelectedPeer({ id: pid, type: p.type })}
                         className={`w-full flex items-center gap-3 p-4 transition-all duration-200 ${
                           isSelected
                             ? 'bg-purple-50 text-black-700 border-2 border-purple-600 shadow-lg transform scale-105 rounded-xl'
@@ -213,7 +251,7 @@ const SuperAdminMessages: React.FC = () => {
                             </span>
                           </div>
                           <p className={`text-xs ${isSelected ? 'text-black/60' : 'text-gray-500'}`}>
-                            {aid}
+                            {p.type}: {pid}
                           </p>
                         </div>
                         {unread > 0 && (
@@ -230,7 +268,7 @@ const SuperAdminMessages: React.FC = () => {
 
             {/* Right Panel - Conversation */}
             <div className="md:col-span-8 flex flex-col bg-white">
-              {!selectedAdmin ? (
+              {!selectedPeer ? (
                 <div className="flex-1 flex items-center justify-center p-12">
                   <div className="text-center">
                     <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center">
@@ -239,36 +277,37 @@ const SuperAdminMessages: React.FC = () => {
                       </svg>
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Conversation</h3>
-                    <p className="text-gray-500">Choose an admin from the list to start messaging</p>
+                    <p className="text-gray-500">Choose a user from the list to start messaging</p>
                   </div>
                 </div>
               ) : (
                 <>
                   {/* Conversation Header */}
                   <div className="border-b border-gray-200 p-4 bg-purple-50">
+                    {(() => {
+                      const current = peers.find(p => p.id === selectedPeer.id && p.type === selectedPeer.type);
+                      const title = current?.displayName || selectedPeer.id;
+                      const subtitle = `${selectedPeer.type === 'ADMIN' ? 'Admin ID' : 'Guest ID'}: ${selectedPeer.id}`;
+                      return (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-700 border-2 border-purple-600 flex items-center justify-center font-bold">
-                        {(admins.find(a => (a.adminId || a._id).toString() === selectedAdmin)?.username || 'A').charAt(0).toUpperCase()}
+                        {(title || 'U').charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {admins.find(a => (a.adminId || a._id).toString() === selectedAdmin)?.username || selectedAdmin}
+                          {title}
                         </h3>
-                        <p className="text-xs text-gray-500">Admin ID: {selectedAdmin}</p>
+                        <p className="text-xs text-gray-500">{subtitle}</p>
                       </div>
                     </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Messages Area */}
                   <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white" style={{ maxHeight: 'calc(75vh - 200px)' }}>
                     <div className="space-y-4">
-                      {messages
-                        .filter(m => {
-                          const aid = (m.from?.adminId || m.from?._id || '').toString();
-                          const toAid = (m.to?.adminId || m.to?._id || '').toString();
-                          return aid === selectedAdmin || toAid === selectedAdmin;
-                        })
-                        .map(m => {
+                      {messages.map(m => {
                           const fromSuper = m.from?.role === 'SUPER_ADMIN';
                           return (
                             <div key={m._id} className={`flex ${fromSuper ? 'justify-end' : 'justify-start'}`}>
@@ -325,7 +364,7 @@ const SuperAdminMessages: React.FC = () => {
                       />
                       <button
                         onClick={sendReply}
-                        disabled={!selectedAdmin || !reply.trim()}
+                        disabled={!selectedPeer || !reply.trim()}
                         className="p-3 rounded-xl bg-white text-purple-700 border-2 border-purple-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-50 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none"
                         aria-label="Send message"
                       >
