@@ -108,27 +108,7 @@ export default function GuestExport() {
     }
   };
 
-  const exportEverything = async () => {
-    const ids = (batches || []).map((b: any) => String(b.batchId || '').toUpperCase()).filter(Boolean);
-    if (!ids.length) { toast.error('No assigned batches to export'); return; }
-    setDownloading(true);
-    try {
-      const blob = await guestAPI.exportData(ids);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `STARS_guest_export_all_years.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Export downloaded');
-    } catch (e: any) {
-      toast.error(e?.message || 'Export failed');
-    } finally {
-      setDownloading(false);
-    }
-  };
+  
 
   // Export All removed — use Export Selected or navigate from Welcome Export CTA
 
@@ -141,7 +121,7 @@ export default function GuestExport() {
             <p className="text-violet-700">Filter by year and select assigned batches to export. Only batch names are shown.</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={refreshAll} className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg">Refresh</button>
+            <button disabled={loading} onClick={refreshAll} className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg">Refresh</button>
             <button onClick={() => { window.location.href = '/guest'; }} className="px-3 py-1 bg-white text-purple-700 border border-purple-600 rounded-lg">Back</button>
           </div>
         </div>
@@ -176,8 +156,8 @@ export default function GuestExport() {
           </div>
 
           <div className="mt-6 flex gap-3">
-            <button disabled={downloading} onClick={exportSelected} className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg disabled:opacity-50">Export Selected</button>
-            <button disabled={downloading || batches.length===0} onClick={exportAll} className="px-4 py-2 bg-violet-600 text-white rounded-lg disabled:opacity-50">Export All</button>
+            <button disabled={downloading || loading} onClick={exportSelected} className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-600 rounded-lg disabled:opacity-50">Export Selected</button>
+            <button disabled={downloading || loading || batches.length===0} onClick={exportAll} className="px-4 py-2 bg-violet-600 text-white rounded-lg disabled:opacity-50">Export All</button>
           </div>
         </div>
       </div>
