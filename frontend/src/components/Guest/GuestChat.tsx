@@ -15,7 +15,7 @@ type Msg = {
 };
 
 export default function GuestChatModal({ onClose }: Props) {
-  const CHAT_POLL_MS = 5000;
+  const CHAT_POLL_MS = 60000;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
