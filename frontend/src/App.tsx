@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Login from './pages/Login';
+import Login from './pages/login';
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import SuperAdminMessages from './pages/SuperAdmin/SuperAdminMessages';
 import AdminManagementPage from './pages/SuperAdmin/AdminManagementPage';
