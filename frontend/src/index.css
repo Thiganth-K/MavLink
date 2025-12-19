@@ -68,8 +68,6 @@ select,
 .textarea,
 .select {
   background-color: #ffffff !important;
-  color: #000000 !important;
-  box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
 /* Also ensure placeholder text is readable */

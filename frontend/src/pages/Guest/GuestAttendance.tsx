@@ -5,7 +5,7 @@ import { attendanceAPI, batchAPI, guestAPI, notificationAPI, type AttendanceStat
 import { formatDateForDisplay, formatTimestampIST } from '../../utils/dateUtils';
 import ResponsiveTable from '../../components/Admin/ResponsiveTable';
 import GuestChatModal from '../../components/Guest/GuestChat';
-import { FaComments } from 'react-icons/fa';
+import { FaComments, FaDownload, FaBars, FaSignOutAlt } from 'react-icons/fa';
 
 function ViewAttendanceRow({ record }: { record: Attendance }) {
   const [showReason, setShowReason] = useState(false);
@@ -156,6 +156,7 @@ export default function GuestAttendance() {
   const [selectedDateForDetail, setSelectedDateForDetail] = useState<string | null>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [openChat, setOpenChat] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const logout = () => {
     try {
@@ -342,11 +343,13 @@ export default function GuestAttendance() {
     setSelectedDateForDetail(null);
   };
 
+  // Export is now available via the Export page (navigate to /guest/export)
+
   return (
     <div className="min-h-screen bg-white p-6">
       <Toaster position="top-center" />
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow border border-purple-200 p-5 mb-6">
+        <div className="relative bg-white rounded-xl shadow border border-purple-200 p-5 mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h1 className="text-3xl font-bold text-purple-950">Welcome{guestUsername ? `, ${guestUsername}` : ''}</h1>
@@ -357,24 +360,62 @@ export default function GuestAttendance() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setOpenChat(true)}
-                className="relative px-3 py-2 bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50 rounded flex items-center gap-2"
-              >
-                <FaComments className="w-4 h-4" />
-                <span>Chat</span>
-                {unreadNotifs > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                    {unreadNotifs}
-                  </span>
+              {/* Desktop actions */}
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => setOpenChat(true)}
+                  className="relative px-3 py-2 bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50 rounded flex items-center gap-2"
+                >
+                  <FaComments className="w-4 h-4" />
+                  <span>Chat</span>
+                  {unreadNotifs > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {unreadNotifs}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { window.location.href = '/guest/export'; }}
+                  className="relative px-3 py-2 bg-purple-50 text-purple-700 border border-purple-600 hover:bg-purple-50 rounded flex items-center gap-2"
+                >
+                  <FaDownload className="w-4 h-4" />
+                  <span>Export</span>
+                </button>
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 bg-red-50 text-red-700 border border-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                >
+                  <FaSignOutAlt className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+
+              {/* Mobile menu toggle (absolute top-right) */}
+              <div className="md:hidden">
+                <button onClick={() => setShowMobileMenu(s => !s)} className="absolute right-4 top-4 inline-flex items-center px-3 py-2 bg-white text-fuchsia-700 rounded-full shadow-sm transition border border-fuchsia-700 z-50">
+                  <FaBars className="w-5 h-5" />
+                </button>
+                {showMobileMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setShowMobileMenu(false)} />
+                    <aside className="fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-xl p-6 transform transition-transform z-50">
+                      <div className="flex flex-col h-full">
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="text-lg font-bold text-purple-950">Menu</h3>
+                          <button onClick={() => setShowMobileMenu(false)} className="px-2 py-1 text-gray-600 rounded hover:bg-gray-100">Close</button>
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <button onClick={() => { setShowMobileMenu(false); window.location.href = '/guest/export'; }} className="w-full text-left px-4 py-3 rounded-lg bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 flex items-center gap-3"><FaDownload className="w-4 h-4" /> <span>Export</span></button>
+                          <button onClick={() => { setShowMobileMenu(false); setOpenChat(true); }} className="w-full text-left px-4 py-3 rounded-lg bg-white text-purple-700 border border-purple-200 hover:bg-purple-50 flex items-center gap-3"><FaComments className="w-4 h-4" /> <span>Chat</span> {unreadNotifs > 0 && <span className="ml-2 inline-flex items-center justify-center bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">{unreadNotifs}</span>}</button>
+                        </div>
+                        <div className="mt-4">
+                          <button onClick={() => { setShowMobileMenu(false); logout(); }} className="w-full text-left px-4 py-3 text-red-600 rounded-lg border border-red-100 hover:bg-red-50 flex items-center gap-3"><FaSignOutAlt className="w-4 h-4"/> <span>Logout</span></button>
+                        </div>
+                      </div>
+                    </aside>
+                  </>
                 )}
-              </button>
-              <button
-                onClick={logout}
-                className="px-3 py-2 bg-red-50 text-red-700 border border-red-600 hover:bg-red-50 rounded"
-              >
-                Logout
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -382,32 +423,37 @@ export default function GuestAttendance() {
         {openChat && <GuestChatModal onClose={() => setOpenChat(false)} />}
 
         <div className="bg-white rounded-xl shadow p-5 border border-purple-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div>
               <label className="block text-purple-950 mb-1 font-medium">Batch</label>
-              <select
-                value={activeBatchId}
-                onChange={(e) => setActiveBatchId(String(e.target.value).toUpperCase())}
-                className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
-                disabled={isLoadingMeta || batches.length === 0}
-              >
-                {batches.length === 0 ? (
-                  <option value="">No allotted batches</option>
-                ) : (
-                  batches.map(b => (
-                    <option key={String(b._id || b.batchId)} value={String(b.batchId || '').toUpperCase()}>
-                      {String(b.batchId || '').toUpperCase()} {b.batchName ? `- ${b.batchName}` : ''}
-                    </option>
-                  ))
-                )}
-              </select>
+              <div className="flex items-center gap-4">
+                <select
+                  value={activeBatchId}
+                  onChange={(e) => setActiveBatchId(String(e.target.value).toUpperCase())}
+                  className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
+                  disabled={isLoadingMeta || batches.length === 0}
+                >
+                  {batches.length === 0 ? (
+                    <option value="">No allotted batches</option>
+                  ) : (
+                    batches.map(b => (
+                      <option key={String(b._id || b.batchId)} value={String(b.batchId || '').toUpperCase()}>
+                        {b.batchName ? String(b.batchName) : String(b.batchId || '').toUpperCase()}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                <div className="text-sm text-gray-700">
+                  <div className="font-semibold text-purple-950">Selected</div>
+                  <div className="max-w-[280px] truncate">{activeBatch ? (activeBatch.batchName ? String(activeBatch.batchName) : String(activeBatch.batchId || '').toUpperCase()) : '-'}</div>
+                </div>
+              </div>
             </div>
 
-            <div className="text-sm text-gray-700">
-              <div className="font-semibold text-purple-950">Selected</div>
-              <div>{activeBatch ? `${String(activeBatch.batchId || '').toUpperCase()}${activeBatch.batchName ? ` - ${activeBatch.batchName}` : ''}` : '-'}</div>
-            </div>
+          
           </div>
+          
         </div>
 
         {/* Attendance Records (cards/table like Admin ViewAttendance) */}
@@ -442,6 +488,7 @@ export default function GuestAttendance() {
                   >
                     Table
                   </button>
+                  
                 </>
               )}
             </div>

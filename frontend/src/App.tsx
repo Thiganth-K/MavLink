@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Login from './pages/login';
+import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import SuperAdminMessages from './pages/SuperAdmin/SuperAdminMessages';
 import AdminManagementPage from './pages/SuperAdmin/AdminManagementPage';
@@ -21,6 +21,7 @@ import StudentAnalysisDashboard from './pages/SuperAdmin/StudentAnalysisDashboar
 import SuperAdminExport from './pages/SuperAdmin/SuperAdminExport';
 import AdminLayout from './components/Admin/AdminLayout';
 import GuestAttendance from './pages/Guest/GuestAttendance';
+import GuestExport from './pages/Guest/GuestExport';
 import GuestManagementPage from './pages/SuperAdmin/GuestManagementPage';
 
 function App() {
@@ -201,6 +202,14 @@ function App() {
 
   if (path === '/guest') {
     return <GuestAttendance />;
+  }
+
+  if (path === '/guest/export') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <GuestExport />
+      </div>
+    );
   }
 
   if (path.startsWith('/admin-dashboard')) {
