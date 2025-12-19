@@ -1228,4 +1228,30 @@ export const guestAPI = {
     }
     return res.json();
   }
+  ,exportData: async (batchIds?: string[] | string): Promise<Blob> => {
+      const storedUser = localStorage.getItem('user');
+      let guestId: string | undefined;
+      try { guestId = storedUser ? JSON.parse(storedUser).guestId : undefined; } catch {}
+
+      const headers: Record<string, string> = {
+        'X-Role': localStorage.getItem('role') || ''
+      };
+      if (guestId) headers['X-Guest-Id'] = guestId;
+
+      let q = '';
+      if (Array.isArray(batchIds) && batchIds.length) {
+        const encoded = batchIds.map(b => encodeURIComponent(String(b))).join(',');
+        q = `?batchIds=${encoded}`;
+      } else if (typeof batchIds === 'string' && batchIds) {
+        q = `?batchIds=${encodeURIComponent(batchIds)}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/guest/export${q}`, { headers });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to export guest data');
+      }
+
+      return res.blob();
+    }
 };
